@@ -279,7 +279,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                     point_invalidity = point_invalidity | np.isnan(classes)
                 if labels.dtype != np.dtype('O'):
                     point_invalidity = point_invalidity | np.isnan(labels)
-                print "Invalid points : ",point_invalidity.sum()
+                # print "Invalid points : ",point_invalidity.sum()
                 valid_points = np.where(True - point_invalidity)
             else:
                 point_invalidity = np.zeros(len(classes)).astype(bool)
@@ -334,22 +334,60 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
 
             # if (n_classes > 1) or (n_labels == 1) or np.all(labels == classes) or (labels.dtype == np.dtype('O')):
             if (n_classes > 1) or (n_labels == 1) or np.all(labels == classes):
-                plot_legend = 'labels'
+                plot_legend = ['labels']
+
+                are_classes_sublabels = np.all([len(np.unique(labels[classes==c]))==1 for c in class_list])
+
+                if not are_classes_sublabels:
+                    plot_legend += ['colorbar']
+                    if labels.dtype == np.dtype('O'):
+                        labels = np.sum([i*(labels==l).astype(int) for i,l in enumerate(label_list)],axis=0)+1
+                        label_range = (0,labels.max()+1.)
+                        cbar_ticks = np.arange(labels.max())+1
+                        cbar_ticklabels = label_list
+                        label_list = np.sort(np.unique(labels))
+                    else:
+                        label_range = (labels.min() + world_object['label_range'][0]*(labels.max()-labels.min())/100.,labels.min() + world_object['label_range'][1]*(labels.max()-labels.min())/100.)
+                        cbar_ticks = np.linspace(label_range[0],label_range[1],5)
+                        cbar_ticklabels = np.round(cbar_ticks,decimals=3)
+                    mpl_norm = mpl.colors.Normalize(vmin=label_range[0], vmax=label_range[1])
+                    
+
+                    color_dict = dict(red=[],green=[],blue=[])
+                    for k,c in enumerate(['red','green','blue']):
+                        color_dict[c] += [(0.0,0.0,0.0)]
+                        color_dict[c] += [(1.0,1.0,1.0)]
+                    for c in ['red','green','blue']:
+                        color_dict[c] = tuple(color_dict[c])
+                    mpl_cmap = mpl.colors.LinearSegmentedColormap('intensity', color_dict)
+
+
+                print class_list
+                print label_list
 
                 for i_class, c in enumerate(class_list):
 
                     label = np.unique(labels[classes==c])[0]
+                    print label
                     i_label = np.where(label_list==label)[0][0]
 
                     if world_object['label_colormap']['name'] != 'glasbey':
-                        # class_color = np.array(cmap.get_color((i_class+1)/float(n_classes+1)))
-                        class_color = np.round(cmap.get_color((i_label+1)/float(n_labels+1)),decimals=3)
+                        if are_classes_sublabels:
+                            class_color = np.round(cmap.get_color((i_label+1)/float(n_labels+1)),decimals=3)
+                        else:
+                            class_color = np.round(cmap.get_color((i_class+1)/float(n_classes+1)),decimals=3)
                     else:
-                        #class_color = np.array(cmap.get_color((i_class+1)/255.))
-                        class_color = np.round(cmap.get_color((i_label+1)/255.),decimals=3)
+                        if are_classes_sublabels:
+                            class_color = np.round(cmap.get_color((i_label+1)/255.),decimals=3)
+                        else:
+                            class_color = np.round(cmap.get_color((i_class+1)/255.),decimals=3)
+
 
                     _,figure_labels = figure.gca().get_legend_handles_labels()
-                    plot_label = str(label) if str(label) not in figure_labels else None
+                    if are_classes_sublabels:
+                        plot_label = str(label) if str(label) not in figure_labels else None
+                    else:
+                        plot_label = str(c) if str(c) not in figure_labels else None
 
 
                     if world_object['plot'] in ['scatter','line','density']:
@@ -359,7 +397,15 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                     
 
                     if world_object['plot'] == 'scatter':
-                        simple_plot(figure,X[classes==c],Y[classes==c],class_color,xlabel=xlabel,ylabel=ylabel,linked=False,marker_size=markersize,linewidth=linewidth,alpha=alpha,label=plot_label)
+                        if are_classes_sublabels:
+                            simple_plot(figure,X[classes==c],Y[classes==c],class_color,xlabel=xlabel,ylabel=ylabel,linked=False,marker_size=markersize,linewidth=linewidth,alpha=alpha,label=plot_label)
+                        else:
+                            class_labels = labels[classes==c]
+                            normalized_class_labels = np.maximum(0,np.minimum(1,(class_labels-label_range[0])/float(label_range[1]-label_range[0])))
+                            label_colors = np.array([(1-0.8*np.abs(0.5-l)/0.5)*class_color + np.maximum(0,0.8*(0.5-l)/0.5)*np.zeros(3) + np.maximum(0,0.8*(l-0.5)/0.5)*np.ones(3) for l in normalized_class_labels])
+                            simple_plot(figure,X[classes==c],Y[classes==c],label_colors,xlabel=xlabel,ylabel=ylabel,linked=False,marker_size=markersize,linewidth=linewidth,alpha=alpha,label=plot_label)
+                        
+
                     elif world_object['plot'] == 'line':
                         simple_plot(figure,np.sort(X[classes==c]),Y[classes==c][np.argsort(X[classes==c])],class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=(linewidth+1)/2.,alpha=alpha,label=plot_label)
                         # smooth_plot(figure,np.sort(X[classes==c]),Y[classes==c][np.argsort(X[classes==c])],class_color,class_color,xlabel=xlabel,ylabel=ylabel,smooth_factor=smooth*Y.mean(),linewidth=linewidth,alpha=alpha,label=plot_label)
@@ -397,11 +443,11 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                             figure.gca().add_patch(class_ellipse)
                             figure.gca().scatter([class_center[0]],[class_center[1]],marker=u'o',c=class_color,s=2.*markersize,linewidth=1.5*linewidth,alpha=(alpha+1.)/2.)
             else:
-                plot_legend = 'colorbar'
+                plot_legend = ['colorbar']
 
                 if labels.dtype == np.dtype('O'):
                     labels = np.sum([i*(labels==l).astype(int) for i,l in enumerate(label_list)],axis=0)+1
-                    print labels
+                    # print labels
                     label_colors = np.array([np.round(cmap.get_color(l),decimals=3) for l in labels/float(labels.max()+1.)])
                     mpl_norm = mpl.colors.Normalize(vmin=0, vmax=labels.max()+1.)
                     cbar_ticks = np.arange(labels.max())+1
@@ -413,8 +459,8 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                     cbar_ticks = np.linspace(label_range[0],label_range[1],5)
                     cbar_ticklabels = np.round(cbar_ticks,decimals=3)
 
-                    print (labels.min(),labels.max()), world_object['label_range']
-                    print label_range, cbar_ticks, cbar_ticklabels
+                    # print (labels.min(),labels.max()), world_object['label_range']
+                    # print label_range, cbar_ticks, cbar_ticklabels
 
                 color_dict = dict(red=[],green=[],blue=[])
                 for p in np.sort(cmap._color_points.keys()):
@@ -456,7 +502,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                             box_plot(figure,np.arange(n_classes),np.array([X[classes==c] for c in class_list]),class_colors,xlabel="",ylabel=xlabel,linewidth=linewidth,marker_size=(markersize+50)/10,alpha=alpha)
                     else:
 
-                        plot_legend = 'labels'
+                        plot_legend = ['labels']
 
                         n_slices = 5
                         if X.dtype != np.dtype('O') and len(np.unique(X)) > len(X)/5. or (len(np.unique(X)) > 50):
@@ -516,7 +562,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
 
 
                 elif world_object['plot'] == 'PCA':
-                    plot_legend = 'labels'
+                    plot_legend = ['labels']
                     pca, projected_data = pca_analysis(data,classes,class_colors,class_labels,variables,pca_figure=figure,linewidth=linewidth,marker_size=markersize,alpha=alpha,draw_classes=world_object['regression'] in ['fireworks'])  
                     x_min,x_max = np.percentile(projected_data[:,0],1)-4,np.percentile(projected_data[:,0],99)+4
                     y_min,y_max = np.percentile(projected_data[:,1],1)-4,np.percentile(projected_data[:,1],99)+4    
@@ -571,9 +617,9 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
             colorbar_locations = dict(top_right=[0.12, 0.98, 0.78, 0.02],bottom_right=[0.9, 0.1, 0.02, 0.8],top_left=[0.0, 0.1, 0.02, 0.8],bottom_left=[0.12, 0.05, 0.78, 0.02])
             colorbar_orientations = dict(top_right='horizontal',bottom_right='vertical',top_left='vertical',bottom_left='horizontal')
             if world_object['legend'] != "":
-                if plot_legend == 'labels':
+                if 'labels' in plot_legend:
                     figure.gca().legend(loc=legend_locations[world_object['legend']])
-                elif plot_legend == 'colorbar':
+                if 'colorbar' in plot_legend:
                     ax = figure.gca()
                     cb_ax = figure.add_axes(colorbar_locations[world_object['legend']])
                     cb = mpl.colorbar.ColorbarBase(cb_ax, cmap=mpl_cmap, norm=mpl_norm, orientation=colorbar_orientations[world_object['legend']])
