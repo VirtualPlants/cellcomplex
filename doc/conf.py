@@ -331,6 +331,7 @@ opts.dryrun = None
 opts.force = None
 opts.header = 'src'
 opts.maxdepth = 4
+opts.includeprivate=False
 
 if not path.isdir(opts.destdir):
     os.makedirs(opts.destdir)

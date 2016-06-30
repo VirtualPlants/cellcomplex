@@ -31,16 +31,16 @@ import os
 import sys
 import pickle
 
-def compute_topomesh_property(topomesh,property_name,degree=0,positions=None,normal_method="density",object_positions=None,object_radius=10.,verbose=False):
-    """Compute a property of a PropertyTopomesh
+def compute_topomesh_property(topomesh, property_name, degree=0, positions=None, normal_method="density", object_positions=None, object_radius=10., verbose=False):
+    """Compute a property of a PropertyTopomesh.
 
     The function compute and fills a property of a PropertyTopomesh passed as argument. The given
     property is computed for all elements of the specified degree and stored as a dictionary in
     the PropertyTopomesh structure
 
-    :Parameters:
-        - 'topomesh' (PropertyTopomesh) - the structure on which to compute the property
-        - 'property_name' (string) - the name of the property to compute, among the following ones:
+    Args:
+        * topomesh (PropertyTopomesh): the structure on which to compute the property
+        * property_name (string): the name of the property to compute, among the following ones:
             * 'barycenter' (degree : [0, 1, 2, 3]) : the position of the center of the element
             * 'vertices' (degree : [0, 1, 2, 3])
             * 'triangles' (degree : [0, 1, 2, 3])
@@ -49,15 +49,15 @@ def compute_topomesh_property(topomesh,property_name,degree=0,positions=None,nor
             * 'area' (degree : [2])
             * 'volume' (degree : [3])
             * 'normal' (degree : [0, 2])
-        - 'degree' (int) - the degree of the elements on which to compute the property
-        - 'positions' (dict) - [optional] a position dictionary if ('barycenter',0) is empty
-        - 'object_positions' (dict) - [optional] position of the object(s) reprensented by the mesh
+        * degree (int): the degree of the elements on which to compute the property
+        * positions (dict): [optional] a position dictionary if ('barycenter',0) is empty
+        * object_positions (dict): [optional] position of the object(s) represented by the mesh
             * used only for property ('normal',2)
-        - 'object_radius' (float) - [optional] radius of the object(s) represented by the mesh
+        * object_radius (float): [optional] radius of the object(s) represented by the mesh
             * used only for property ('normal',2)
 
-        :Returns:
-            None - PropertyTopomesh passed as argument is updated
+    Returns:
+        * None: PropertyTopomesh passed as argument is updated
     """
 
     if positions is None:
@@ -1284,7 +1284,23 @@ def compute_topomesh_triangle_properties(topomesh,positions=None):
 
 
 def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting='area',adjacency_sigma=0.5,neighborhood=1):
-    """
+    """Compute a property on degree 0 using the same property defined at degree 2.
+
+    The vertex property is computed by averaging the properties of its neighboring faces.
+
+    Args:
+        * topomesh (PropertyTopomesh): the structure on which to compute the property
+        * property_name (str): the name of the property to compute
+        * weighting (str): the weight assigned to each face for the averaging of the property
+            * 'uniform': all the faces have the same weight (1)
+            * 'area': the weight on the faces is equal to their area
+            * 'angle': the weight of the faces is equal to the incidence angle at the considered vertex (neighborhood=1)
+            * 'cotangent': the weight of the faces is equal to the sof of cotangent of opposite angles (neighborhood=1)
+        * adjacency_sigma (float): the std of the gaussian weighting using the ring distance
+        * neighborhood (int): the size of the ring of neighbors (1-ring is immediate neighboring triangles)
+
+    Returns:
+        * None: the PropertyTopomesh passed as argument is updated.
     """
     start_time = time()
     print "--> Computing vertex property from faces"
