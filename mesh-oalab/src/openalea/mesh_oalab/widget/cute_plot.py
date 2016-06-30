@@ -209,10 +209,13 @@ def density_contour_plot(figure,X,Y,color,XY_range=None,xlabel="",ylabel="",n_po
     axes.set_yticklabels(axes.get_yticks(),fontproperties=font, size=12)
 
 
-def map_plot(figure,X,Y,Z,colormap,XY_range=None,xlabel="",ylabel="",n_points=100,n_contours=20,smooth_factor=1.0,linewidth=1,alpha=1.0,label=""):
+def map_plot(figure,X,Y,Z,colormap=None,XY_range=None,xlabel="",ylabel="",n_points=100,n_contours=20,smooth_factor=1.0,linewidth=1,alpha=1.0,label=""):
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     figure.patch.set_facecolor('white')
     axes = figure.add_subplot(111)
+
+    if colormap is None:
+        colormap = 'Greys'
 
     if XY_range is None:
         XY_range = [[X.min(),X.max()],[Y.min(),Y.max()]]
@@ -270,6 +273,8 @@ def map_plot(figure,X,Y,Z,colormap,XY_range=None,xlabel="",ylabel="",n_points=10
     axes.set_ylim(*tuple(XY_range[1]))
     axes.set_ylabel(ylabel, fontproperties=font, size=10, style='italic')
     axes.set_yticklabels(axes.get_yticks(),fontproperties=font, size=12)
+
+    return xx, yy, zz_map
 
 
 
