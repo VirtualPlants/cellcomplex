@@ -1,0 +1,56 @@
+{
+  ".coveragerc": {
+    "coverage": "AaOrhzAM3sDehRpC8kdaORQhgrzWJYnFM4wN8/Apv8JWn4DnKZ0nzAETbQWjOzl998LT1uMmrz5khr/gZesOpQ=="
+  }, 
+  ".gitignore": {
+    "github": "E8Yr7ZonuoIVgMalSnEiuBvRsvQdsfSvYMGHvjOjPBPQth2B+YTADz0uZhCk9b+nj200f+lZE96bPAXJhhAkNA=="
+  }, 
+  "AUTHORS.rst": {}, 
+  "CONTRIBUTING.rst": {}, 
+  "HISTORY.rst": {}, 
+  "LICENSE": {
+    "license": "21ExMhSzB2uXQuU1VoH7++nrb4u6TbesqGtJDpM39OLPWft9SJ2tJ956R6foYmkI9VuJay7SUrhFLPxxMEHLxg=="
+  }, 
+  "MANIFEST.in": {
+    "pysetup": "vzgcfdwg7fafu0G3HEmFsZnC8jB8sa4zeSFQ2ReZO+pUfGeynOcw4+CIzP/ZV7n5nmpGGI7xqcdcPtOFfoivdQ=="
+  }, 
+  "README.rst": {
+    "doc": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg=="
+  }, 
+  "doc/Makefile": {
+    "sphinx": "C58jxdu8XJNOoaWOw7VWy4LwFmS8lTQt/JeZLt5JozMSJ503plOZchucx+vAEzELbx/Czs/h9pshe9s+9HeOeQ=="
+  }, 
+  "doc/authors.rst": {}, 
+  "doc/conf.py": {
+    "sphinx": "0Kk/z4FsYBeuuDB2OdjqATEISqDtGWIPN9daYsSO4vTU4Y4n0YVsuPodv3V6NDahDkPyBAPMroTtF6vv/lbrZA=="
+  }, 
+  "doc/contributing.rst": {}, 
+  "doc/history.rst": {}, 
+  "doc/index.rst": {}, 
+  "doc/installation.rst": {}, 
+  "doc/make.bat": {
+    "sphinx": "oA67PK7JSR3w9u1V0gOXFZAb8qgfgUJ0wQ46cVXu7M3iJyAbLf76WkEqw6Y1r5Q6EvHAogcjmImdGsOpiYZ22g=="
+  }, 
+  "doc/readme.rst": {}, 
+  "doc/usage.rst": {}, 
+  "dvlpt_requirements.txt": {
+    "pysetup": "3+3ypRIiSRJu4qfh2VRoDgFw8mgXrR5XArs2YhJ3pidji2TRU8cDtUExYqZUx6c3RNzLGGXkOTgnL+TtAfpObg=="
+  }, 
+  "requirements.txt": {
+    "pysetup": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg=="
+  }, 
+  "setup.cfg": {
+    "pysetup": "9ciegKdtYb2RIj1ovJARdcy2vAGDx2fIfuXzdNxltPIgkpNJbBa9+x/gh+jBlHeopHz9ug7IcbKEIa76fxTVwg=="
+  }, 
+  "setup.py": {
+    "pysetup.call": "2wHuP94SpWKZpqOzExkQGTxnhGPgBHK3qOdPn0Ncstj5FkZ7FBGGM/inqAXaI4QLKQtTNlOUYRGSkYUWAUcf1w==", 
+    "pysetup.kwds": "E4eGJfRgQXm+N7hfoXBX3CGpmMd7tJamoBCgAJq6AZXejj9SROpmQvSdMg7TCAUqofF+AumPE0skzYMqARqNAg=="
+  }, 
+  "src/openalea/cellcomplex/__init__.py": {
+    "base": "gR33dW0qqYmsV9NSNB+DD8XmuxnC2t0mKjnMoU5728qh97fSER6MbX+3QKxpZDLByZToaAay4xhx8acxketJmA=="
+  }, 
+  "src/openalea/cellcomplex/version.py": {
+    "version": "vlcF8GnD2TE81ja4r8xZsp7w0qmLS6xRAHhixvZJdfJX9wFjHN13OBzau05z0uc0zPzF9X+/JaCmy6rxDLYx9Q=="
+  }, 
+  "test/__init__.py": {}
+}
