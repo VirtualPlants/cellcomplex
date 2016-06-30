@@ -19,12 +19,13 @@
 
 import numpy as np
 
-from openalea.mesh.property_topomesh_analysis import compute_topomesh_property
-from openalea.mesh.property_topomesh_creation import vertex_topomesh, edge_topomesh, triangle_topomesh, tetrahedra_topomesh
+from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
+from openalea.cellcomplex.property_topomesh.property_topomesh_creation import vertex_topomesh, edge_topomesh, triangle_topomesh, tetrahedra_topomesh
+
+from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh, hexagon_topomesh
 
 from openalea.container import array_dict
 
-from openalea.mesh.example_topomesh import square_topomesh, hexagon_topomesh
 
 
 def test_length_property():

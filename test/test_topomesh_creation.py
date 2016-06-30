@@ -19,7 +19,7 @@
 
 import numpy as np
 
-from openalea.mesh.property_topomesh_creation import vertex_topomesh, edge_topomesh, triangle_topomesh, tetrahedra_topomesh
+from openalea.cellcomplex.property_topomesh.property_topomesh_creation import vertex_topomesh, edge_topomesh, triangle_topomesh, tetrahedra_topomesh
 
 def test_vertex_topomesh():
     n_points = 10
