@@ -24,6 +24,8 @@ from scipy.cluster.vq                       import kmeans, vq
 from array                                  import array
 
 from openalea.container                     import PropertyTopomesh, array_dict
+from openalea.cellcomplex.property_topomesh.utils.matching_tools import kd_tree_match
+
 
 from copy                                   import copy
 from time                                   import time
@@ -417,18 +419,6 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
         print "<-- Saving .ply        [",end_time-start_time,"s]"
 
 
-def kd_tree_match(obs, codebook):
-    from scipy.spatial import cKDTree
-    data = cKDTree(obs)
-    res1 = data.query_ball_tree(cKDTree(codebook), 1e-5, 1, 1e-5)
-    res1 = np.array(res1)[:,0]
-    #print res1
-    #res2 = vq(obs, codebook)[0]
-    #print res2
-    #assert np.array_equal(res1,res2)
-    return res1
-
-
 def read_ply_property_topomesh(ply_filename, verbose = False):
     """
     """
@@ -715,6 +705,43 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
     return topomesh
 
 
+def read_obj_property_topomesh(obj_filename, verbose=False):
+    """
+    """
+    import re
+    from openalea.cellcomplex.property_topomesh.utils.array_tools import array_unique
+    from openalea.cellcomplex.property_topomesh.property_topomesh_creation import triangle_topomesh
+
+    if verbose:
+        start_time =time()
+        print "--> Reading .obj"
+
+    obj_file = open(obj_filename,'rU')
+
+    if not obj_file:
+        raise IOError("Unable to open "+obj_filename+"!")
+
+    obj_stream = enumerate(obj_file,1)
+
+    vertices = []
+    faces = []
+    vertex_normals = []
+    face_normals = []
+
+    for lineno, line in obj_stream:
+        if re.split(' ',line)[0] == 'v':
+            vertices += [np.array(re.split(' ',line)[1:]).astype(float)]
+
+        if re.split(' ',line)[0] == 'f':
+            if '//' in line:
+                faces += [np.array([re.split('//',v)[0] for v in re.split(' ',line)[1:]]).astype(int) - 1]
+            elif '/' in line:
+                faces += [np.array([re.split('/',v)[0] for v in re.split(' ',line)[1:]]).astype(int) - 1]
+
+    vertex_positions = dict(zip(range(len(vertices)),vertices))
+    topomesh = triangle_topomesh(faces,vertex_positions)
+
+    return topomesh
 
 
 
