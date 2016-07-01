@@ -19,10 +19,10 @@
 
 import numpy as np
 
-from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
+from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property, compute_topomesh_vertex_property_from_faces
 from openalea.cellcomplex.property_topomesh.property_topomesh_creation import vertex_topomesh, edge_topomesh, triangle_topomesh, tetrahedra_topomesh
 
-from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh, hexagon_topomesh
+from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh, hexagon_topomesh, vtk_ellipsoid_topomesh
 
 from openalea.container import array_dict
 
@@ -59,6 +59,7 @@ def test_length_scaling():
     for eid in topomesh.wisps(1):
         assert np.isclose(topomesh.wisp_property('length',1)[eid],side_length,1e-7)
 
+
 def test_area_property():
     side_length = 1.
 
@@ -88,6 +89,7 @@ def test_angle_property():
     for fid in topomesh.wisps(2):
         assert np.all(np.isclose(topomesh.wisp_property('angles',2)[fid],np.pi/3.,1e-7))
 
+
 def test_eccentricity_property():
     side_length = 1.
 
@@ -96,6 +98,18 @@ def test_eccentricity_property():
     print topomesh.wisp_property('eccentricity',2).values()
     print np.isclose(topomesh.wisp_property('eccentricity',2).values(),0.,1e1)
     assert np.all(np.isclose(1-topomesh.wisp_property('eccentricity',2).values(),1.,1e-3))
+
+
+def test_curvature_property():
+    radius = 10.
+
+    topomesh = vtk_ellipsoid_topomesh(ellipsoid_radius=radius)
+    compute_topomesh_property(topomesh,'normal',2,normal_method='orientation')
+    compute_topomesh_vertex_property_from_faces(topomesh,'normal')
+    compute_topomesh_property(topomesh,'mean_curvature',2)
+
+    assert np.all(topomesh.wisp_property('mean_curvature',2) < 1.15/radius)    
+
 
 
 
