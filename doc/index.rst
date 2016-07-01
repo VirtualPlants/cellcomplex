@@ -1,8 +1,7 @@
-
-Welcome to openalea.cellcomplex's documentation!
-====================================================
+.. include:: ../README.rst
 
 Contents:
+---------
 
 .. toctree::
    :maxdepth: 2
@@ -13,6 +12,7 @@ Contents:
    contributing
    authors
    history
+
 
 Indices and tables
 ==================
