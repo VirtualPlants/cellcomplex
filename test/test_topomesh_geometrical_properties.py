@@ -22,7 +22,7 @@ import numpy as np
 from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property, compute_topomesh_vertex_property_from_faces
 from openalea.cellcomplex.property_topomesh.property_topomesh_creation import vertex_topomesh, edge_topomesh, triangle_topomesh, tetrahedra_topomesh
 
-from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh, hexagon_topomesh, vtk_ellipsoid_topomesh
+from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh, hexagon_topomesh, sphere_topomesh
 
 from openalea.container import array_dict
 
@@ -103,12 +103,14 @@ def test_eccentricity_property():
 def test_curvature_property():
     radius = 10.
 
-    topomesh = vtk_ellipsoid_topomesh(ellipsoid_radius=radius)
+    topomesh = sphere_topomesh(radius)
     compute_topomesh_property(topomesh,'normal',2,normal_method='orientation')
     compute_topomesh_vertex_property_from_faces(topomesh,'normal')
     compute_topomesh_property(topomesh,'mean_curvature',2)
 
-    assert np.all(topomesh.wisp_property('mean_curvature',2) < 1.15/radius)    
+    print topomesh.wisp_property('mean_curvature',2)
+
+    assert np.all(np.isclose(topomesh.wisp_property('mean_curvature',2).values(),1./radius,1e-1))
 
 
 
