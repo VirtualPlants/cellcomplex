@@ -17,6 +17,29 @@
 #
 ###############################################################################
 
+"""
+=========================
+PropertyTopomesh Analysis
+=========================
+
+Implementing functions to compute geometrical and topological properties on
+a PropertyTopomesh, generally assuming it represents a triangular mesh (but
+not necessarily a 2-manifold one). Powerful computation of the values of the 
+property for all the mesh elements at once. Convenient functions such as edge
+lengths, cell volumes, surface curvatures, vertex normals, face areas, and
+so on.
+
+.. autosummary::
+   :toctree: generated/
+
+   compute_topomesh_property -- compute automatically a property over all elements 
+   compute_topomesh_triangle_properties -- compute useful properties on triangular faces
+   compute_topomesh_vertex_property_from_faces -- propagate a property from faces to vertices
+   compute_topomesh_cell_property_from_faces -- propagate a perty from faces to cells
+   topomesh_property_gaussian_filtering -- filter a property in space and adjacency
+
+"""
+
 import numpy as np
 from scipy import ndimage as nd
 
@@ -32,32 +55,56 @@ import sys
 import pickle
 
 def compute_topomesh_property(topomesh, property_name, degree=0, positions=None, normal_method="density", object_positions=None, object_radius=10., verbose=False):
-    """Compute a property of a PropertyTopomesh.
+    """Compute a property over the elements of a PropertyTopomesh.
 
-    The function compute and fills a property of a PropertyTopomesh passed as argument. The given
-    property is computed for all elements of the specified degree and stored as a dictionary in
-    the PropertyTopomesh structure
+    The function computes and fills a property of a PropertyTopomesh passed as
+    argument. The given property is computed for all elements of the specified 
+    degree and stored as a dictionary in the PropertyTopomesh structure.
 
-    Args:
-        * topomesh (PropertyTopomesh): the structure on which to compute the property
-        * property_name (string): the name of the property to compute, among the following ones:
-            * 'barycenter' (degree : [0, 1, 2, 3]) : the position of the center of the element
-            * 'vertices' (degree : [0, 1, 2, 3])
-            * 'triangles' (degree : [0, 1, 2, 3])
-            * 'cells' (degree : [0, 1, 2, 3])
-            * 'length' (degree : [1])
-            * 'area' (degree : [2])
-            * 'volume' (degree : [3])
-            * 'normal' (degree : [0, 2])
-        * degree (int): the degree of the elements on which to compute the property
-        * positions (dict): [optional] a position dictionary if ('barycenter',0) is empty
-        * object_positions (dict): [optional] position of the object(s) represented by the mesh
-            * used only for property ('normal',2)
-        * object_radius (float): [optional] radius of the object(s) represented by the mesh
-            * used only for property ('normal',2)
 
-    Returns:
-        * None: PropertyTopomesh passed as argument is updated
+    :Parameters:
+        topomesh (:class:`PropertyTopomesh`):
+            The structure on which to compute the property.
+        property_name (str):
+            The name of the property to compute, among the following ones:
+                * *barycenter* (degree : [0, 1, 2, 3])
+                * *vertices* (degree : [0, 1, 2, 3])
+                * *triangles* (degree : [0, 1, 2, 3])
+                * *cells* (degree : [0, 1, 2, 3])
+                * *length* (degree : [1])
+                * *area* (degree : [2])
+                * *volume* (degree : [3])
+                * *normal* (degree : [0, 2])
+        degree (int):
+            The degree of the elements on which to compute the property.
+        positions (dict, *optional*):
+            A position dictionary if  the property ('barycenter',0) is empty.
+        normal_method (str, *optional*):
+            The method used to re-orient the face normals (default is *density*)
+                * *barycenter*: oriented using the direction of the mesh center
+                * *density*: oriented using the gradient of object density
+                * *orientation*: consistently oriented using topological propagation 
+        object_positions (dict, *optional*):
+            The position of the object(s) represented by the mesh.
+                * used only for property ('normal',2)
+        object_radius (float, *optional*):
+            The radius of the object(s) represented by the mesh.
+                * used only for property ('normal',2)
+        verbose (bool, *optional*):
+            Whether to display or not information on computed properties.
+
+    :Returns:
+        None : 
+            The PropertyTopomesh passed as argument is updated.
+
+    :Example:
+        >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
+        >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
+        >>> topomesh = square_topomesh(side_length=1)
+        >>> compute_topomesh_property(topomesh,'length',1)
+        >>> print topomesh.wisp_property('length',1)
+        {0: 1.0, 1: 1.0, 2: 1.41421356237, 3: 1.0, 4: 1.0}
+
     """
 
     if positions is None:
@@ -1242,7 +1289,32 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
 
 
 def compute_topomesh_triangle_properties(topomesh,positions=None):
-    """todo"""
+    """Compute an usual set of properties over the faces of a PropertyTopomesh.
+
+    The function computes several geometrical properties assuming the structure
+    passed as argument is a PropertyTopomesh representing a triangular mesh.
+    The area, perimeter and eccentricity of each triangular face is computed 
+    and the corresponding properties updated in the structure.
+
+    :Parameters:
+        topomesh (:class:`PropertyTopomesh`):
+            The structure on which to compute the property.
+        positions (dict, *optional*):
+            A position dictionary if the property ('barycenter',0) is empty.
+
+    :Returns:
+        None: 
+            The PropertyTopomesh passed as argument is updated. 
+
+    :Example:
+        >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
+        >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_triangle_properties
+        >>> topomesh = square_topomesh(side_length=1)
+        >>> compute_topomesh_triangle_properties(topomesh)
+        >>> print topomesh.wisp_property('area',2)
+        {0: 0.5, 1: 0.5}
+
+    """
 
     start_time = time()
     print "--> Computing triangle properties"
@@ -1283,25 +1355,42 @@ def compute_topomesh_triangle_properties(topomesh,positions=None):
     print "<-- Computing triangle properties    [",end_time-start_time,"s]"
 
 
-def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting='area',adjacency_sigma=0.5,neighborhood=1):
+def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting='area',neighborhood=1,adjacency_sigma=0.5):
     """Compute a property on degree 0 using the same property defined at degree 2.
 
-    The vertex property is computed by averaging the properties of its neighboring faces.
+    The vertex property is computed by averaging the properties of its neighbor
+    faces, weighting them differently according to the chosen method.
 
-    Args:
-        * topomesh (PropertyTopomesh): the structure on which to compute the property
-        * property_name (str): the name of the property to compute
-        * weighting (str): the weight assigned to each face for the averaging of the property
-            * 'uniform': all the faces have the same weight (1)
-            * 'area': the weight on the faces is equal to their area
-            * 'angle': the weight of the faces is equal to the incidence angle at the considered vertex (neighborhood=1)
-            * 'cotangent': the weight of the faces is equal to the sof of cotangent of opposite angles (neighborhood=1)
-        * adjacency_sigma (float): the std of the gaussian weighting using the ring distance
-        * neighborhood (int): the size of the ring of neighbors (1-ring is immediate neighboring triangles)
+    :Parameters:
+        topomesh (:class:`PropertyTopomesh`): 
+            The structure on which to compute the property.
+        property_name (str): 
+            The name of the property to compute (must be already computed on faces).
+        weighting (str): 
+            The way weights are assigned to each face for the averaging of the property (default is *area*)
+                * *uniform*: all the faces have the same weight (1)
+                * *area*: the weight on the faces is equal to their area
+                * *angle*: the weight of the faces is equal to the incidence angle at the considered vertex (neighborhood=1)
+                * *cotangent*: the weight of the faces is equal to the sum of cotangent of opposite angles (neighborhood=1)
+        neighborhood (int): 
+            The ring-distance of faces considered around each vertex (1-ring is immediate neighbor faces).
+        adjacency_sigma (float): 
+            The standard deviation of the gaussian weighting using the ring-distance.
 
-    Returns:
-        * None: the PropertyTopomesh passed as argument is updated.
+    :Returns:
+        None: 
+            The PropertyTopomesh passed as argument is updated.
+
+    :Example: 
+        >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
+        >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
+        >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_vertex_property_from_faces
+        >>> topomesh = square_topomesh(side_length=1)
+        >>> compute_topomesh_property(topomesh,'normal',2,normal_method='orientation')
+        >>> compute_topomesh_vertex_property_from_faces(topomesh,'normal',weighting='area',neighborhood=3,adjacency_sigma=1.2)      
+
     """
+
     start_time = time()
     print "--> Computing vertex property from faces"
 
@@ -1394,9 +1483,32 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     end_time = time()
     print "<-- Computing vertex property from faces [",end_time-start_time,"s]"
 
-def compute_topomesh_cell_property_from_faces(topomesh,property_name,weighting='area'):
+def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate='mean', weighting='area'):
+    """Compute a property on degree 3 using the same property defined at degree 2.
+
+    The cell property is computed by averaging or summing the properties of its
+    border faces, weighting them differently according to the chosen method.
+
+    :Parameters:
+        topomesh (:class:`PropertyTopomesh`): 
+            The structure on which to compute the property.
+        property_name (str): 
+            The name of the property to compute (must be already computed on faces).
+        aggregate (str): 
+            The way weighted face properties are combined to compute the cell property  (default is *mean*)
+                * *mean*: the cell property is the weighted average of face properties
+                * *sum*: the cell property is the weighted sum of face properties
+        weighting (str): 
+            The way weights are assigned to each face to compute the property (default is *area*)
+                * *uniform*: all the faces have the same weight (1)
+                * *area*: the weight on the faces is equal to their area
+
+    :Returns:
+        None: 
+            The PropertyTopomesh passed as argument is updated.
+            
     """
-    """
+
     start_time = time()
     print "--> Computing cell property from faces"
 
@@ -1430,6 +1542,13 @@ def compute_topomesh_cell_property_from_faces(topomesh,property_name,weighting='
 
 
 def filter_topomesh_property(topomesh,property_name,degree,coef=0.5,normalize=False):
+    '''Filter an existing property by a gaussian-like operator.
+
+    .. warning:: Deprecated function, use :func:`topomesh_property_gaussian_filtering` instead.
+
+
+    '''
+
     assert topomesh.has_wisp_property(property_name,degree=degree,is_computed=True)
     if degree>1:
         neighbors = np.array([[(w1,w2) for w2 in topomesh.border_neighbors(degree,w1) if not np.isnan(topomesh.wisp_property(property_name,degree=degree)[w2])] for w1 in topomesh.wisps(degree) if not np.isnan(topomesh.wisp_property(property_name,degree=degree)[w1])])
@@ -1459,7 +1578,35 @@ def filter_topomesh_property(topomesh,property_name,degree,coef=0.5,normalize=Fa
     topomesh.update_wisp_property(property_name,degree=degree,values=filtered_property,keys=np.array(list(topomesh.wisps(degree))))
 
 
-def topomesh_property_gaussian_filtering(topomesh,property_name,degree,adjacency_sigma=1.0,distance_sigma=1.0,neighborhood=3):
+def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborhood=3,adjacency_sigma=1.0,distance_sigma=1.0):
+    """Filter an existing property by a gaussian-like operator.
+
+    A new value of an existing property is computed for each element of a given
+    degree as a linear combination of all the property values. The coefficient
+    associated with each other element is defined relatively to its distance
+    in both space and topology (ring-distance) using the product of 2 gaussian 
+    functions. 
+
+    :Parameters:
+        topomesh (:class:`PropertyTopomesh`): 
+            The structure on which to compute the property.
+        property_name (str): 
+            The name of the property to compute (must be already computed on faces).
+        degree (int):
+            The degree of the elements on which to compute the property.
+        neighborhood (int):
+            The maximal ring-distance up to which elements have a non-zero ceofficient.
+        adjacency_sigma (float): 
+            The standard deviation of the gaussian function based on the ring-distance.
+        distance_sigma (float): 
+            The standard deviation of the gaussian function based on the Euclidean distance.
+
+    :Returns:
+        None: 
+            The PropertyTopomesh passed as argument is updated.
+            
+    """
+
     assert topomesh.has_wisp_property(property_name,degree=degree,is_computed=True)
 
     if not topomesh.has_wisp_property('barycenter',degree=degree,is_computed=True):
