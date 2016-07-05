@@ -1407,13 +1407,13 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     assert not face_property.values().dtype == np.object
 
     if neighborhood == 1:
-        vertex_faces = np.concatenate([list(topomesh.regions(0,v,2)) for v in topomesh.wisps(0)]).astype(np.uint16)
-        vertex_face_vertices = np.concatenate([v*np.ones_like(list(topomesh.regions(0,v,2))) for v in topomesh.wisps(0)]).astype(np.uint16)
+        vertex_faces = np.concatenate([list(topomesh.regions(0,v,2)) for v in topomesh.wisps(0)]).astype(np.uint32)
+        vertex_face_vertices = np.concatenate([v*np.ones_like(list(topomesh.regions(0,v,2))) for v in topomesh.wisps(0)]).astype(np.uint32)
     else:
         vertex_face_adjacency_matrix = topomesh.nb_wisps(2)*np.ones((max(topomesh.wisps(0))+1,max(topomesh.wisps(2))+1))
 
-        vertex_faces = np.concatenate([list(topomesh.regions(0,v,2)) for v in topomesh.wisps(0)]).astype(np.uint16)
-        vertex_face_vertices = np.concatenate([v*np.ones_like(list(topomesh.regions(0,v,2))) for v in topomesh.wisps(0)]).astype(np.uint16)
+        vertex_faces = np.concatenate([list(topomesh.regions(0,v,2)) for v in topomesh.wisps(0)]).astype(np.uint32)
+        vertex_face_vertices = np.concatenate([v*np.ones_like(list(topomesh.regions(0,v,2))) for v in topomesh.wisps(0)]).astype(np.uint32)
     
         compute_topomesh_property(topomesh,'border_neighbors',2)
 
@@ -1517,8 +1517,8 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
 
     face_property = topomesh.wisp_property(property_name,2)
 
-    cell_faces = np.concatenate([list(topomesh.borders(3,c)) for c in topomesh.wisps(3)]).astype(np.uint16)
-    cell_face_cells = np.concatenate([c*np.ones(topomesh.nb_borders(3,c)) for c in topomesh.wisps(3)]).astype(np.uint16)
+    cell_faces = np.concatenate([list(topomesh.borders(3,c)) for c in topomesh.wisps(3)]).astype(np.uint32)
+    cell_face_cells = np.concatenate([c*np.ones(topomesh.nb_borders(3,c)) for c in topomesh.wisps(3)]).astype(np.uint32)
 
     if weighting == 'uniform':
         cell_face_weight = np.ones_like(cell_faces)
