@@ -12,6 +12,8 @@ Authors:
 --------
 * Frederic Boudon (frederic.boudon@cirad.fr)
 * Guillaume Cerutti (guillaume.cerutti@inria.fr)
+* Jérôme Chopard (https://github.com/revesansparole)
+* Hadrien Oliveri (hadrien.oliveri@inria.fr)
 
 
 Institutes:
@@ -32,7 +34,7 @@ Description
 
 OpenAlea.CellComplex is a library providing data structures and algorithms to represent and analyze plant cell tissues in 3D. It offers an implementation of the topological structure of cellular complex as an Incidence Graph in a class named **PropertyTopomesh**.
 
-.. image:: ../tissue.png
+.. image:: https://github.com/VirtualPlants/cellcomplex/blob/master/tissue.png
 
 The structure comes with algorithms allowing to
 	* Create a structure from more basic representations
