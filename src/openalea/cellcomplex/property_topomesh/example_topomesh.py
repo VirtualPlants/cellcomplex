@@ -32,6 +32,7 @@ def square_topomesh(side_length = 1):
 
     return triangle_topomesh(triangles, points)
 
+
 def hexagon_topomesh(side_length = 1):
     points = {}
     points[0] = [0,0,0]
@@ -44,7 +45,62 @@ def hexagon_topomesh(side_length = 1):
 
     return triangle_topomesh(triangles, points)
 
-def vtk_ellipsoid_topomesh(ellipsoid_radius=50.0, ellipsoid_scales=[1,1,1], ellipsoid_axes=np.diag(np.ones(3)), ellipsoid_center=np.zeros(3)):      
+def icosahedron_topomesh(size=1.0):
+    ico_points = {}
+    ico_points[0] = size*np.array([ 0.      , -1.      ,  0.      ])
+    ico_points[1] = size*np.array([ 0.7236  , -0.447215,  0.52572 ])
+    ico_points[2] = size*np.array([-0.276385, -0.447215,  0.85064 ])
+    ico_points[3] = size*np.array([-0.894425, -0.447215,  0.      ])
+    ico_points[4] = size*np.array([-0.276385, -0.447215, -0.85064 ])
+    ico_points[5] = size*np.array([ 0.7236  , -0.447215, -0.52572 ])
+    ico_points[6] = size*np.array([ 0.276385,  0.447215,  0.85064 ])
+    ico_points[7] = size*np.array([-0.7236  ,  0.447215,  0.52572 ])
+    ico_points[8] = size*np.array([-0.7236  ,  0.447215, -0.52572 ])
+    ico_points[9] = size*np.array([ 0.276385,  0.447215, -0.85064 ])
+    ico_points[10] = size*np.array([ 0.894425,  0.447215,  0.      ])
+    ico_points[11] = size*np.array([ 0.      ,  1.      ,  0.      ])
+
+    ico_triangles = [[ 0,  1,  2],
+        [ 0,  1,  5],
+        [ 0,  2,  3],
+        [ 0,  3,  4],
+        [ 0,  4,  5],
+        [ 1,  5, 10],
+        [ 1,  2,  6],
+        [ 2,  3,  7],
+        [ 3,  4,  8],
+        [ 4,  5,  9],
+        [ 1,  6, 10],
+        [ 2,  6,  7],
+        [ 3,  7,  8],
+        [ 4,  8,  9],
+        [ 5,  9, 10],
+        [ 6, 10, 11],
+        [ 6,  7, 11],
+        [ 7,  8, 11],
+        [ 8,  9, 11],
+        [ 9, 10, 11]]
+
+    return triangle_topomesh(ico_triangles, ico_points)
+
+
+def sphere_topomesh(radius=1.0,center=np.zeros(3)):
+    from openalea.container import array_dict
+    from openalea.cellcomplex.property_topomesh.property_topomesh_optimization import topomesh_triangle_split
+
+    ico = icosahedron_topomesh()
+    topomesh = topomesh_triangle_split(topomesh_triangle_split(ico))
+
+    positions = topomesh.wisp_property('barycenter',0)
+    new_positions = array_dict(center + radius*positions.values()/np.linalg.norm(positions.values(),axis=1)[:,np.newaxis],positions.keys())
+    topomesh.update_wisp_property('barycenter',0,new_positions)
+
+    return topomesh
+
+
+def vtk_ellipsoid_topomesh(ellipsoid_radius=50.0, ellipsoid_scales=[1,1,1], ellipsoid_axes=np.diag(np.ones(3)), ellipsoid_center=np.zeros(3)):
+    """
+    """      
     import vtk
     from openalea.cellcomplex.property_topomesh.utils.image_tools import vtk_polydata_to_triangular_mesh
 
