@@ -33,8 +33,32 @@ from time                                   import time
 from copy                                   import deepcopy
 
 
-def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict([('gradient',0.1),('regularization',0.5)]),sigma_deformation=2*np.sqrt(3),gradient_derivatives=None,gaussian_sigma=10.0,resolution=(1.0,1.0,1.0),target_normal=None,target_areas=None,distance_threshold=2*np.sqrt(3),edge_collapse=False):
-    """todo"""
+def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,resolution=(1.0,1.0,1.0),target_normal=None,target_areas=None,distance_threshold=2*np.sqrt(3),edge_collapse=False):
+    """Optimize the positions of the mesh vertices along multiple criteria.
+
+    The 'barycenter' property of the elements of degree 0 is updated following
+    a different "force" vector for each vertex. This vector is computed as the
+    opposite of the gradient of a composite energy functional defined over the
+    mesh. The weights of the energy terms are to be specified in the function
+    arguments. The deformation is constrained to a possibly small range around
+    each vertex.
+
+    The function can for instance be used to apply a smoothing to the mesh 
+    (laplacian, curvature flow, taubin), or for more complex optimization such
+    as planarization of interfaces, or triangle quality enhancement.
+
+    Args:
+        topomesh (:class:`PropertyTopomesh`): 
+            The structure on which to apply the optimization.
+        iterations (int):
+            The number of times the deformation is repeated.
+        omega_forces (dict):
+            The weights associated to each energy term. 
+
+    Note: 
+        The PropertyTopomesh passed as argument is updated.
+
+    """
 
     for iteration in xrange(iterations):
 

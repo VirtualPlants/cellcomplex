@@ -12,7 +12,7 @@ Authors:
 --------
 * Frederic Boudon (frederic.boudon@cirad.fr)
 * Guillaume Cerutti (guillaume.cerutti@inria.fr)
-* Jérôme Chopard (https://github.com/revesansparole)
+* Jerome Chopard (https://github.com/revesansparole)
 * Hadrien Oliveri (hadrien.oliveri@inria.fr)
 
 

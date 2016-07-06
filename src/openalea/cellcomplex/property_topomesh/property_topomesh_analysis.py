@@ -62,7 +62,7 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
     degree and stored as a dictionary in the PropertyTopomesh structure.
 
 
-    :Parameters:
+    Args:
         topomesh (:class:`PropertyTopomesh`):
             The structure on which to compute the property.
         property_name (str):
@@ -93,11 +93,11 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
         verbose (bool, *optional*):
             Whether to display or not information on computed properties.
 
-    :Returns:
+    Returns:
         None : 
             The PropertyTopomesh passed as argument is updated.
 
-    :Example:
+    Example:
         >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
         >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
         >>> topomesh = square_topomesh(side_length=1)
@@ -1296,17 +1296,17 @@ def compute_topomesh_triangle_properties(topomesh,positions=None):
     The area, perimeter and eccentricity of each triangular face is computed 
     and the corresponding properties updated in the structure.
 
-    :Parameters:
+    Args:
         topomesh (:class:`PropertyTopomesh`):
             The structure on which to compute the property.
         positions (dict, *optional*):
             A position dictionary if the property ('barycenter',0) is empty.
 
-    :Returns:
+    Returns:
         None: 
             The PropertyTopomesh passed as argument is updated. 
 
-    :Example:
+    Example:
         >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
         >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_triangle_properties
         >>> topomesh = square_topomesh(side_length=1)
@@ -1361,7 +1361,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     The vertex property is computed by averaging the properties of its neighbor
     faces, weighting them differently according to the chosen method.
 
-    :Parameters:
+    Args:
         topomesh (:class:`PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
@@ -1377,11 +1377,11 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
         adjacency_sigma (float): 
             The standard deviation of the gaussian weighting using the ring-distance.
 
-    :Returns:
+    Returns:
         None: 
             The PropertyTopomesh passed as argument is updated.
 
-    :Example: 
+    Example: 
         >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
         >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
         >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_vertex_property_from_faces
@@ -1489,21 +1489,21 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
     The cell property is computed by averaging or summing the properties of its
     border faces, weighting them differently according to the chosen method.
 
-    :Parameters:
+    Args:
         topomesh (:class:`PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
             The name of the property to compute (must be already computed on faces).
         aggregate (str): 
-            The way weighted face properties are combined to compute the cell property  (default is *mean*)
+            The way weighted face properties are combined to compute the cell property  (default is *mean*):
                 * *mean*: the cell property is the weighted average of face properties
                 * *sum*: the cell property is the weighted sum of face properties
         weighting (str): 
-            The way weights are assigned to each face to compute the property (default is *area*)
+            The way weights are assigned to each face to compute the property (default is *area*):
                 * *uniform*: all the faces have the same weight (1)
                 * *area*: the weight on the faces is equal to their area
 
-    :Returns:
+    Returns:
         None: 
             The PropertyTopomesh passed as argument is updated.
             
@@ -1539,6 +1539,8 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
     
     end_time = time()
     print "<-- Computing cell property from faces [",end_time-start_time,"s]"
+
+
 
 
 def filter_topomesh_property(topomesh,property_name,degree,coef=0.5,normalize=False):
@@ -1587,7 +1589,7 @@ def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborh
     in both space and topology (ring-distance) using the product of 2 gaussian 
     functions. 
 
-    :Parameters:
+    Args:
         topomesh (:class:`PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
@@ -1601,7 +1603,7 @@ def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborh
         distance_sigma (float): 
             The standard deviation of the gaussian function based on the Euclidean distance.
 
-    :Returns:
+    Returns:
         None: 
             The PropertyTopomesh passed as argument is updated.
             

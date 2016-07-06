@@ -44,12 +44,14 @@ sys.path.insert(0, os.path.join(project_root, 'src'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.doctest',
     'sphinx.ext.graphviz',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
     'sphinx.ext.viewcode'
 ]
 
@@ -147,9 +149,6 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = 'default'
-# html_theme = 'sphinx_rtd_theme'
-# html_theme = 'scipy'
-# html_theme_path = ["_themes", ]
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
@@ -329,12 +328,12 @@ opts.modulefirst = None
 opts.separatemodules = None
 opts.noheadings = None
 opts.destdir = path.abspath(path.join(project_root, "doc", "_dvlpt"))
-opts.suffix = source_suffix
+opts.suffix = source_suffix[1:]
 opts.dryrun = None
 opts.force = None
 opts.header = 'src'
 opts.maxdepth = 4
-opts.includeprivate=False
+opts.includeprivate = False
 
 if not path.isdir(opts.destdir):
     os.makedirs(opts.destdir)
