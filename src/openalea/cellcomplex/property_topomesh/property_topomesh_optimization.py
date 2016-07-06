@@ -17,6 +17,7 @@
 #
 ###############################################################################
 
+from math import sqrt
 import numpy as np
 from scipy import ndimage as nd
 
@@ -33,7 +34,7 @@ from time                                   import time
 from copy                                   import deepcopy
 
 
-def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,resolution=(1.0,1.0,1.0),target_normal=None,target_areas=None,distance_threshold=2*np.sqrt(3),edge_collapse=False):
+def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,resolution=(1.0,1.0,1.0),target_normal=None,target_areas=None,distance_threshold=2*sqrt(3),edge_collapse=False):
     """Optimize the positions of the mesh vertices along multiple criteria.
 
     The 'barycenter' property of the elements of degree 0 is updated following

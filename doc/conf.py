@@ -1,3 +1,34 @@
+import sys
+from mock import Mock as MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['numpy',
+                'pandas',
+                'scipy', 'scipy.cluster', 'scipy.cluster.vq',
+                'scipy.spatial', 'scipy.spatial.qhull',
+                'vtk',
+
+                'openalea.core', 'openalea.core.plugin', 'openalea.core.authors',
+                'openalea.core.observer', 'openalea.core.control',
+                'openalea.core.interface',
+                'openalea.core.service', 'openalea.core.service.ipython',
+                'openalea.container', 'openalea.container.array_dict',
+                'openalea.container.utils', 'openalea.container.utils.id_generator',
+                'openalea.container.property_topomesh',
+                'openalea.image', 'openalea.image.spatial_image',
+                'openalea.oalab', 'openalea.oalab.control', 'openalea.oalab.control.manager',
+                'openalea.oalab.interface', 'openalea.oalab.service', 'openalea.oalab.service.drag_and_drop',
+                'openalea.oalab.widget', 'openalea.oalab.widget.world',
+                'openalea.oalab.colormap', 'openalea.oalab.colormap.colormap_utils',
+                'tissuelab', 'tissuelab.gui', 'tissuelab.gui.vtkviewer', 'tissuelab.gui.vtkviewer.vtk_utils',
+                'tissuelab.gui.vtkviewer.vtkworldviewer',
+                'openalea.vpltk', 'openalea.vpltk.qt']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 # {# pkglts, sphinx
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
