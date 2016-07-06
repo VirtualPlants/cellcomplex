@@ -19,11 +19,14 @@
 
 import numpy as np
 
-from openalea.cellcomplex.property_topomesh.property_topomesh_creation import vertex_topomesh, edge_topomesh, triangle_topomesh, tetrahedra_topomesh
+from openalea.cellcomplex.property_topomesh.property_topomesh_creation import (
+    vertex_topomesh, edge_topomesh)
+
 
 def test_vertex_topomesh():
     n_points = 10
-    points = dict(zip(range(n_points),np.random.rand(3*n_points).reshape((n_points,3))))
+    points = dict(zip(range(n_points),
+                      np.random.rand(3 * n_points).reshape((n_points, 3))))
 
     topomesh = vertex_topomesh(points)
 
@@ -33,13 +36,15 @@ def test_vertex_topomesh():
     assert topomesh.nb_wisps(3) == 0
 
     for p in points.keys():
-        assert np.all(topomesh.wisp_property('barycenter',0)[p] == points[p])
+        assert np.all(topomesh.wisp_property('barycenter', 0)[p] == points[p])
 
 
 def test_edge_topomesh():
     n_points = 10
-    points = dict(zip(range(n_points),np.random.rand(3*n_points).reshape((n_points,3))))
-    edges = np.transpose([np.arange(n_points),(np.arange(n_points)+1)%n_points])
+    points = dict(zip(range(n_points),
+                      np.random.rand(3 * n_points).reshape((n_points, 3))))
+    edges = np.transpose(
+        [np.arange(n_points), (np.arange(n_points) + 1) % n_points])
 
     topomesh = edge_topomesh(edges, points)
 
@@ -49,10 +54,7 @@ def test_edge_topomesh():
     assert topomesh.nb_wisps(3) == 0
 
     for p in points.keys():
-        assert np.all(topomesh.wisp_property('barycenter',0)[p] == points[p])
+        assert np.all(topomesh.wisp_property('barycenter', 0)[p] == points[p])
 
-    for eid,e in enumerate(edges):
-        assert set(topomesh.borders(1,eid)) == set(e)
-
-
-
+    for eid, e in enumerate(edges):
+        assert set(topomesh.borders(1, eid)) == set(e)
