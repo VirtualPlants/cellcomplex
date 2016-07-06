@@ -2,8 +2,8 @@
 
 # #}
 
-numpy
-scipy
+# numpy
+# scipy
 # openalea.deploy
 # openalea.core
 # openalea.container

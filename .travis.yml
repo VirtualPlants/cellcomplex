@@ -10,11 +10,16 @@ python:
 addons:
   apt:
     packages:
+     - python-numpy
+     - python-scipy
 # {# pkglts, travis.addons
 
  #}
 
 install:
+ - pip install --upgrade git+https://github.com/openalea/deploy#egg=OpenAlea.Deploy
+ - pip install --upgrade git+https://github.com/openalea/openalea
+ - pip install --upgrade git+https://github.com/openalea/openalea-components
 # {# pkglts, travis.install
  - pip install -r requirements.txt
  - pip install -r dvlpt_requirements.txt
