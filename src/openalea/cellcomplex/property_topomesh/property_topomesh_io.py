@@ -27,6 +27,7 @@ from array                                  import array
 
 from openalea.container                     import PropertyTopomesh, array_dict
 from openalea.cellcomplex.property_topomesh.utils.matching_tools import kd_tree_match
+from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
 
 
 from copy                                   import copy
@@ -750,7 +751,11 @@ def read_obj_property_topomesh(obj_filename, verbose=False):
 
     return topomesh
 
-def save_obj_property_topomesh(topomesh, obj_filename, verbose=False):
+def save_obj_property_topomesh(topomesh, obj_filename, reorient_faces=False, verbose=False):
+    
+    if reorient_faces:
+        compute_topomesh_property(topomesh,'normal',2,normal_method='orientation')
+
     start_time =time()
     print "--> Saving .obj + .mtl"
 
@@ -783,15 +788,111 @@ def save_obj_property_topomesh(topomesh, obj_filename, verbose=False):
         objfile.write("g object"+str(c)+"\n")
         objfile.write("usemtl mat"+str(c)+"\n")
         for t in topomesh.borders(3,c):
-            tri = list(topomesh.borders(2,t,2))
+            if reorient_faces:
+                # tri = list(topomesh.borders(2,t,2))[::topomesh.wisp_property('orientation',2)[t]]
+                tri = list(topomesh.wisp_property('oriented_vertices',2)[t])[::topomesh.wisp_property('orientation',2)[t]]
+            else:
+                tri = list(topomesh.borders(2,t,2))
             objfile.write("f "+str(vertex_index[tri[0]]+1)+"/"+str(c)+" "+str(vertex_index[tri[1]]+1)+"/"+str(c)+" "+str(vertex_index[tri[2]]+1)+"/"+str(c)+"\n")
     objfile.close()
     end_time = time()
     print "<-- Saving .obj + .mtl       [",end_time-start_time,"s]"
 
 
-def read_msh_property_topomesh(msh_filename, verbose=False):
-    return None
+def read_msh_property_topomesh(msh_filename, preserve_cells=True, verbose=False):
+    """
+    """
+    import re
+    from openalea.cellcomplex.property_topomesh.utils.array_tools import array_unique
+    from openalea.cellcomplex.property_topomesh.property_topomesh_creation import triangle_topomesh
+
+
+    if verbose:
+        start_time =time()
+        print "--> Reading .msh"
+
+    msh_file = open(msh_filename,'rU')
+
+    if not msh_file:
+        raise IOError("Unable to open "+msh_filename+"!")
+
+    msh_stream = enumerate(msh_file,1)
+
+    vertex_positions = {}
+    faces = []
+    face_cells = []
+    vertex_normals = []
+    face_normals = []
+
+    lineno, line = msh_stream.next()
+    while not "$MeshFormat" in line:
+        lineno, line = msh_stream.next()
+    lineno, line = msh_stream.next()
+    mesh_format = line
+
+    while not "$Nodes" in line:
+        lineno, line = msh_stream.next()
+    lineno, line = msh_stream.next()
+    n_nodes = int(re.split(' ',line)[0])
+    print n_nodes," Nodes"
+
+    for n in xrange(n_nodes):
+        lineno, line = msh_stream.next()
+        nid = int(re.split(' ',line)[0])
+        n_pos = np.array(re.split(' ',line)[1:4]).astype(float)
+        vertex_positions[nid] = n_pos
+    lineno, line = msh_stream.next()
+    assert "$EndNodes" in line
+
+    while not "$Elements" in line:
+        lineno, line = msh_stream.next()
+    lineno, line = msh_stream.next()
+    n_elements = int(re.split(' ',line)[0])
+    print n_elements," Elements"
+
+    # 2 : triangular face
+    # 1 : edge
+    # 15 : point
+    element_node_number = dict([(2,3),(1,2),(15,1)])
+    #element_node_number = dict([(1,2),(15,1)])
+
+    for e in xrange(n_elements):
+        lineno, line = msh_stream.next()
+        eid = int(re.split(' ',line)[0])
+
+        e_type = int(re.split(' ',line)[1])
+
+        n_tags = int(re.split(' ',line)[2])
+        e_tags = np.array(re.split(' ',line)[3:3+n_tags]).astype(int)
+
+        cell = e_tags[-1]
+
+        try:
+            e_nodes = np.array([re.split(' ',line)[3+n_tags+i] for i in xrange(element_node_number[e_type])]).astype(int)
+        except KeyError:
+            raise KeyError("MSH Element type "+str(e_type)+" not handled yet!")
+        
+        if e_type == 2:
+            faces += [list(e_nodes)]
+            face_cells += [cell]
+    lineno, line = msh_stream.next()
+    assert "$EndElements" in line
+
+    msh_file.close()
+
+    topomesh = triangle_topomesh(faces,vertex_positions)
+
+    if preserve_cells:
+        topomesh.remove_wisp(3,0)
+        for cid in np.sort(np.unique(face_cells)):
+            topomesh.add_wisp(3,cid)
+        for fid,cid in enumerate(face_cells):
+            topomesh.link(3,cid,fid)
+
+    return topomesh
+
+
+    
 
 
 
