@@ -10,7 +10,7 @@
       [
         "Guillaume Cerutti", 
         "guillaume.cerutti@inria.fr"
-      ],
+      ], 
       [
         "Frederic Boudon", 
         "frederic.boudon@inria.fr"
@@ -26,7 +26,7 @@
     "keywords": []
   }, 
   "github": {
-    "owner": "{{ base.authors[0][0] }}", 
+    "owner": "VirtualPlants", 
     "project": "{{ base.pkgname }}", 
     "url": "https://github.com/{{ github.owner }}/{{ github.project }}"
   }, 
@@ -40,6 +40,9 @@
     "intended_versions": [
       "27"
     ]
+  }, 
+  "readthedocs": {
+    "project": "{{ github.project }}"
   }, 
   "sphinx": {
     "autodoc_dvlpt": true, 

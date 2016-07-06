@@ -4,6 +4,11 @@ OpenAlea CellComplex Library
 
 .. {# pkglts, doc
 
+
+.. image:: https://readthedocs.org/projects/cellcomplex/badge/?version=latest
+    :alt: Documentation status
+    :target: https://cellcomplex.readthedocs.io/en/latest/?badge=latest
+
 .. #}
 
 The Topological Plant Tissue datastructure

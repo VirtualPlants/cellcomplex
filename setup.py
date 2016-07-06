@@ -37,7 +37,7 @@ setup_kwds = dict(
     long_description=readme + '\n\n' + history,
     author="Guillaume Cerutti, Frederic Boudon, ",
     author_email="guillaume.cerutti@inria.fr, frederic.boudon@inria.fr, ",
-    url='https://github.com/Guillaume Cerutti/cellcomplex',
+    url='https://github.com/VirtualPlants/cellcomplex',
     license='cecill-c',
     zip_safe=False,
 
