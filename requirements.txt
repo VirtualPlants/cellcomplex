@@ -4,6 +4,6 @@
 
 numpy
 scipy
-openalea.deploy
-openalea.core
-openalea.container
+# openalea.deploy
+# openalea.core
+# openalea.container
