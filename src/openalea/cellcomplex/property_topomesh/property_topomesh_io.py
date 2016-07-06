@@ -5,9 +5,11 @@
 #
 #       Copyright 2014-2016 INRIA - CIRAD - INRA
 #
-#       File author(s): Guillaume Cerutti <guillaume.cerutti@inria.fr>
+#       File author(s): Guillaume Cerutti <guillaume.cerutti@inria.fr>,
+#                       Hadrien Oliveri <hadrien.oliveri@inria.fr>
 #
-#       File contributor(s): Guillaume Cerutti <guillaume.cerutti@inria.fr>
+#       File contributor(s): Guillaume Cerutti <guillaume.cerutti@inria.fr>,
+#                            Hadrien Oliveri <hadrien.oliveri@inria.fr>
 #
 #       Distributed under the Cecill-C License.
 #       See accompanying file LICENSE.txt or copy at
@@ -747,6 +749,50 @@ def read_obj_property_topomesh(obj_filename, verbose=False):
     topomesh = triangle_topomesh(faces,vertex_positions)
 
     return topomesh
+
+def save_obj_property_topomesh(topomesh, obj_filename, verbose=False):
+    start_time =time()
+    print "--> Saving .obj + .mtl"
+
+    mtlfile =  open(obj_filename[:-4]+".mtl",'w')
+
+    for c in topomesh.wisps(3):
+        mtlfile.write("newmtl mat"+str(c)+"\n")
+        col = [np.random.rand(),np.random.rand(),np.random.rand()]
+        mtlfile.write("  Ka "+str(col[0])+" "+str(col[1])+" "+str(col[2])+"\n")
+        mtlfile.write("  Kd "+str(col[0])+" "+str(col[1])+" "+str(col[2])+"\n")
+        mtlfile.write("  Ks 0.0 0.0 0.0\n")
+        mtlfile.write("    Ns 0.0\n")
+        mtlfile.write("  d 1.0\n")
+        mtlfile.write("    Tr 1.0\n")
+
+    objfile = open(obj_filename,'w')
+    objfile.write("#\n")
+    objfile.write("# Wavefront OBJ file\n")
+    objfile.write("# TextureMontage Atlas\n")
+    objfile.write("#\n")
+    objfile.write("mtllib "+obj_filename[:-4]+".mtl\n")
+
+    vertex_index = {}
+    for i,v in enumerate(list(topomesh.wisps(0))):
+        pos = topomesh.wisp_property('barycenter',0)[v]
+        objfile.write("v "+str(pos[0])+" "+str(pos[1])+" "+str(pos[2])+"\n")
+        vertex_index[v] = i
+
+    for c in topomesh.wisps(3):
+        objfile.write("g object"+str(c)+"\n")
+        objfile.write("usemtl mat"+str(c)+"\n")
+        for t in topomesh.borders(3,c):
+            tri = list(topomesh.borders(2,t,2))
+            objfile.write("f "+str(vertex_index[tri[0]]+1)+"/"+str(c)+" "+str(vertex_index[tri[1]]+1)+"/"+str(c)+" "+str(vertex_index[tri[2]]+1)+"/"+str(c)+"\n")
+    objfile.close()
+    end_time = time()
+    print "<-- Saving .obj + .mtl       [",end_time-start_time,"s]"
+
+
+def read_msh_property_topomesh(msh_filename, verbose=False):
+    return None
+
 
 
 
