@@ -54,15 +54,24 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
             The number of times the deformation is repeated.
         omega_forces (dict):
             The weights associated to each energy term. 
-
+    Returns:
+        None
     Note: 
         The PropertyTopomesh passed as argument is updated.
 
     """
 
+    if fix_borders:
+        compute_topomesh_property(topomesh,'triangles',1)
+        compute_topomesh_property(topomesh,'vertices',1)
+        border_edges = np.array(list(topomesh.wisps(1)))[np.array(map(len,topomesh.wisp_property('triangles',1).values())) == 1]
+        border_vertices = np.unique(topomesh.wisp_property('vertices',1).values(border_edges))
+        vertex_is_border = np.array([v in border_vertices for v in topomesh.wisps(0)])
+
     for iteration in xrange(iterations):
 
         deformation_force = np.zeros_like(topomesh.wisp_property('barycenter',degree=0).values(),np.float32)
+
 
         if omega_forces.has_key('gradient') and omega_forces['gradient']!=0.0:
             start_time = time()
@@ -186,6 +195,10 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
         #deformation_force[np.where(deformation_force_amplitude>sigma_deformation)[0]] = sigma_deformation*deformation_force[np.where(deformation_force_amplitude>sigma_deformation)[0]]/deformation_force_amplitude[np.where(deformation_force_amplitude>sigma_deformation)[0]][:,np.newaxis]
         
         deformation_force = np.minimum(1.0,sigma_deformation/deformation_force_amplitude)[:,np.newaxis] * deformation_force
+
+        if fix_borders:
+            deformation_force[vertex_is_border] = 0.
+
         topomesh.update_wisp_property('barycenter',degree=0,values=topomesh.wisp_property('barycenter',degree=0).values(list(topomesh.wisps(0))) + deformation_force,keys=list(topomesh.wisps(0)))
         
         end_time = time()
