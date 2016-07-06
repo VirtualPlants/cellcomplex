@@ -9,6 +9,11 @@ OpenAlea CellComplex Library
     :alt: Documentation status
     :target: https://cellcomplex.readthedocs.io/en/latest/?badge=latest
 
+
+.. image:: https://travis-ci.org/VirtualPlants/cellcomplex.svg?branch=master
+    :alt: Travis build status
+    :target: https://travis-ci.org/VirtualPlants/cellcomplex
+
 .. #}
 
 The Topological Plant Tissue datastructure

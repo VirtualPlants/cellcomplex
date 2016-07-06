@@ -49,6 +49,7 @@
     "theme": "default"
   }, 
   "test": {}, 
+  "travis": {}, 
   "version": {
     "major": 0, 
     "minor": 8, 
