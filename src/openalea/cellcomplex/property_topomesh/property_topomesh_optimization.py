@@ -17,7 +17,19 @@
 #
 ###############################################################################
 
-from math import sqrt
+
+"""
+=============================
+PropertyTopomesh Optimization
+=============================
+
+.. autosummary::
+   :toctree: generated/
+
+   property_topomesh_vertices_deformation
+
+"""
+
 import numpy as np
 from scipy import ndimage as nd
 
@@ -34,7 +46,8 @@ from time                                   import time
 from copy                                   import deepcopy
 
 
-def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,resolution=(1.0,1.0,1.0),target_normal=None,target_areas=None,distance_threshold=2*sqrt(3),edge_collapse=False):
+def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,resolution=(1.0,1.0,1.0),target_normal=None,target_areas=None,fix_borders=False):
+
     """Optimize the positions of the mesh vertices along multiple criteria.
 
     The 'barycenter' property of the elements of degree 0 is updated following
@@ -49,14 +62,41 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
     as planarization of interfaces, or triangle quality enhancement.
 
     Args:
-        topomesh (:class:`PropertyTopomesh`): 
+        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
             The structure on which to apply the optimization.
         iterations (int):
             The number of times the deformation is repeated.
         omega_forces (dict):
-            The weights associated to each energy term. 
+            The weights (float) associated to each energy term:
+                * *regularization*: energy optimizing triangle eccentricity 
+                * *area*: energy optimizing triangle size homogeneity
+                * *gradient*: energy pushing vertices towards local maxima of a gradient field
+                * *laplacian*: energy regularizing cell edges towards straight lines
+                * *planarization*: energy regularizing cell interfaces towards planar surfaces
+                * *epidermis_planarization*: energy regularizing outer cell surfaces towards planar surfaces
+                * *convexity*: energy regularizing outer cell surfaces towards spherical surfaces
+                * *laplacian_smoothing*: energy regularizing the mesh using a Laplacian operator
+                * *gaussian_smoothing*: energy regularizing the mesh using a Gaussian operator
+                * *curvature_flow_smoothing*: energy regularizing the mesh using a Cotangent Laplacian operator
+                * *taubin_smoothing*: energy regularizing the mesh using two-pass Gaussian operator
+        sigma_deformation (float):
+            The maximal allowed amplitude of a deformation of a vertex at each iteration.
+        gaussian_sigma (float):
+            The standard deviation used to compute gaussian weights in gaussian/taubin smoothing.
+        gradient_derivatives (:class:`openalea.image.SpatialImage`):
+            The 3 derivatives of the gradient field (x, y, z) used for gradient optimization.
+        target_normal (:class:`numpy.array`, *optional*):
+            The normal of the desired plane for the interface planarization optimization. 
+            If None, the direction linking cell centers is chosen.
+        target_areas (:class:`numpy.array`, *optional*):
+            The values of areas to which the mesh triangles should tend in the area optimization.
+            If None, the average area value is chosen.
+        fix_borders (bool):
+            Whether the border vertices should be fixed or not (in the case of open surfaces).
+            
     Returns:
         None
+
     Note: 
         The PropertyTopomesh passed as argument is updated.
 
@@ -210,31 +250,6 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
         compute_topomesh_property(topomesh,'length',degree=1)
         end_time = time()
         print "<-- Updating distances       [",end_time-start_time,"s]"
-
-        # if edge_collapse:
-
-        #     start_time = time()
-        #     print "--> Collapsing small edges"
-            
-        #     sorted_distances = np.array(sorted(enumerate(distances.values() ),key=lambda x:x[1]))
-
-        #     edges_to_collapse = edge_vertices.values()[np.array(sorted_distances[:,0],int)[np.where(sorted_distances[:,1] < distance_threshold)]]
-        #     edge_distances = distances.values()[np.array(sorted_distances[:,0],int)[np.where(sorted_distances[:,1] < distance_threshold)]]
-
-        #     e_index = 0
-        #     while e_index<len(edges_to_collapse):
-        #         e_start_time = time()
-        #         edge_start_time = time()
-        #         edge_pids = edges_to_collapse[e_index]
-
-        #         kept_pid,suppressed_pid = collapse_edge_with_graph(topomesh,vertex_graph,edge_pids)
-        #         positions[kept_pid] = vertex_graph.vertex_property('barycenter')[kept_pid]
-        #         del positions[suppressed_pid]
-        #         edges_to_collapse = np.delete(edges_to_collapse,np.where(edges_to_collapse==suppressed_pid)[0],axis=0)
-        #         e_index += 1
-        #     print"  <-- ",e_index," edges collapsed" 
-        #     end_time = time()
-        #     print "<-- Collapsing small edges   [",end_time-start_time,"s]"
 
         print topomesh.nb_wisps(0)," Vertices, ",topomesh.nb_wisps(2)," Triangles, ",topomesh.nb_wisps(3)," Cells"
 
