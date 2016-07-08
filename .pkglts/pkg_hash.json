@@ -6,11 +6,11 @@
     "github": "wVVlsQPP65I5Gg6bW37JENFtYxO6Naq7x+mO0DaDGFVbMPk2o5QJ3DUwMoYfkOfou9lcR/6DC0MXr7hnrTWc9g=="
   }, 
   ".travis.yml": {
-    "travis": "1ZzqYFwXTmGdOLLF/QjB7xwiBqy8mB1HlaKlqCjPfGNDuBKq5KDXk46ohaCpsnTN8zI958Ox2l2AaVdBKMRC7g==", 
+    "travis": "p39laCS5PHN7gbwAtgU28Z+UXHRifGIORlali3ZkK7OQKjjRhn1Dbwscp76SZeocjKUEBtl3fI1857Ri37wPWQ==", 
     "travis.addons": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==", 
     "travis.after": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==", 
-    "travis.install": "Nv+BGoUManrM8Guli6wxi9ZxtfDxzm4z1EQ6klR7GEpwfG92wzwo8iHNKYqWqgyP3CjKm6gxs54V1U88IiZygg==", 
-    "travis.script": "QcLr2RY8uvDdHBZjwk2D6R7wO0KXucLhnclomGtohT61RSEC8PX5z+mFHLUZmfrsVzLdRdhVCm9tYo0Tx9RIMw=="
+    "travis.install": "LEacQHgilrixqIgoBti9RdpDfRxA5LpWY9ep4oseVXLt9tE3KX05knGRs46ZEIuLsWYitThT4+gLSPEunBQgFA==", 
+    "travis.script": "STjpu3u3YoOeTz4mBIflZ58OodPdFRPFtLt6c8CUciNwe/fYhCTxlKTMB/S7VL1ippUsQVIfrFGl+OQ/ALWmPQ=="
   }, 
   "AUTHORS.rst": {}, 
   "CONTRIBUTING.rst": {}, 
@@ -42,17 +42,17 @@
   "doc/readme.rst": {}, 
   "doc/usage.rst": {}, 
   "dvlpt_requirements.txt": {
-    "pysetup": "UQJqyb7YIaBZSsbBzHa4g943V6w4PfULzPZwHKLPmkkKthgekqqdh4XqGpVjQrr3D9hF4m1qAu34UIT1ceUidw=="
+    "pysetup": "XWPKeIfT2RoNPeDhPDgWWOssKAjkq/OXoEfIpSs8vJrYkPahRrEs1qXFvqxzqoV09MjmnVg0zrG9m/wRXfrRxw=="
   }, 
   "requirements.txt": {
-    "pysetup": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg=="
+    "pysetup": "/5djJXLbrvuFk7LIgtfgYR8RnQrY5BEmOB4zEd0PrKeswR/8sQkzj4yKy7Zl3LAdRzYjPDhWiRkS1oMCG4FX7Q=="
   }, 
   "setup.cfg": {
     "pysetup": "LTCGMIlVc5c3y+sVc51LWjn02SPTu6VnJ5Q5intM97+jB6raBHccYsKXCrFJ8F2QBkLXmQxpaE0Ikbimxg8E9A=="
   }, 
   "setup.py": {
     "pysetup.call": "2wHuP94SpWKZpqOzExkQGTxnhGPgBHK3qOdPn0Ncstj5FkZ7FBGGM/inqAXaI4QLKQtTNlOUYRGSkYUWAUcf1w==", 
-    "pysetup.kwds": "PW696J/lk6QHYpyh3ubq/3B58GjRHcV3Bgw2Pd1cDSOedDcQwm7sfNXbiHfgfnFPBgbJyU4h1ULIt9Q4JoAoAw=="
+    "pysetup.kwds": "NIkYScZSjQR8h8wpK/YB1vRaHQrdY+RUVJnwDj5ail32ljLZz4gKStQ0RSwjF1tp5ozMI0P1J6/0d+skyAIB5w=="
   }, 
   "src/openalea/cellcomplex/__init__.py": {
     "base": "gR33dW0qqYmsV9NSNB+DD8XmuxnC2t0mKjnMoU5728qh97fSER6MbX+3QKxpZDLByZToaAay4xhx8acxketJmA=="
