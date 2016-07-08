@@ -27,6 +27,7 @@
   "doc/Makefile": {
     "sphinx": "C58jxdu8XJNOoaWOw7VWy4LwFmS8lTQt/JeZLt5JozMSJ503plOZchucx+vAEzELbx/Czs/h9pshe9s+9HeOeQ=="
   }, 
+  "doc/_static/nonempty.txt": {}, 
   "doc/authors.rst": {}, 
   "doc/conf.py": {
     "sphinx": "mELamPtfuz9lj5oRmbzlol1K9TO2hbbKHnGwQz4Ot/jCJEIi4Lp+Suwu/UZd5qBx2mRLLvuoODq/DqyynUTLOQ=="
@@ -47,7 +48,7 @@
     "pysetup": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg=="
   }, 
   "setup.cfg": {
-    "pysetup": "oKuNyRydi7//vZjs1rlUXPGrncwvpHDJZCDbgh6emureNKdQnuSLmI7ZfD8zIGHhCQVlTGobegHxidEFPbub+g=="
+    "pysetup": "LTCGMIlVc5c3y+sVc51LWjn02SPTu6VnJ5Q5intM97+jB6raBHccYsKXCrFJ8F2QBkLXmQxpaE0Ikbimxg8E9A=="
   }, 
   "setup.py": {
     "pysetup.call": "2wHuP94SpWKZpqOzExkQGTxnhGPgBHK3qOdPn0Ncstj5FkZ7FBGGM/inqAXaI4QLKQtTNlOUYRGSkYUWAUcf1w==", 
