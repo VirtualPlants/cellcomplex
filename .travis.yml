@@ -5,6 +5,10 @@ language: python
 
 python:
   - "2.7"
+
+virtualenv:
+    system_site_packages: true
+
 # #}
 
 addons:
@@ -17,7 +21,7 @@ addons:
  #}
 
 install:
- - pip install --upgrade git+https://github.com/openalea/deploy#egg=OpenAlea.Deploy
+ - pip install --upgrade git+https://github.com/openalea/deploy
  - pip install --upgrade git+https://github.com/openalea/core
  - pip install --upgrade git+https://github.com/openalea/container
 # {# pkglts, travis.install
