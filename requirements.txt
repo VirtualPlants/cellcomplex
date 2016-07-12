@@ -3,5 +3,10 @@
 # edit .pkglts/pkg_cfg instead
 # section pysetup
 
+# openalea/deploy
+# openalea/core
+# openalea/container
+# numpy
+# scipy
 
 # #}
