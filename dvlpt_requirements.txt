@@ -1,6 +1,7 @@
 # {# pkglts, pysetup
 coverage
 mock
+nbconvert
 nose
 sphinx
 

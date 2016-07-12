@@ -36,15 +36,35 @@
     "project": "{{ base.pkgname }}", 
     "year": 2015
   }, 
+  "notebook": {
+    "src_directory": "example"
+  }, 
   "pysetup": {
     "intended_versions": [
       "27"
     ], 
-    "require": [["git", "openalea/deploy"],
-                ["git", "openalea/core"],
-                ["git", "openalea/container"],
-                ["conda", "numpy"],
-                ["conda", "scipy"]]
+    "require": [
+      [
+        "git", 
+        "openalea/deploy"
+      ], 
+      [
+        "git", 
+        "openalea/core"
+      ], 
+      [
+        "git", 
+        "openalea/container"
+      ], 
+      [
+        "conda", 
+        "numpy"
+      ], 
+      [
+        "conda", 
+        "scipy"
+      ]
+    ]
   }, 
   "readthedocs": {
     "project": "{{ github.project }}"

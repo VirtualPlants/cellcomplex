@@ -9,7 +9,7 @@
     "travis": "p39laCS5PHN7gbwAtgU28Z+UXHRifGIORlali3ZkK7OQKjjRhn1Dbwscp76SZeocjKUEBtl3fI1857Ri37wPWQ==", 
     "travis.addons": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==", 
     "travis.after": "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==", 
-    "travis.install": "LEacQHgilrixqIgoBti9RdpDfRxA5LpWY9ep4oseVXLt9tE3KX05knGRs46ZEIuLsWYitThT4+gLSPEunBQgFA==", 
+    "travis.install": "xEgSUPsFkZyntkZJJH0Kza1+jqbYoULKEaOvWDfXw+tILxqyEkRVYnzsxh59TbUNhLuk8MSZ6X972fDcCG1Jqg==", 
     "travis.script": "STjpu3u3YoOeTz4mBIflZ58OodPdFRPFtLt6c8CUciNwe/fYhCTxlKTMB/S7VL1ippUsQVIfrFGl+OQ/ALWmPQ=="
   }, 
   "AUTHORS.rst": {}, 
@@ -42,7 +42,7 @@
   "doc/readme.rst": {}, 
   "doc/usage.rst": {}, 
   "dvlpt_requirements.txt": {
-    "pysetup": "XWPKeIfT2RoNPeDhPDgWWOssKAjkq/OXoEfIpSs8vJrYkPahRrEs1qXFvqxzqoV09MjmnVg0zrG9m/wRXfrRxw=="
+    "pysetup": "Kgqpi6dvqkiv13kr4NNUnBMH2tH2ibokHOLxUzyvKteFhIznpkduF40LciHj9Ny7x/km4bgxUkzRWD7w1Le03Q=="
   }, 
   "requirements.txt": {
     "pysetup": "Pi1fUdnE6J8pk8pjDZobSjnl0W0kX9o6nvS/28poGSPDqyrMOQcjBPV/8BVtR3m070MRgY0i8/rkb8D7Lvi/nQ=="
@@ -52,7 +52,7 @@
   }, 
   "setup.py": {
     "pysetup.call": "2wHuP94SpWKZpqOzExkQGTxnhGPgBHK3qOdPn0Ncstj5FkZ7FBGGM/inqAXaI4QLKQtTNlOUYRGSkYUWAUcf1w==", 
-    "pysetup.kwds": "NIkYScZSjQR8h8wpK/YB1vRaHQrdY+RUVJnwDj5ail32ljLZz4gKStQ0RSwjF1tp5ozMI0P1J6/0d+skyAIB5w=="
+    "pysetup.kwds": "2tXcuPtGaQlZlVdQXY4scGaUdG3o8g0qwKjBKBwUEUbli9fb2J4Nd335vc3jYNdOQ4w6u0YP31O02HxwyQ/5Tw=="
   }, 
   "src/openalea/cellcomplex/__init__.py": {
     "base": "gR33dW0qqYmsV9NSNB+DD8XmuxnC2t0mKjnMoU5728qh97fSER6MbX+3QKxpZDLByZToaAay4xhx8acxketJmA=="

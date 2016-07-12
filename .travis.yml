@@ -43,6 +43,7 @@ install:
   - conda install scipy
   - conda install coverage
   - conda install mock
+  - conda install nbconvert
   - conda install nose
   - conda install sphinx
 

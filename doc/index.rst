@@ -9,6 +9,7 @@ Contents:
    readme
    installation
    usage
+   _notebook/index
    contributing
    authors
    history
