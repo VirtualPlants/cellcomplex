@@ -171,9 +171,9 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
         if not 'cells' in topomesh.wisp_property_names(degree):
             topomesh.add_wisp_property('cells',degree=degree)
         if degree == topomesh.degree():
-            topomesh.update_wisp_property('cells',degree=degree,values=np.array(list(topomesh.wisps(degree))),keys=np.array(list(topomesh.wisps(degree))))
+            topomesh.update_wisp_property('cells',degree=degree,values=np.array(list(topomesh.wisps(degree))).astype(int),keys=np.array(list(topomesh.wisps(degree))))
         else:
-            topomesh.update_wisp_property('cells',degree=degree,values=np.array([list(topomesh.regions(degree,w,topomesh.degree()-degree)) for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
+            topomesh.update_wisp_property('cells',degree=degree,values=np.array([[int(c) for c in topomesh.regions(degree,w,topomesh.degree()-degree)] for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
 
     if property_name == 'borders':
         assert degree>0

@@ -68,12 +68,13 @@ from tissuelab.gui.vtkviewer.vtkworldviewer import setdefault, world_kwargs, _co
 
 cst_figure = dict(step=1,min=0,max=9)
 cst_plots = dict(enum=['scatter','line','distribution','cumulative','boxplot','violin','density','map','PCA'])
-cst_regression = dict(enum=['','linear','quadratic','cubic','exponential','logarithmic','fireworks'])
+cst_regression = dict(enum=['','linear','quadratic','cubic','exponential','logarithmic','density','fireworks'])
 cst_legend = dict(enum=['','top_right','bottom_right','top_left','bottom_left'])
 cst_size = dict(step=5, min=0, max=100)
 cst_width = dict(step=1, min=0, max=10)
 cst_proba = dict(step=0.01, min=0, max=1)
 cst_extent_range = dict(step=1, min=-50, max=150)
+cst_points = dict(step=1, min=1, max=100)
 
 
 dataframe_attributes = {}
@@ -90,6 +91,7 @@ dataframe_attributes['dataframe']['linewidth'] = dict(value=1,interface="IInt",c
 dataframe_attributes['dataframe']['alpha'] = dict(value=1.0, interface=IFloat, constraints=cst_proba,label=u"Alpha")
 dataframe_attributes['dataframe']['smooth_factor'] = dict(value=0.0, interface=IFloat, constraints=cst_proba,label=u"Smoothing")
 dataframe_attributes['dataframe']['regression'] = dict(value='', interface=IEnumStr, constraints=cst_regression,label=u"Regression")
+dataframe_attributes['dataframe']['n_points'] = dict(value=5, interface=IInt, constraints=cst_points,label=u"Number of Points")
 dataframe_attributes['dataframe']['legend'] = dict(value='',interface="IEnumStr",constraints=cst_legend,label="Legend")
 
 def _dataframe_columns(world_object, attr_name, variable_name, **kwargs):
@@ -208,6 +210,8 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
             setdefault(world_object, dtype, 'smooth_factor', attribute_definition=dataframe_attributes, **kwargs)
 
             setdefault(world_object, dtype, 'regression', attribute_definition=dataframe_attributes, **kwargs)
+
+            setdefault(world_object, dtype, 'n_points', attribute_definition=dataframe_attributes, **kwargs)
 
             world_object.silent = False
 
@@ -418,7 +422,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                         density_contour_plot(figure,X[classes==c],Y[classes==c],class_color,data_range,xlabel=xlabel,ylabel=ylabel,smooth_factor=smooth*10,marker_size=markersize,linewidth=linewidth,alpha=alpha,label=plot_label)
 
                     if world_object['plot'] in ['scatter','line','density']:
-                        if world_object['regression'] in ['linear','quadratic','cubic','exponential','logarithmic']:
+                        if world_object['regression'] in ['linear','quadratic','cubic','exponential','logarithmic','density']:
                             reg_X = np.linspace(X.min() -0.5*(X.max()-X.min()),X.min() +1.5*(X.max()-X.min()),400)
                             if world_object['regression'] in ['linear','quadratic','cubic']:
                                 degree = 1 if world_object['regression']=='linear' else 2 if world_object['regression']=='quadratic' else 3
@@ -430,7 +434,17 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                             elif world_object['regression'] in ['logarithmic']:
                                 p = np.polyfit(np.log(X[classes==c]),Y[classes==c],deg=1)
                                 reg_Y = np.polyval(p,np.log(reg_X))
-                            simple_plot(figure,reg_X,reg_Y,class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=linewidth+np.sqrt(markersize)/np.pi,alpha=(alpha+1)/2.)
+                            elif world_object['regression'] in ['density']:
+                                radius = 10.0*X.std()/float(len(reg_X))
+                                density_k = 100.*np.exp(-10.*smooth/2.)
+                                x_distances = np.power(np.power(X[classes==c][np.newaxis] - reg_X[:,np.newaxis],2),0.5)
+                                x_potential = 1./2. * (1. - np.tanh(density_k*(x_distances - radius)))
+                                # x_potential = np.transpose(x_potential)
+                                x_density = x_potential.sum(axis=1)
+                                x_membership = x_potential/x_density[:,np.newaxis]
+                                reg_Y = (x_membership*Y[classes==c]).sum(axis=1)
+
+                            simple_plot(figure,reg_X[True-np.isnan(reg_Y)],reg_Y[True-np.isnan(reg_Y)],class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=2*(linewidth+1)+np.sqrt(markersize)/np.pi,alpha=(alpha+1)/2.)
                         elif world_object['regression'] in ['fireworks']:
                             class_covariance = np.cov(np.transpose([X[classes==c],Y[classes==c]]),rowvar=False)
                             vals, vecs = np.linalg.eigh(class_covariance)
@@ -504,12 +518,13 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
 
                         plot_legend = ['labels']
 
-                        n_slices = 5
+                        n_slices = world_object['n_points']
                         if X.dtype != np.dtype('O') and len(np.unique(X)) > len(X)/5. or (len(np.unique(X)) > 50):
                             magnitude = np.power(10,np.around(4*np.log10(np.nanmean(X)+np.nanstd(X)+1e-7))/4+0.5)
                             magnitude = np.around(magnitude,int(-np.log10(magnitude))+1)
-                            class_values = np.array(np.maximum(np.minimum(np.around(n_slices*X/magnitude),n_slices),0),int)
-                            X = (np.arange(n_slices+1)*magnitude)[class_values]
+
+                            class_values = np.array(np.maximum(np.minimum(np.around(n_slices*X/magnitude),n_slices),-n_slices),int)
+                            X = (np.arange(-n_slices-1,n_slices+1)*magnitude)[class_values+n_slices+1]
 
                         X_values = np.sort(np.unique(X))
 
