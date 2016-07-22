@@ -63,7 +63,7 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
 
 
     Args:
-        topomesh (:class:`PropertyTopomesh`):
+        topomesh (:class:`openaela.mesh.PropertyTopomesh`):
             The structure on which to compute the property.
         property_name (str):
             The name of the property to compute, among the following ones:
@@ -94,8 +94,10 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
             Whether to display or not information on computed properties.
 
     Returns:
-        None : 
-            The PropertyTopomesh passed as argument is updated.
+        None
+
+    Note:
+        The PropertyTopomesh passed as argument is updated.
 
     Example:
         >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
@@ -169,9 +171,9 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
         if not 'cells' in topomesh.wisp_property_names(degree):
             topomesh.add_wisp_property('cells',degree=degree)
         if degree == topomesh.degree():
-            topomesh.update_wisp_property('cells',degree=degree,values=np.array(list(topomesh.wisps(degree))),keys=np.array(list(topomesh.wisps(degree))))
+            topomesh.update_wisp_property('cells',degree=degree,values=np.array(list(topomesh.wisps(degree))).astype(int),keys=np.array(list(topomesh.wisps(degree))))
         else:
-            topomesh.update_wisp_property('cells',degree=degree,values=np.array([list(topomesh.regions(degree,w,topomesh.degree()-degree)) for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
+            topomesh.update_wisp_property('cells',degree=degree,values=np.array([[int(c) for c in topomesh.regions(degree,w,topomesh.degree()-degree)] for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
 
     if property_name == 'borders':
         assert degree>0
@@ -1297,14 +1299,16 @@ def compute_topomesh_triangle_properties(topomesh,positions=None):
     and the corresponding properties updated in the structure.
 
     Args:
-        topomesh (:class:`PropertyTopomesh`):
+        topomesh (:class:`openalea.mesh.PropertyTopomesh`):
             The structure on which to compute the property.
         positions (dict, *optional*):
             A position dictionary if the property ('barycenter',0) is empty.
 
     Returns:
-        None: 
-            The PropertyTopomesh passed as argument is updated. 
+        None
+
+    Note:
+        The PropertyTopomesh passed as argument is updated. 
 
     Example:
         >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
@@ -1362,7 +1366,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     faces, weighting them differently according to the chosen method.
 
     Args:
-        topomesh (:class:`PropertyTopomesh`): 
+        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
             The name of the property to compute (must be already computed on faces).
@@ -1378,8 +1382,10 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
             The standard deviation of the gaussian weighting using the ring-distance.
 
     Returns:
-        None: 
-            The PropertyTopomesh passed as argument is updated.
+        None
+            
+    Note:
+        The PropertyTopomesh passed as argument is updated.
 
     Example: 
         >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
@@ -1483,6 +1489,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     end_time = time()
     print "<-- Computing vertex property from faces [",end_time-start_time,"s]"
 
+
 def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate='mean', weighting='area'):
     """Compute a property on degree 3 using the same property defined at degree 2.
 
@@ -1490,7 +1497,7 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
     border faces, weighting them differently according to the chosen method.
 
     Args:
-        topomesh (:class:`PropertyTopomesh`): 
+        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
             The name of the property to compute (must be already computed on faces).
@@ -1504,8 +1511,10 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
                 * *area*: the weight on the faces is equal to their area
 
     Returns:
-        None: 
-            The PropertyTopomesh passed as argument is updated.
+        None
+
+    Note: 
+        The PropertyTopomesh passed as argument is updated.
             
     """
 
@@ -1539,8 +1548,6 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
     
     end_time = time()
     print "<-- Computing cell property from faces [",end_time-start_time,"s]"
-
-
 
 
 def filter_topomesh_property(topomesh,property_name,degree,coef=0.5,normalize=False):
@@ -1590,7 +1597,7 @@ def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborh
     functions. 
 
     Args:
-        topomesh (:class:`PropertyTopomesh`): 
+        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
             The name of the property to compute (must be already computed on faces).
@@ -1604,8 +1611,10 @@ def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborh
             The standard deviation of the gaussian function based on the Euclidean distance.
 
     Returns:
-        None: 
-            The PropertyTopomesh passed as argument is updated.
+        None
+
+    Note: 
+        The PropertyTopomesh passed as argument is updated.
             
     """
 
@@ -1653,9 +1662,5 @@ def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborh
         filtered_properties = (vertex_gaussian[...,np.newaxis]*properties[:,np.newaxis]).sum(axis=0) / vertex_gaussian.sum(axis=0)[...,np.newaxis]
 
     topomesh.update_wisp_property(property_name,degree=degree,values=filtered_properties,keys=np.array(list(topomesh.wisps(degree))))
-
-    
-
-
 
 
