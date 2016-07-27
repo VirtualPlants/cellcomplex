@@ -298,7 +298,8 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
             classes = classes[valid_points]
             labels = labels[valid_points]
 
-            if classes.dtype != np.dtype('O') and len(np.unique(classes)) > len(classes)/5. or (len(np.unique(classes)) > 50):
+            n_slices = world_object['n_points']
+            if classes.dtype != np.dtype('O') and (len(np.unique(classes)) > n_slices):
                 magnitude = np.power(10,np.around(4*np.log10(np.nanmean(classes)+np.nanstd(classes)+1e-7))/4+0.5)
                 magnitude = np.around(magnitude,int(-np.log10(magnitude))+1)
                 class_values = np.array(np.maximum(np.minimum(np.around(10*classes/magnitude),10),0),int)

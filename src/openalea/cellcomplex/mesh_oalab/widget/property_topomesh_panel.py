@@ -57,8 +57,8 @@ for degree in xrange(4):
     attribute_definition['topomesh']["property_degree_"+str(degree)] = dict(value=degree,interface="IInt",constraints=cst_degree,label="Degree") 
     attribute_definition['topomesh']["property_name_"+str(degree)] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label="Property")     
     attribute_definition['topomesh']["coef_"+str(degree)] = dict(value=1,interface="IFloat",constraints=cst_proba,label="Coef") 
-attribute_definition['topomesh']["filename"] = dict(value="",interface="IFileStr",constraints={},label="Filename")
-attribute_definition['topomesh']["save"] = dict(value=(lambda:None),interface="IAction",constraints={},label="Save PropertyTopomesh")
+# attribute_definition['topomesh']["filename"] = dict(value="",interface="IFileStr",constraints={},label="Filename")
+# attribute_definition['topomesh']["save"] = dict(value=(lambda:None),interface="IAction",constraints={},label="Save PropertyTopomesh")
 
 
 def _property_names(world_object, attr_name, property_name, **kwargs):
@@ -106,7 +106,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
         self._mesh = {}
         self._mesh_matching = {}
 
-        self._filename = {}
+        # self._filename = {}
 
         self._current = None
         # self._default_manager = self._create_manager()
@@ -247,10 +247,10 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                     setdefault(world_object, dtype, 'coef_'+str(degree), attribute_definition=attribute_definition, **kwargs)
                 world_object.silent = False
             
-            world_object.silent = True
-            setdefault(world_object, dtype, 'filename', attribute_definition=attribute_definition, **kwargs)
-            world_object.silent = False
-            setdefault(world_object, dtype, 'save', attribute_definition=attribute_definition, **kwargs)
+            # world_object.silent = True
+            # setdefault(world_object, dtype, 'filename', attribute_definition=attribute_definition, **kwargs)
+            # world_object.silent = False
+            # setdefault(world_object, dtype, 'save', attribute_definition=attribute_definition, **kwargs)
             
             if not self._mesh.has_key(world_object.name):
                 self._mesh[world_object.name] = dict([(0,None),(1,None),(2,None),(3,None)])
@@ -436,32 +436,32 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                 world_object.silent = False
                 # world_object.set_attribute("property_name_"+str(display_degree),"")
 
-            elif attribute['name'] == 'filename':
-                filename = world_object['filename']
-                if ".ply" in filename:
-                    self._filename[world_object.name] = filename
-                    world_object.set_attribute('save',self._save_as_ply(world_object))
-                else:
-                    world_object.set_attribute('save',(lambda:None))
+            # elif attribute['name'] == 'filename':
+            #     filename = world_object['filename']
+            #     if ".ply" in filename:
+            #         self._filename[world_object.name] = filename
+            #         world_object.set_attribute('save',self._save_as_ply(world_object))
+            #     else:
+            #         world_object.set_attribute('save',(lambda:None))
 
-    def _save_as_ply(self, world_object):
-        topomesh = world_object.data
-        properties_to_save = dict([(0,[]),(1,[]),(2,[]),(3,[])])
-        for property_degree in xrange(4):
-            properties_to_save[property_degree] = list(topomesh.wisp_property_names(property_degree))
-            if property_degree == 0:
-                properties_to_save[property_degree].remove('barycenter')
-            for property_name in ['vertices','edges','triangles','cells','regions','borders','neighbors']:
-                try:
-                    properties_to_save[property_degree].remove(property_name)
-                except ValueError:
-                    pass
-        print properties_to_save
+    # def _save_as_ply(self, world_object):
+    #     topomesh = world_object.data
+    #     properties_to_save = dict([(0,[]),(1,[]),(2,[]),(3,[])])
+    #     for property_degree in xrange(4):
+    #         properties_to_save[property_degree] = list(topomesh.wisp_property_names(property_degree))
+    #         if property_degree == 0:
+    #             properties_to_save[property_degree].remove('barycenter')
+    #         for property_name in ['vertices','edges','triangles','cells','regions','borders','neighbors']:
+    #             try:
+    #                 properties_to_save[property_degree].remove(property_name)
+    #             except ValueError:
+    #                 pass
+    #     print properties_to_save
 
-        def _save_action():
-            save_ply_property_topomesh(topomesh, self._filename[world_object.name], properties_to_save=properties_to_save)
+    #     def _save_action():
+    #         save_ply_property_topomesh(topomesh, self._filename[world_object.name], properties_to_save=properties_to_save)
 
-        return _save_action
+    #     return _save_action
 
     # def _display_control_changed(self, world_object, display_degree):
     #     def _changed(old, new):
