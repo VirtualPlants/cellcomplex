@@ -75,6 +75,7 @@ class TriangularMesh(object):
     
     def _repr_vtk_(self):
         import vtk
+        from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
         from openalea.container import array_dict
 
         if len(self.triangles) > 0:
@@ -115,38 +116,72 @@ class TriangularMesh(object):
                     vtk_mesh.GetPointData().SetTensors(vtk_point_data)
 
             else:
+                from time import time
+                start_time = time()
 
-                mesh_points = []
-                for p in self.points.keys():
-                    pid = vtk_points.InsertNextPoint(self.points[p])
-                    mesh_points.append(pid)
-                    if self.point_data.has_key(p):
-                        if isiterable(self.point_data[p]):
-                            vtk_point_data.InsertValue(pid,self.point_data[p][0])
-                        else:
-                            vtk_point_data.InsertValue(pid,self.point_data[p])
-                mesh_points = array_dict(mesh_points,self.points.keys())
+                double_array = vtk.vtkDoubleArray()
+                double_array = numpy_to_vtk(np.array(self.points.values()), deep=True, array_type=vtk.VTK_DOUBLE)
+                vtk_points.SetData(double_array)
+
+                if self.point_data.has_key(self.points.keys()[0]):
+                    if isiterable(self.point_data[self.points.keys()[0]]):
+                        vtk_point_data = numpy_to_vtk(np.array([v[0] for v in self.point_data.values()]), deep=True, array_type=vtk.VTK_DOUBLE)
+                    else:
+                        vtk_point_data = numpy_to_vtk(np.array(self.point_data.values()), deep=True, array_type=vtk.VTK_DOUBLE)
+                vtk_point_data.SetNumberOfComponents(1)
+                
+                # mesh_points = []
+
+                # for p in self.points.keys():
+                    # pid = vtk_points.InsertNextPoint(self.points[p])
+                    # mesh_points.append(pid)
+                    # if self.point_data.has_key(p):
+                        # if isiterable(self.point_data[p]):
+                            # vtk_point_data.InsertValue(pid,self.point_data[p][0])
+                        # else:
+                            # vtk_point_data.InsertValue(pid,self.point_data[p])
+
+                mesh_points = array_dict(np.arange(len(self.points)),self.points.keys())
+                # mesh_points = array_dict(mesh_points,self.points.keys())
+                
                 if len(self.point_data) > 0:
                     vtk_mesh.GetPointData().SetScalars(vtk_point_data)
 
-                for t in self.triangles.keys():
-                    poly = vtk_triangles.InsertNextCell(3)
-                    for i in xrange(3):
-                        vtk_triangles.InsertCellPoint(mesh_points[self.triangles[t][i]])
-                    if self.triangle_data.has_key(t):
-                        if isiterable(self.triangle_data[t]):
-                            if np.array(self.triangle_data[t]).ndim==1:
-                                vtk_triangle_data.InsertTuple(poly,self.triangle_data[t])
-                            else:
-                                vtk_triangle_data.InsertTuple(poly,np.concatenate(self.triangle_data[t]))
-                            # vtk_triangle_data.InsertValue(poly,self.triangle_data[t][0])
+                triangles_vtk = np.concatenate([3*np.ones(len(self.triangles),int)[:,np.newaxis],mesh_points.values(np.array(self.triangles.values()))],axis=1)
+                vtk_ids = numpy_to_vtkIdTypeArray(triangles_vtk, deep=True)
+                vtk_triangles.SetCells(len(self.triangles), vtk_ids)
+
+                if self.triangle_data.has_key(self.triangles.keys()[0]):
+                    if isiterable(self.triangle_data[self.triangles.keys()[0]]):
+                        if np.array(self.triangle_data[self.triangles.keys()[0]]).ndim==1:
+                            vtk_triangle_data = numpy_to_vtk(np.array(self.triangle_data.values()), deep=True, array_type=vtk.VTK_DOUBLE)
                         else:
-                            vtk_triangle_data.InsertValue(poly,self.triangle_data[t])
+                            vtk_triangle_data = numpy_to_vtk(np.array([np.concatenate(v) for v in self.triangle_data.values()]), deep=True, array_type=vtk.VTK_DOUBLE)
+                    else:
+                        vtk_triangle_data = numpy_to_vtk(np.array(self.triangle_data.values()), deep=True, array_type=vtk.VTK_DOUBLE)
+
+                # for t in self.triangles.keys():
+                #     poly = vtk_triangles.InsertNextCell(3)
+                #     for i in xrange(3):
+                #         vtk_triangles.InsertCellPoint(mesh_points[self.triangles[t][i]])
+                    # if self.triangle_data.has_key(t):
+                    #     if isiterable(self.triangle_data[t]):
+                    #         if np.array(self.triangle_data[t]).ndim==1:
+                    #             vtk_triangle_data.InsertTuple(poly,self.triangle_data[t])
+                    #         else:
+                    #             vtk_triangle_data.InsertTuple(poly,np.concatenate(self.triangle_data[t]))
+                    #         # vtk_triangle_data.InsertValue(poly,self.triangle_data[t][0])
+                    #     else:
+                    #         vtk_triangle_data.InsertValue(poly,self.triangle_data[t])
+                
                 vtk_mesh.SetPoints(vtk_points)
                 vtk_mesh.SetPolys(vtk_triangles)
 
                 if len(self.triangle_data) > 0:
                     vtk_mesh.GetCellData().SetScalars(vtk_triangle_data)
+
+                end_time = time()
+                print "--> Converting to VTK PolyData     [",end_time-start_time,"s]"
 
             return vtk_mesh
 
@@ -234,27 +269,27 @@ class TriangularMesh(object):
 
     def min(self):
         if self.data().ndim == 1:
-            return np.min(self.data())
+            return np.nanmin(self.data())
         elif self.data().ndim == 2:
-            return np.min(np.linalg.norm(self.data(),axis=1))
+            return np.nanmin(np.linalg.norm(self.data(),axis=1))
         elif self.data().ndim == 3:
-            return np.min(np.sqrt(np.trace(np.power(self.data(),2),axis1=1,axis2=2)))
+            return np.nanmin(np.sqrt(np.trace(np.power(self.data(),2),axis1=1,axis2=2)))
 
     def max(self):
         if self.data().ndim == 1:
-            return np.max(self.data())
+            return np.nanmax(self.data())
         elif self.data().ndim == 2:
-            return np.max(np.linalg.norm(self.data(),axis=1))
+            return np.nanmax(np.linalg.norm(self.data(),axis=1))
         elif self.data().ndim == 3:
-            return np.max(np.sqrt(np.trace(np.power(self.data(),2),axis1=1,axis2=2)))
+            return np.nanmax(np.sqrt(np.trace(np.power(self.data(),2),axis1=1,axis2=2)))
 
     def mean(self):
         if self.data().ndim == 1:
-            return np.mean(self.data())
+            return np.nanmean(self.data())
         elif self.data().ndim == 2:
-            return np.mean(np.linalg.norm(self.data(),axis=1))
+            return np.nanmean(np.linalg.norm(self.data(),axis=1))
         elif self.data().ndim == 3:
-            return np.mean(np.sqrt(np.trace(np.power(self.data(),2),axis1=1,axis2=2)))
+            return np.nanmean(np.sqrt(np.trace(np.power(self.data(),2),axis1=1,axis2=2)))
 
     def bounding_box(self):
         if len(self.points)>0:

@@ -209,8 +209,8 @@ def vtk_polydata_to_cell_triangular_meshes(polydata):
 
     start_time = time()
     print "  --> Creating cell meshes"
-    for c in np.unique(triangle_cell): 
-
+    for c in np.unique(triangle_cell):
+        
         mesh[c] = TriangularMesh()
         cell_triangles = np.arange(polydata.GetNumberOfCells())[np.where(triangle_cell==c)]
         cell_triangle_points = np.sort([[polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in cell_triangles])
