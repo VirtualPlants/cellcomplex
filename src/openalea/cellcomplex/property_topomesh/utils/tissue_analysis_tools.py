@@ -20,9 +20,10 @@
 
 import numpy as np
 
+from openalea.cellcomplex.property_topomesh.utils.array_tools import array_unique
+from scipy.cluster.vq import vq
+
 def cell_vertex_extraction(img,**kwargs):
-    from vplants.meshing.array_tools import array_unique
-    from scipy.cluster.vq import vq
     
     shape = np.array(img.shape)
     neighborhood_img = []
@@ -59,8 +60,6 @@ def cell_vertex_extraction(img,**kwargs):
 
 
 def voxel_cell_vertex_extraction(img,**kwargs):
-    from vplants.meshing.array_tools import array_unique
-    from scipy.cluster.vq import vq
     
     shape = np.array(img.shape)
     neighborhood_img = []

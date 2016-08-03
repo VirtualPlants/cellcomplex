@@ -28,7 +28,7 @@ import matplotlib
 matplotlib.use( "MacOSX" )
 import matplotlib.pyplot as plt
 
-from vplants.meshing.cute_plot              import simple_plot, density_plot, smooth_plot, histo_plot, bar_plot, violin_plot, spider_plot
+from cute_plot              import simple_plot, density_plot, smooth_plot, histo_plot, bar_plot, violin_plot, spider_plot
 
 import matplotlib.font_manager as fm
 import matplotlib.patches as patch

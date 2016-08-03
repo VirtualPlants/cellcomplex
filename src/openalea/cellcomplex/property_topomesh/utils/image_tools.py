@@ -820,7 +820,7 @@ def image_to_pgl_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smooth=1.0,
 
 
 def image_to_triangular_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smooth=1.0,resolution=None):
-    from vplants.meshing.triangular_mesh import TriangularMesh
+    from openalea.cellcomplex.triangular_mesh import TriangularMesh
     from time import time
 
     if resolution is None:
