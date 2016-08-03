@@ -1299,7 +1299,7 @@ def compute_topomesh_triangle_properties(topomesh,positions=None):
     and the corresponding properties updated in the structure.
 
     Args:
-        topomesh (:class:`openalea.mesh.PropertyTopomesh`):
+        topomesh (:class:`openalea.cellcomplex.property_topomesh.PropertyTopomesh`):
             The structure on which to compute the property.
         positions (dict, *optional*):
             A position dictionary if the property ('barycenter',0) is empty.
@@ -1366,7 +1366,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     faces, weighting them differently according to the chosen method.
 
     Args:
-        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
+        topomesh (:class:`openalea.cellcomplex.property_topomesh.PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
             The name of the property to compute (must be already computed on faces).
@@ -1497,7 +1497,7 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
     border faces, weighting them differently according to the chosen method.
 
     Args:
-        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
+        topomesh (:class:`openalea.cellcomplex.property_topomesh.PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
             The name of the property to compute (must be already computed on faces).
@@ -1597,7 +1597,7 @@ def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborh
     functions. 
 
     Args:
-        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
+        topomesh (:class:`openalea.cellcomplex.property_topomesh.PropertyTopomesh`): 
             The structure on which to compute the property.
         property_name (str): 
             The name of the property to compute (must be already computed on faces).

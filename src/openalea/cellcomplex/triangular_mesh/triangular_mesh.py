@@ -323,6 +323,7 @@ class TriangularMesh(object):
                     bbox_volume = np.prod(bbox[:,1] - bbox[:,0])
                     point_volume = bbox_volume/float(2.*len(self.points))
                     self.char_dimension = np.power(3.*point_volume/(4.*np.pi),1/3.)
+
                 return self.char_dimension
             else:
                 return 1.

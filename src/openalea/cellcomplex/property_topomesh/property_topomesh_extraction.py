@@ -23,7 +23,7 @@ from copy import deepcopy
 
 from openalea.container import array_dict
 
-from openalea.mesh import PropertyTopomesh
+from openalea.cellcomplex.property_topomesh import PropertyTopomesh
 from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
 
 

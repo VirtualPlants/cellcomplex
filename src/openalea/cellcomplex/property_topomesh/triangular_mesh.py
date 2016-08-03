@@ -25,7 +25,7 @@ from openalea.cellcomplex.triangular_mesh import TriangularMesh
 
 from time import time
 
-def topomesh_to_triangular_mesh(topomesh, degree=3, coef=1.0, mesh_center=None, epidermis=False, property_name=None, property_degree=None):
+def topomesh_to_triangular_mesh(topomesh, degree=3, coef=1.0, mesh_center=None, epidermis=False, cell_edges=False, property_name=None, property_degree=None):
 
 
     start_time = time()
@@ -181,6 +181,25 @@ def topomesh_to_triangular_mesh(topomesh, degree=3, coef=1.0, mesh_center=None, 
         triangle_topomesh_triangles = {}
         edge_topomesh_edges = dict(zip(triangular_mesh.edges.keys(),triangular_mesh.edges.keys()))
         vertices_topomesh_vertices = {}
+
+        if cell_edges:
+            compute_topomesh_property(topomesh,'epidermis',1)
+            compute_topomesh_property(topomesh,'cells',1)
+    
+            edge_n_cells = np.array(map(len,topomesh.wisp_property('cells',1).values()))
+            edge_is_cell_edge = edge_n_cells>2
+            edge_is_cell_edge = edge_is_cell_edge | (edge_n_cells>1)&(topomesh.wisp_property('epidermis',1).values())
+            edge_is_cell_edge = array_dict(edge_is_cell_edge,list(topomesh.wisps(1)))
+
+            edges_to_remove = []
+            for eid in triangular_mesh.edges:
+                if not edge_is_cell_edge[eid]:
+                    edges_to_remove += [eid]
+            for eid in edges_to_remove:
+                del triangular_mesh.edges[eid]
+                del edge_topomesh_edges[eid]
+                if triangular_mesh.edge_data.has_key(eid):
+                    del triangular_mesh.edge_data[eid]
 
     elif degree == 0:
         vertices_positions = topomesh.wisp_property('barycenter',0)

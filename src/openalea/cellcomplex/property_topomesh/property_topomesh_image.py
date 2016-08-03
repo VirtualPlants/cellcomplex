@@ -21,7 +21,7 @@ import numpy as np
 
 from copy import deepcopy
 
-from openalea.mesh import PropertyTopomesh
+from openalea.cellcomplex.property_topomesh import PropertyTopomesh
 from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
 
 

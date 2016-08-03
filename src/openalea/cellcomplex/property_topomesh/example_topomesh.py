@@ -19,7 +19,7 @@
 
 import numpy as np
 
-from openalea.mesh.property_topomesh_creation import triangle_topomesh
+from openalea.cellcomplex.property_topomesh.property_topomesh_creation import triangle_topomesh
 
 def square_topomesh(side_length = 1):
     points = {}

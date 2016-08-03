@@ -62,7 +62,7 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
     as planarization of interfaces, or triangle quality enhancement.
 
     Args:
-        topomesh (:class:`openalea.mesh.PropertyTopomesh`): 
+        topomesh (:class:`openalea.cellcomplex.property_topomesh.PropertyTopomesh`): 
             The structure on which to apply the optimization.
         iterations (int):
             The number of times the deformation is repeated.

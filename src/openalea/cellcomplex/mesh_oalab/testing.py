@@ -17,8 +17,8 @@
 #
 ###############################################################################
 
-from openalea.mesh import PropertyTopomesh
-from openalea.mesh.property_topomesh_creation import tetrahedra_topomesh
+from openalea.cellcomplex.property_topomesh import PropertyTopomesh
+from openalea.cellcomplex.property_topomesh.property_topomesh_creation import tetrahedra_topomesh
 
 
 def tetrahedron_example_topomesh():

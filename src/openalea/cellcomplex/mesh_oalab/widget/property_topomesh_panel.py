@@ -33,8 +33,8 @@ from openalea.oalab.widget.world import WorldModel
 from openalea.container import PropertyTopomesh, array_dict
 
 try:
-    from openalea.mesh.triangular_mesh import topomesh_to_triangular_mesh
-    from openalea.mesh.property_topomesh_io import save_ply_property_topomesh
+    from openalea.cellcomplex.property_topomesh.triangular_mesh import topomesh_to_triangular_mesh
+    from openalea.cellcomplex.property_topomesh.property_topomesh_io import save_ply_property_topomesh
 except:
     print "Openalea.Cellcomplex must be installed to use TopomeshControls!"
     raise
@@ -57,6 +57,7 @@ for degree in xrange(4):
     attribute_definition['topomesh']["property_degree_"+str(degree)] = dict(value=degree,interface="IInt",constraints=cst_degree,label="Degree") 
     attribute_definition['topomesh']["property_name_"+str(degree)] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label="Property")     
     attribute_definition['topomesh']["coef_"+str(degree)] = dict(value=1,interface="IFloat",constraints=cst_proba,label="Coef") 
+attribute_definition['topomesh']["cell_edges"] = dict(value=False,interface="IBool",constraints={},label="Cell edges")
 # attribute_definition['topomesh']["filename"] = dict(value="",interface="IFileStr",constraints={},label="Filename")
 # attribute_definition['topomesh']["save"] = dict(value=(lambda:None),interface="IAction",constraints={},label="Save PropertyTopomesh")
 
@@ -245,6 +246,8 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                 setdefault(world_object, dtype, 'property_name_'+str(degree), conv=_property_names, attribute_definition=attribute_definition, **kwargs)
                 if degree>1:
                     setdefault(world_object, dtype, 'coef_'+str(degree), attribute_definition=attribute_definition, **kwargs)
+                elif degree == 1:
+                    setdefault(world_object, dtype, 'cell_edges', attribute_definition=attribute_definition, **kwargs)
                 world_object.silent = False
             
             # world_object.silent = True
@@ -382,12 +385,13 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                     topomesh = world_object.data
                     property_name = world_object['property_name_'+str(display_degree)]
                     property_degree = world_object['property_degree_'+str(display_degree)]
+                    cell_edges = world_object['cell_edges']
                     if display_degree > 1:
                         coef = world_object['coef_'+str(display_degree)]
                     else:
                         coef = 1
                     print "Property : ",property_name," (",attribute['name'],")"
-                    mesh, matching = topomesh_to_triangular_mesh(topomesh,degree=display_degree,coef=coef,mesh_center=[0,0,0],property_name=property_name,property_degree=property_degree)
+                    mesh, matching = topomesh_to_triangular_mesh(topomesh,degree=display_degree,coef=coef,mesh_center=[0,0,0],cell_edges=cell_edges,property_name=property_name,property_degree=property_degree)
                     
                     self._mesh[world_object.name][display_degree] = mesh
                     self._mesh_matching[world_object.name][display_degree] = matching
