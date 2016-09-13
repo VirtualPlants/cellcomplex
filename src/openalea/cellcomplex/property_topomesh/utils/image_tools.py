@@ -198,7 +198,8 @@ def vtk_polydata_to_cell_triangular_meshes(polydata):
     triangle_cell_start_time = time()
     print "  --> Listing triangles"
     print "      - ",polydata.GetNumberOfCells()," triangles"
-    polydata_triangles = np.sort([[polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in xrange(polydata.GetNumberOfCells())])   
+    # polydata_triangles = np.sort([[polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in xrange(polydata.GetNumberOfCells())])   
+    polydata_triangles = np.array([[polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in xrange(polydata.GetNumberOfCells())])   
     triangle_cell_end_time = time()
     print "  <-- Listing triangles            [",triangle_cell_end_time - triangle_cell_start_time,"s]"
 
@@ -214,7 +215,8 @@ def vtk_polydata_to_cell_triangular_meshes(polydata):
         
         mesh[c] = TriangularMesh()
         cell_triangles = np.arange(polydata.GetNumberOfCells())[np.where(triangle_cell==c)]
-        cell_triangle_points = np.sort([[polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in cell_triangles])
+        # cell_triangle_points = np.sort([[polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in cell_triangles])
+        cell_triangle_points = np.array([[polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in cell_triangles])
         cell_vertices = np.sort(np.unique(cell_triangle_points))
 
 

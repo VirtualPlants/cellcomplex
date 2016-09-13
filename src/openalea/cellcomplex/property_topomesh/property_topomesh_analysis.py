@@ -280,7 +280,7 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
             cell_face_component = 0
             for c,cid in enumerate(topomesh.wisps(3)):
 
-                cell_fids = np.array(list(topomesh.borders(3,cid)))
+                cell_fids = np.array(list(topomesh.borders(3,cid))).astype(int)
                 # print cell_fids
 
                 cell_fid_normals = topomesh.wisp_property('normal',2).values(cell_fids)

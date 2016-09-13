@@ -238,17 +238,18 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
             kwargs = world_kwargs(world_object)
 
             print "Set default attributes : ",world_object.name
-
+            
+            world_object.silent = True
             for degree in np.arange(4)[::-1]:
                 setdefault(world_object, dtype, 'display_'+str(degree), attribute_definition=attribute_definition, **kwargs)
-                world_object.silent = True
+
                 setdefault(world_object, dtype, 'property_degree_'+str(degree), attribute_definition=attribute_definition, **kwargs)
                 setdefault(world_object, dtype, 'property_name_'+str(degree), conv=_property_names, attribute_definition=attribute_definition, **kwargs)
                 if degree>1:
                     setdefault(world_object, dtype, 'coef_'+str(degree), attribute_definition=attribute_definition, **kwargs)
                 elif degree == 1:
                     setdefault(world_object, dtype, 'cell_edges', attribute_definition=attribute_definition, **kwargs)
-                world_object.silent = False
+            world_object.silent = False
             
             # world_object.silent = True
             # setdefault(world_object, dtype, 'filename', attribute_definition=attribute_definition, **kwargs)

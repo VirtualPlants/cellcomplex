@@ -121,7 +121,7 @@ def cut_surface_topomesh(input_topomesh, z_cut=0, below=True):
     return topomesh
 
 
-def clean_topomesh(input_topomesh):
+def clean_topomesh(input_topomesh, clean_properties=False):
 
     topomesh = deepcopy(input_topomesh)
 
@@ -140,6 +140,11 @@ def clean_topomesh(input_topomesh):
     vertices_to_remove = [w for w in topomesh.wisps(0) if topomesh.nb_regions(0,w)==0]
     for w in vertices_to_remove:
         topomesh.remove_wisp(0,w)
+
+    if clean_properties:
+        for degree in xrange(4):
+            for property_name in topomesh.wisp_property_names(degree):
+                topomesh.update_wisp_property(property_name,degree,dict(zip(list(topomesh.wisps(degree)),topomesh.wisp_property(property_name,degree).values(list(topomesh.wisps(degree))))))
 
     return topomesh
     
