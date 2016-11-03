@@ -330,9 +330,7 @@ def property_topomesh_triangle_regularization_force(topomesh):
     #triangle_unitary_force = 0.02*area_unitary_force + 8.0*sinus_unitary_force
     # triangle_unitary_force = 0.02*area_unitary_force
 
-    triangle_force = np.transpose([nd.sum(triangle_unitary_force[:,0],triangle_vertices[:,0],index=list(topomesh.wisps(0))),
-                                   nd.sum(triangle_unitary_force[:,1],triangle_vertices[:,0],index=list(topomesh.wisps(0))),
-                                   nd.sum(triangle_unitary_force[:,2],triangle_vertices[:,0],index=list(topomesh.wisps(0)))])
+    triangle_force = np.transpose([nd.sum(triangle_unitary_force[:,k],triangle_vertices[:,0],index=list(topomesh.wisps(0))) for k in xrange(3)])
 
     return triangle_force
 
@@ -962,13 +960,15 @@ def topomesh_remove_vertex(topomesh,pid,kept_fid=None,triangulate=True):
 
 
 def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
+    initial_topomesh = deepcopy(topomesh)
+
     try:
         if manifold:
             assert len(list(topomesh.regions(1,eid))) == 2
 
         pid_to_keep, pid_to_delete = topomesh.borders(1,eid)
 
-        print "--> Collapsing edge",eid," : ",pid_to_keep," ; ",pid_to_delete
+        print "--> Trying to collapse edge",eid," : ",pid_to_keep," ; ",pid_to_delete
 
         if kept_pid is not None and pid_to_keep != kept_pid:
             pid_to_delete, pid_to_keep = topomesh.borders(1,eid)
@@ -1000,8 +1000,8 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
             eid_to_keep = list(set(topomesh.borders(2,fid)).intersection(set(eids_to_keep)).difference({eid}))[0]
             eid_to_delete = list(set(topomesh.borders(2,fid)).intersection(set(eids_to_delete)).difference({eid}))[0]
 
-            print "    --> Kept eid : ",eid_to_keep,list(topomesh.regions(1,eid_to_keep))
-            print "    --> Deleted eid : ",eid_to_delete,list(topomesh.regions(1,eid_to_delete))
+            print "      --> Kept eid : ",eid_to_keep,list(topomesh.regions(1,eid_to_keep))
+            print "      --> Deleted eid : ",eid_to_delete,list(topomesh.regions(1,eid_to_delete))
 
             topomesh.unlink(2,fid,eid)
             topomesh.unlink(2,fid,eid_to_keep)
@@ -1041,18 +1041,32 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
 
         topomesh.remove_wisp(1,eid)
 
-        print "<-- Collapsed edge",eid," : ",pid_to_keep
+        if np.max([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])>2:
+            print "  --> Error while collapsing! Non-manifold edges :",np.array(list(topomesh.wisps(1)))[np.array([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])>2]
+
+        assert np.max([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])==2
+
+        print "<-- Collapsed edge",eid," : ",pid_to_keep," (",topomesh.nb_wisps(2)," Faces )"
+        #raw_input()
 
         return True
 
         # edge_vertices = np.sort(np.array([list(topomesh.borders(1,e)) for e in topomesh.wisps(1) if topomesh.nb_borders(1,e) == 2]))
         # edge_vertex_id = edge_vertices[:,0]*10000 + edge_vertices[:,1]
         # if edge_vertices.shape[0] != array_unique(edge_vertices).shape[0]:
-        #     print eid," collapse error : (",pid_to_keep,pid_to_delete,")",np.array(list(topomesh.wisps(1)))[nd.sum(np.ones_like(edge_vertex_id),edge_vertex_id,index=edge_vertex_id)>1]
+        #     print eid," collapse error : (",pid_to_keep,pid_to_delete,@")",np.array(list(topomesh.wisps(1)))[nd.sum(np.ones_like(edge_vertex_id),edge_vertex_id,index=edge_vertex_id)>1]
         #     raw_input()
 
     except AssertionError:
-        print "Impossible to collapse edge : wrong configuration ( ",len(list(topomesh.regions(1,eid)))," regions)"
+        print "<-- Impossible to collapse edge : wrong configuration ( ",len(list(initial_topomesh.regions(1,eid)))," regions)"
+        assert np.max([initial_topomesh.nb_regions(1,e) for e in initial_topomesh.wisps(1)])==2
+        topomesh._borders = deepcopy(initial_topomesh._borders)
+        topomesh._regions = deepcopy(initial_topomesh._regions)
+        topomesh.update_wisp_property('barycenter',0,initial_topomesh.wisp_property('barycenter',0))
+        assert np.max([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])==2
+
+        print "<-- Failed to collapse edge",eid," : ",pid_to_keep," (",topomesh.nb_wisps(2)," Faces )"
+        # raw_input()
         return False
 
 
@@ -1490,7 +1504,6 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
 
         if omega_energies.has_key('neighborhood'):
 
-
             compute_topomesh_property(topomesh,'valence',0)
 
             nested_mesh = kwargs.get("nested_mesh",False)
@@ -1570,23 +1583,104 @@ def property_topomesh_edge_split_optimization(topomesh, maximal_length=None, ite
     return n_splits
 
 
-def property_topomesh_isotropic_remeshing(initial_topomesh, maximal_length=None, iterations=1):
+def property_topomesh_edge_collapse_optimization(topomesh, omega_energies=dict([('length',0.01),('error_quadrics',0.65)]), minimal_length=None, target_triangles=None, iterations=1):
+
+    compute_topomesh_property(topomesh,'vertices',1)
+    compute_topomesh_property(topomesh,'vertices',2)
+    compute_topomesh_property(topomesh,'length',1)
+    compute_topomesh_property(topomesh,'area',2)
+
+    if minimal_length is None:
+        target_length = np.percentile(topomesh.wisp_property('length',1).values(),70)
+        minimal_length = 3./4. * target_length
+
+    if target_triangles is None:
+        target_triangles = topomesh.nb_wisps(2)/4
+
+    if 'error_quadrics' in omega_energies.keys():
+        maximal_quadrics_error = np.power(minimal_length,2.)
+
+        compute_topomesh_property(topomesh,'triangles',0)
+        vertices_positions = topomesh.wisp_property('barycenter',0).values(topomesh.wisp_property('vertices',2).values())
+        normal_vectors = np.cross(vertices_positions[:,1]-vertices_positions[:,0],vertices_positions[:,2]-vertices_positions[:,0])
+        normal_norms = np.linalg.norm(normal_vectors,axis=1)
+        normal_vectors = normal_vectors/normal_norms[:,np.newaxis]
+        plane_d = -np.einsum('...ij,...ij->...i',normal_vectors,vertices_positions[:,0])
+        triangle_planes = np.concatenate([normal_vectors,plane_d[:,np.newaxis]],axis=1)
+
+        triangle_plane_quadrics = array_dict(np.einsum('...i,...j->...ij',triangle_planes,triangle_planes),list(topomesh.wisps(2)))
+        vertex_triangles = deepcopy(topomesh.wisp_property('triangles',0))
+
+        # vertex_quadrics = triangle_plane_quadrics.values([t[0]+1 for t in vertex_triangles])
+        # homogeneous_positions = np.concatenate([topomesh.wisp_property('barycenter',0).values(),np.ones((topomesh.nb_wisps(0),1))],axis=1)
+
+    for iterations in xrange(iterations):
+        compute_topomesh_property(topomesh,'vertices',1)
+        compute_topomesh_property(topomesh,'length',1)
+
+        edge_energy_variation = np.zeros_like(list(topomesh.wisps(1)),np.float)
+
+        if 'length' in omega_energies.keys():
+            edge_energy_variation += omega_energies['length']*(topomesh.wisp_property('length',1).values(list(topomesh.wisps(1))))
+
+        if 'error_quadrics' in omega_energies.keys():
+
+            edge_vertices = topomesh.wisp_property('vertices',1).values()
+            edge_middles = topomesh.wisp_property('barycenter',0).values(edge_vertices).mean(axis=1)
+            edge_middles_homogeneous = np.concatenate([edge_middles,np.ones((topomesh.nb_wisps(1),1))],axis=1)
+
+            edge_vertex_faces = np.array([np.concatenate(vertex_triangles.values(v)) for v in edge_vertices])
+            edge_vertex_face_quadrics = np.array([triangle_plane_quadrics.values(t) for t in edge_vertex_faces])
+            edge_vertex_face_middles = np.array([ [e for t in e_v_t] for e,e_v_t in zip(edge_middles_homogeneous,edge_vertex_faces)])
+            edge_quadrics_errors = np.array([np.abs(np.einsum('...ij,...ij->...i',m,np.einsum('...ij,...j->...i',q,m))).sum() for q,m in zip(edge_vertex_face_quadrics,edge_vertex_face_middles)])
+            edge_quadrics_errors = array_dict(edge_quadrics_errors,list(topomesh.wisps(1)))
+
+            edge_energy_variation += omega_energies['error_quadrics']*(edge_quadrics_errors.values(list(topomesh.wisps(1))))
+
+        sorted_energy_variation_edges = np.array(list(topomesh.wisps(1)))[np.argsort(edge_energy_variation)]
+        if 'error_quadrics' in omega_energies.keys():
+            sorted_energy_variation_edges = sorted_energy_variation_edges[edge_quadrics_errors.values(sorted_energy_variation_edges) < maximal_quadrics_error]
+        sorted_energy_variation_edges = sorted_energy_variation_edges[topomesh.wisp_property('length',1).values(sorted_energy_variation_edges) < minimal_length]
+        # sorted_quadrics_errors_edges = sorted_quadrics_errors_edges[np.sort(edge_quadrics_errors.values()) < np.percentile(edge_quadrics_errors.values(),5)]
+
+        modified_edges = set()
+        n_collapses = 0 
+        for eid in sorted_energy_variation_edges:
+            if not eid in modified_edges and topomesh.nb_wisps(2)>target_triangles:
+                # print "  <-- Collapsing edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+                modified_edges = modified_edges.union(set(np.unique(list(topomesh.border_neighbors(1,eid))))).union({eid})
+                collapsed = topomesh_collapse_edge(topomesh,eid,manifold=False)
+                n_collapses += collapsed
+                # print "  <-- Collapsed edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+        print "--> Collapsed ",n_collapses," edges[",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+
+    return n_collapses
+
+
+def property_topomesh_isotropic_remeshing(initial_topomesh, maximal_length=None, minimal_length=None, collapse=False, iterations=1):
 
     topomesh = deepcopy(initial_topomesh)
 
     n_flips = topomesh.nb_wisps(1)
     n_splits = topomesh.nb_wisps(1)
+    n_collapses = topomesh.nb_wisps(1)
 
+    compute_topomesh_property(topomesh,'length',1)
+    target_length = np.percentile(topomesh.wisp_property('length',1).values(),80)
     if maximal_length is None:
-        compute_topomesh_property(topomesh,'length',1)
-        target_length = np.percentile(topomesh.wisp_property('length',1).values(),50)
         maximal_length = 4./3. * target_length
+    if minimal_length is None:
+        minimal_length = 3./4. * target_length
 
     iteration = 0
-    while (n_flips+n_splits > topomesh.nb_wisps(1)/100.) and (iteration<iterations):
+    while (n_flips+n_splits+n_collapses > topomesh.nb_wisps(1)/100.) and (iteration<iterations):
+        if collapse:
+            n_collapses = property_topomesh_edge_collapse_optimization(topomesh, minimal_length=minimal_length, iterations=1)
+        else:
+            n_collapses = 0
         n_splits = property_topomesh_edge_split_optimization(topomesh, maximal_length=maximal_length, iterations=1)
-        n_flips = property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('neighborhood',0.65)]),simulated_annealing=False,iterations=3)
-        property_topomesh_vertices_deformation(topomesh,omega_forces=dict([('taubin_smoothing',0.33)]))
+        n_flips = property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('neighborhood',0.65)]),simulated_annealing=False,iterations=5)
+        property_topomesh_vertices_deformation(topomesh,omega_forces=dict([('taubin_smoothing',0.33)]),iterations=5)
         iteration += 1
 
     return topomesh

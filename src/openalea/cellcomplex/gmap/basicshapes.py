@@ -20,7 +20,6 @@ def topopolyline(nbpoints = 3, gmap = None):
         gmap.link_darts(1, darts[2*i+1], darts[2*i+2])
     return gmap, darts
 
-
 def toposquare(gmap = None):
     return topopolygon(4,gmap)
 

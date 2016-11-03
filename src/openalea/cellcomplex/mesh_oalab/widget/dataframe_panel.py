@@ -494,7 +494,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                 elif world_object['plot'] == 'map':
                     data_range = [[X.min()-0.5*(X.max()-X.min()),X.max()+0.5*(X.max()-X.min())],[Y.min()-0.5*(Y.max()-Y.min()),Y.max()+0.5*(Y.max()-Y.min())]]
                     # print mpl_norm(labels)
-                    map_plot(figure,X,Y,mpl_norm(labels),mpl_cmap,data_range,xlabel=xlabel,ylabel=ylabel,smooth_factor=smooth*10,linewidth=linewidth,alpha=alpha)
+                    map_plot(figure,X,Y,mpl_norm(labels),mpl_cmap,data_range,xlabel=xlabel,ylabel=ylabel,smooth_factor=smooth*10,n_points=10.*world_object['n_points'],linewidth=linewidth,alpha=alpha)
 
 
 

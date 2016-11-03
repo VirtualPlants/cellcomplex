@@ -306,7 +306,7 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
     print "<-- Saving .ply        [",end_time-start_time,"s]"
 
 
-def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0,[]),(1,['length']),(2,['area','epidermis']),(3,[])]),color_faces=False, coordinatepropname = 'barycenter', verbose = True):
+def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0,[]),(1,['length']),(2,['area','epidermis']),(3,[])]),color_faces=False, colormap=None, coordinatepropname='barycenter', verbose=True):
     if verbose:
         start_time =time()
         print "--> Saving .ply"
@@ -384,9 +384,18 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
         # for eid in topomesh.borders(2,fid):
         #     ply_file.write(str(edge_index[eid])+" ")
         if color_faces:
-            ply_file.write(str(triangle_data[fid])+" ")
-            ply_file.write(str(triangle_data[fid])+" ")
-            ply_file.write(str(triangle_data[fid])+" ")
+        #     ply_file.write(str(triangle_data[fid])+" ")
+        #     ply_file.write(str(triangle_data[fid])+" ")
+        #     ply_file.write(str(triangle_data[fid])+" ")
+            if colormap is None:
+                ply_file.write(str(triangle_data[fid])+" ")
+                ply_file.write(str(triangle_data[fid])+" ")
+                ply_file.write(str(triangle_data[fid])+" ")
+            else:
+                color = colormap._color_points.values()[int(triangle_data[fid])]
+                ply_file.write(str(int(255*color[0]))+" ")
+                ply_file.write(str(int(255*color[1]))+" ")
+                ply_file.write(str(int(255*color[2]))+" ")
         for property_name in properties_to_save[2]:
             if topomesh.has_wisp_property(property_name,2,is_computed=True):
                 property_type = property_types[str(topomesh.wisp_property(property_name,2).values().dtype)]
@@ -447,6 +456,7 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
     property_types['float32'] = 'float'
     property_types['list'] = 'list'
     property_types['tensor'] = 'tensor'
+    property_types['string'] = 'str'
 
     ply_file = open(ply_filename,'rU')
     ply_stream = enumerate(ply_file,1)
@@ -512,6 +522,9 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
                         prop_index += 1
                     elif property_types[prop_type] == 'int':
                         line_props[prop] = int(re.split(' ',line)[prop_index])
+                        prop_index += 1
+                    elif property_types[prop_type] == 'str':
+                        line_props[prop] = str(re.split(' ',line)[prop_index])
                         prop_index += 1
                     elif property_types[prop_type] == 'list':
                         list_length = int(re.split(' ',line)[prop_index])

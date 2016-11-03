@@ -20,13 +20,18 @@
 import numpy as np
 from openalea.container import array_dict
 
-from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
+from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property, is_triangular
+from openalea.cellcomplex.property_topomesh.property_topomesh_extraction import star_interface_topomesh
 from openalea.cellcomplex.triangular_mesh import TriangularMesh
 
 from time import time
+from copy import deepcopy
 
-def topomesh_to_triangular_mesh(topomesh, degree=3, coef=1.0, mesh_center=None, epidermis=False, cell_edges=False, property_name=None, property_degree=None):
+def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=None, epidermis=False, cell_edges=False, property_name=None, property_degree=None):
 
+    topomesh = deepcopy(input_topomesh)
+    if not is_triangular(topomesh):
+        topomesh = star_interface_topomesh(topomesh)
 
     start_time = time()
     print "--> Creating triangular mesh"
@@ -80,6 +85,7 @@ def topomesh_to_triangular_mesh(topomesh, degree=3, coef=1.0, mesh_center=None, 
                     triangle_vertices += list(cell_vertices_index.values(topomesh.wisp_property('vertices',2).values(topomesh.wisp_property('triangles',3)[c])))
                     triangle_topomesh_cells += list(c*np.ones_like(topomesh.wisp_property('triangles',3)[c]))
                     # triangle_topomesh_triangles += topomesh.wisp_property('triangles',3)[c]
+            print vertices_positions
             vertices_positions = array_dict(vertices_positions,np.arange(len(vertices_positions)))
             vertices_topomesh_vertices = array_dict(vertices_topomesh_vertices,np.arange(len(vertices_positions)))
             if epidermis:

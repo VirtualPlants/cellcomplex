@@ -142,7 +142,7 @@ def tetra_geometric_features(tetrahedra,positions,features=['volume','max_distan
 
 
 def triangle_geometric_features(triangles,positions,features=['area','max_distance']):
-    triangle_edge_list  = np.array([[1, 2],[0, 2],[0, 1]])
+    triangle_edge_list  = np.array([[1,2],[2,0],[0,1]])
     triangle_edges = triangles[...,triangle_edge_list]
     triangle_edge_lengths = np.linalg.norm(positions.values(triangle_edges[...,1]) - positions.values(triangle_edges[...,0]),axis=2)
     
@@ -150,29 +150,57 @@ def triangle_geometric_features(triangles,positions,features=['area','max_distan
 
     triangle_features['edge_lengths'] = triangle_edge_lengths
 
+    triangle_features['barycenter'] = positions.values(triangles).mean(axis=1)
+
     triangle_features['perimeter'] = triangle_edge_lengths.sum(axis=1)
     triangle_features['area'] = np.sqrt((triangle_features['perimeter']/2.0)*(triangle_features['perimeter']/2.0-triangle_edge_lengths[...,0])*(triangle_features['perimeter']/2.0-triangle_edge_lengths[...,1])*(triangle_features['perimeter']/2.0-triangle_edge_lengths[...,2]))
+
+
     triangle_features['eccentricity'] = 1. - (12.0*np.sqrt(3)*triangle_features['area'])/np.power(triangle_features['perimeter'],2.0)
     
-    if ('max_distance' in features) or ('min_distance' in features):
-        triangle_edge_lengths = np.sort(triangle_edge_lengths)
-        triangle_features['max_distance'] = triangle_edge_lengths[:,-1]
-        triangle_features['min_distance'] = triangle_edge_lengths[:,0]
+    # if ('max_distance' in features) or ('min_distance' in features):
+    sorted_triangle_edge_lengths = np.sort(triangle_edge_lengths)
+    triangle_features['max_distance'] = sorted_triangle_edge_lengths[:,-1]
+    triangle_features['min_distance'] = sorted_triangle_edge_lengths[:,0]
 
-    if 'sinus' in features or 'sinus_eccentricity' in features:
-        triangle_features['sinus'] = np.zeros_like(triangle_edge_lengths,np.float16)
-        triangle_features['sinus'][:,0] = np.sqrt(np.array(1.0 - np.power(triangle_edge_lengths[...,1]**2+triangle_edge_lengths[...,2]**2-triangle_edge_lengths[:,0]**2,2.0)/np.power(2.0*triangle_edge_lengths[...,1]*triangle_edge_lengths[...,2],2.0),np.float16))
-        triangle_features['sinus'][:,1] = np.sqrt(np.array(1.0 - np.power(triangle_edge_lengths[...,2]**2+triangle_edge_lengths[...,0]**2-triangle_edge_lengths[:,1]**2,2.0)/np.power(2.0*triangle_edge_lengths[...,2]*triangle_edge_lengths[...,0],2.0),np.float16))
-        triangle_features['sinus'][:,2] = np.sqrt(np.array(1.0 - np.power(triangle_edge_lengths[...,0]**2+triangle_edge_lengths[...,1]**2-triangle_edge_lengths[:,2]**2,2.0)/np.power(2.0*triangle_edge_lengths[...,0]*triangle_edge_lengths[...,1],2.0),np.float16))
+    # if 'sinus' in features or 'sinus_eccentricity' in features or 'circumscribed_circle_center' in features or 'projected_circumscribed_circle_center' in features:
+    triangle_features['sinus'] = np.zeros_like(triangle_edge_lengths,np.float16)
+    triangle_features['sinus'][:,0] = np.sqrt(np.array(1.0 - np.power(triangle_edge_lengths[...,1]**2+triangle_edge_lengths[...,2]**2-triangle_edge_lengths[:,0]**2,2.0)/np.power(2.0*triangle_edge_lengths[...,1]*triangle_edge_lengths[...,2],2.0),np.float16))
+    triangle_features['sinus'][:,1] = np.sqrt(np.array(1.0 - np.power(triangle_edge_lengths[...,2]**2+triangle_edge_lengths[...,0]**2-triangle_edge_lengths[:,1]**2,2.0)/np.power(2.0*triangle_edge_lengths[...,2]*triangle_edge_lengths[...,0],2.0),np.float16))
+    triangle_features['sinus'][:,2] = np.sqrt(np.array(1.0 - np.power(triangle_edge_lengths[...,0]**2+triangle_edge_lengths[...,1]**2-triangle_edge_lengths[:,2]**2,2.0)/np.power(2.0*triangle_edge_lengths[...,0]*triangle_edge_lengths[...,1],2.0),np.float16))
     
-    if 'cosinus' in features:
-        triangle_features['cosinus'] = np.zeros_like(triangle_edge_lengths,np.float16)
-        triangle_features['cosinus'][:,0] = (triangle_edge_lengths[...,1]**2+triangle_edge_lengths[...,2]**2-triangle_edge_lengths[:,0]**2)/(2.0*triangle_edge_lengths[...,1]*triangle_edge_lengths[...,2])
-        triangle_features['cosinus'][:,1] = (triangle_edge_lengths[...,2]**2+triangle_edge_lengths[...,0]**2-triangle_edge_lengths[:,1]**2)/(2.0*triangle_edge_lengths[...,2]*triangle_edge_lengths[...,0])
-        triangle_features['cosinus'][:,2] = (triangle_edge_lengths[...,0]**2+triangle_edge_lengths[...,1]**2-triangle_edge_lengths[:,2]**2)/(2.0*triangle_edge_lengths[...,0]*triangle_edge_lengths[...,1])
+    # if 'cosinus' in features or 'circumscribed_circle_center' in features or 'projected_circumscribed_circle_center' in features:
+    triangle_features['cosinus'] = np.zeros_like(triangle_edge_lengths,np.float16)
+    triangle_features['cosinus'][:,0] = (triangle_edge_lengths[...,1]**2+triangle_edge_lengths[...,2]**2-triangle_edge_lengths[:,0]**2)/(2.0*triangle_edge_lengths[...,1]*triangle_edge_lengths[...,2])
+    triangle_features['cosinus'][:,1] = (triangle_edge_lengths[...,2]**2+triangle_edge_lengths[...,0]**2-triangle_edge_lengths[:,1]**2)/(2.0*triangle_edge_lengths[...,2]*triangle_edge_lengths[...,0])
+    triangle_features['cosinus'][:,2] = (triangle_edge_lengths[...,0]**2+triangle_edge_lengths[...,1]**2-triangle_edge_lengths[:,2]**2)/(2.0*triangle_edge_lengths[...,0]*triangle_edge_lengths[...,1])
 
-    if 'sinus_eccentricity' in features:
-        triangle_features['sinus_eccentricity'] = 1.0 - (2.0*triangle_features['sinus'].sum(axis=1))/(3*np.sqrt(3))
+    triangle_features['angles'] = np.arccos(triangle_features['cosinus'])
+    print triangle_features['angles']*180./np.pi
 
+    # if 'sinus_eccentricity' in features:
+    triangle_features['sinus_eccentricity'] = 1.0 - (2.0*triangle_features['sinus'].sum(axis=1))/(3*np.sqrt(3))
+    # print triangle_features['sinus_eccentricity']
+
+    #if 'circumscribed_circle_center' in features or 'projected_circumscribed_circle_center' in features or 'orthocenter' in features:
+    triangle_features['tangent'] = np.array(triangle_features['sinus']/triangle_features['cosinus'],np.float64)
+    triangle_features['orthocenter'] = (positions.values(triangles)*triangle_features['tangent'][:,:,np.newaxis]).sum(axis=1) / (triangle_features['tangent'].sum(axis=1) + 1e-5)[:,np.newaxis]
+
+    # print triangle_features['tangent']
+    # print (triangle_features['tangent'].sum(axis=1))
+
+    #triangle_tangent_sums = triangle_features['tangent'][...,triangle_edge_list].sum(axis=1)/triangle_features['tangent'][...,triangle_edge_list].sum(axis=1)[:,np.newaxis]
+    #triangle_tangent_sums = np.maximum(triangle_tangent_sums,-1)/np.maximum(triangle_tangent_sums,-1).sum(axis=1)[:,np.newaxis]
+    triangle_sincos = triangle_features['sinus']*triangle_features['cosinus']
+    print triangle_sincos
+    print triangle_sincos.sum(axis=1)
+    triangle_features['circumscribed_circle_center'] = (positions.values(triangles)*triangle_sincos[:,:,np.newaxis]).sum(axis=1)/(triangle_sincos.sum(axis=1) + 1e-5)[:,np.newaxis]
+    
+    triangle_features['projected_circumscribed_circle_center'] = np.copy(triangle_features['circumscribed_circle_center'])
+    if triangle_sincos.min()<0:
+        projected_triangle_edges = triangle_edges[np.where(triangle_sincos<0)[0]]
+        projected_triangle_sincos = triangle_sincos[np.where(triangle_sincos<0)[0]]
+        triangle_features['projected_circumscribed_circle_center'][np.where(triangle_sincos<0)[0]] = positions.values(projected_triangle_edges[projected_triangle_sincos<0]).mean(axis=1)
+        
     return np.concatenate([triangle_features[f][:,np.newaxis] for f in features],axis=1)
 
