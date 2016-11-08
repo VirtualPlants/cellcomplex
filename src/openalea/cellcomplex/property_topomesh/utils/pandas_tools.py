@@ -22,3 +22,9 @@ def topomesh_to_dataframe(topomesh, degree=3, properties=None):
     dataframe.index.name = None
         
     return dataframe
+
+def normalized_data_range(data_range, dataframe, property_name):
+    return tuple([100.*(s-dataframe[property_name].min())/(dataframe[property_name].max()-dataframe[property_name].min()) for s in data_range])
+        
+
+
