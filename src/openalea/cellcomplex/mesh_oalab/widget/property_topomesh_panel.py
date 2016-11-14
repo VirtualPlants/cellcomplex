@@ -469,6 +469,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
 
                     if temporal:
                         time = world_object['time_point']
+                        
                         elements_times = topomesh.wisp_property('time',display_degree).values()
                         topomesh_times = np.unique(elements_times)
                         display_time = topomesh_times[vq(np.array([time]),topomesh_times)[0][0]]

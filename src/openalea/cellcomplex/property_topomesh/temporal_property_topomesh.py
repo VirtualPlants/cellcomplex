@@ -72,4 +72,26 @@ class TemporalPropertyTopomesh(PropertyTopomesh):
         return self._ancestors(degree,[wid])
 
 
+def compute_temporal_topomesh_property(topomesh, property_name, degree=0, positions=None, verbose=False):
+    """
+    """
+    from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
+
+    if positions is None:
+        positions = topomesh.wisp_property('barycenter',degree=0)
+    
+    if property_name == 'time':
+        assert degree>0
+        if not 'time' in topomesh.wisp_property_names(degree):
+            topomesh.add_wisp_property('time',degree=degree)
+        compute_topomesh_property(topomesh,'vertices',degree)
+        topomesh.update_wisp_property('time',degree=degree,values=array_dict([np.unique(topomesh.wisp_property('time',0).values(topomesh.wisp_property('vertices',degree)[w]))[0] for w in topomesh.wisps(degree)],keys=list(topomesh.wisps(degree))))
+       
+    if property_name == 'mother_cell':
+        assert degree==3
+        if not 'mother_cell' in topomesh.wisp_property_names(degree):
+            topomesh.add_wisp_property('mother_cell',degree=degree)
+        topomesh.update_wisp_property('mother_cell',degree=degree,values=np.array([int(list(topomesh.ancestors(degree,w))[0]) for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
+       
+       
 
