@@ -1392,24 +1392,25 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
                 * *area*: the weight on the faces is equal to their area
                 * *angle*: the weight of the faces is equal to the incidence angle at the considered vertex (neighborhood=1)
                 * *cotangent*: the weight of the faces is equal to the sum of cotangent of opposite angles (neighborhood=1)
-        neighborhood (int): 
+                * *angular sector*: the weight of the faces is computed as the angular sector intersecting face barycenter (neighborhood=1)
+        neighborhood (int):
             The ring-distance of faces considered around each vertex (1-ring is immediate neighbor faces).
-        adjacency_sigma (float): 
+        adjacency_sigma (float):
             The standard deviation of the gaussian weighting using the ring-distance.
 
     Returns:
         None
-            
+
     Note:
         The PropertyTopomesh passed as argument is updated.
 
-    Example: 
+    Example:
         >>> from openalea.cellcomplex.property_topomesh.example_topomesh import square_topomesh
         >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
         >>> from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_vertex_property_from_faces
         >>> topomesh = square_topomesh(side_length=1)
         >>> compute_topomesh_property(topomesh,'normal',2,normal_method='orientation')
-        >>> compute_topomesh_vertex_property_from_faces(topomesh,'normal',weighting='area',neighborhood=3,adjacency_sigma=1.2)      
+        >>> compute_topomesh_vertex_property_from_faces(topomesh,'normal',weighting='area',neighborhood=3,adjacency_sigma=1.2)
 
     """
 
@@ -1417,7 +1418,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     print "--> Computing vertex property from faces"
 
     assert topomesh.has_wisp_property(property_name,2,is_computed=True)
-    assert weighting in ['uniform','area','angle','cotangent']
+    assert weighting in ['uniform','area','angle','cotangent','angular sector']
     if neighborhood > 1:
         try:
             assert weighting in ['uniform','area']
@@ -1436,7 +1437,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
 
         vertex_faces = np.concatenate([list(topomesh.regions(0,v,2)) for v in topomesh.wisps(0)]).astype(np.uint32)
         vertex_face_vertices = np.concatenate([v*np.ones_like(list(topomesh.regions(0,v,2))) for v in topomesh.wisps(0)]).astype(np.uint32)
-    
+
         compute_topomesh_property(topomesh,'border_neighbors',2)
 
         vertex_face_adjacency_matrix[(vertex_face_vertices,vertex_faces)] = 0
@@ -1469,9 +1470,10 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
         compute_topomesh_property(topomesh,'vertices',2)
         compute_topomesh_property(topomesh,'angles',2)
         vertex_face_face_vertices = topomesh.wisp_property('vertices',2).values(vertex_faces)
-        
+
         vertex_face_face_angles = topomesh.wisp_property('angles',2).values(vertex_faces)
         vertex_face_vertex_angles = np.array([angles[vertices == v] for v,vertices,angles in zip(vertex_face_vertices,vertex_face_face_vertices,vertex_face_face_angles)])
+        print vertex_face_vertex_angles
         vertex_face_weight = vertex_face_vertex_angles[:,0]
     elif weighting == 'cotangent':
         compute_topomesh_property(topomesh,'vertices',2)
@@ -1482,6 +1484,24 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
         vertex_face_opposite_angles = np.array([angles[vertices != v] for v,vertices,angles in zip(vertex_face_vertices,vertex_face_face_vertices,vertex_face_face_angles)])
         vertex_face_cotangents = 1./np.tan(vertex_face_opposite_angles)
         vertex_face_weight = vertex_face_cotangents.sum(axis=1)
+    elif weighting == 'angular sector':
+        compute_topomesh_property(topomesh,'vertices',2)
+        compute_topomesh_property(topomesh,'angles',2)
+        compute_topomesh_property(topomesh,'barycenter',2)
+
+        vertex_face_face_vertices = topomesh.wisp_property('vertices',2).values(vertex_faces)
+        vertex_face_face_angles = topomesh.wisp_property('angles',2).values(vertex_faces)
+        vertex_face_barycenter = topomesh.wisp_property('barycenter',2).values(vertex_faces)
+        #vertex_positions = topomesh.wisp_property('barycenter',0).values(vertex_face_vertices)
+
+        face_vertex_positions = topomesh.wisp_property('barycenter',0).values(vertex_face_face_vertices)
+        # face_vertex_barycenter_radii = np.linalg.norm(np.array([[vertex_face_barycenter[f] - v for v in face_vertex_positions[f]] for f in vertex_faces]), axis=1)
+        face_vertex_barycenter_radii = np.linalg.norm(face_vertex_positions - vertex_face_barycenter[:,np.newaxis],axis=1)
+
+        vertex_face_weight = np.array(
+            [r[vertices == v] * angles[vertices == v] for v, vertices, r, angles
+             in zip(vertex_face_vertices, vertex_face_face_vertices,
+                    face_vertex_barycenter_radii, vertex_face_face_angles)])[:,0]
 
     if neighborhood > 1:
         vertex_face_weight = vertex_face_weight*vertex_adjacency_gaussian_weight

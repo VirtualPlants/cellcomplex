@@ -127,3 +127,14 @@ def test_curvature_property():
     assert np.all(
         np.isclose(topomesh.wisp_property('mean_curvature', 2).values(),
                    1. / radius, 1e-1))
+
+def test_normal_property():
+    radius = 10.
+
+    topomesh = sphere_topomesh(radius)
+    compute_topomesh_property(topomesh, 'normal', 2,
+                              normal_method='orientation')
+
+    for weighting in ['uniform','area','angle','cotangent','angular sector']:
+        compute_topomesh_vertex_property_from_faces(topomesh, 'normal', weighting=weighting)
+
