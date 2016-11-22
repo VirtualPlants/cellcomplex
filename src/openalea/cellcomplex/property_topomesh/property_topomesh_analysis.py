@@ -1488,15 +1488,15 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
         compute_topomesh_property(topomesh,'vertices',2)
         compute_topomesh_property(topomesh,'angles',2)
         compute_topomesh_property(topomesh,'barycenter',2)
-        compute_topomesh_property(topomesh,'barycenter',1)
 
         vertex_face_face_vertices = topomesh.wisp_property('vertices',2).values(vertex_faces)
         vertex_face_face_angles = topomesh.wisp_property('angles',2).values(vertex_faces)
         vertex_face_barycenter = topomesh.wisp_property('barycenter',2).values(vertex_faces)
-        vertex_positions = topomesh.wisp_property('barycenter',1).values(vertex_faces)
+        #vertex_positions = topomesh.wisp_property('barycenter',0).values(vertex_face_vertices)
 
-        face_vertex_positions = np.array([vertex_positions[v] for v in vertex_face_face_vertices])
-        face_vertex_barycenter_radii = np.linalg.norm(np.array([[vertex_face_barycenter[f] - v for v in face_vertex_positions[f]] for f in vertex_faces]), axis=1)
+        face_vertex_positions = topomesh.wisp_property('barycenter',0).values(vertex_face_face_vertices)
+        # face_vertex_barycenter_radii = np.linalg.norm(np.array([[vertex_face_barycenter[f] - v for v in face_vertex_positions[f]] for f in vertex_faces]), axis=1)
+        face_vertex_barycenter_radii = np.linalg.norm(face_vertex_positions - vertex_face_barycenter[:,np.newaxis],axis=1)
 
         vertex_face_weight = np.array(
             [r[vertices == v] * angles[vertices == v] for v, vertices, r, angles
