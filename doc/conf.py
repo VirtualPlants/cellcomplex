@@ -25,8 +25,7 @@ MOCK_MODULES = ['numpy',
                 'openalea.oalab.widget', 'openalea.oalab.widget.world',
                 'openalea.oalab.colormap', 'openalea.oalab.colormap.colormap_utils',
                 'tissuelab', 'tissuelab.gui', 'tissuelab.gui.vtkviewer', 'tissuelab.gui.vtkviewer.vtk_utils',
-                'tissuelab.gui.vtkviewer.vtkworldviewer',
-                'openalea.vpltk', 'openalea.vpltk.qt']
+                'tissuelab.gui.vtkviewer.vtkworldviewer']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # {# pkglts, sphinx

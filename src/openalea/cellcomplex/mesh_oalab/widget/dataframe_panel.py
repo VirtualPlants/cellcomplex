@@ -7,7 +7,7 @@
 #
 #       File author(s): Guillaume Cerutti <guillaume.cerutti@inria.fr>
 #
-#       File contributor(s): Guillaume Baty <guillaume.baty@inria.fr>, 
+#       File contributor(s): Guillaume Baty <guillaume.baty@inria.fr>,
 #                            Guillaume Cerutti <guillaume.cerutti@inria.fr>
 #
 #       Distributed under the Cecill-C License.
@@ -21,7 +21,7 @@
 __revision__ = ""
 
 # import weakref
-from openalea.vpltk.qt import QtGui, QtCore
+from Qt import QtCore, QtGui, QtWidgets
 from openalea.core.observer import AbstractListener
 from openalea.core.control import Control
 from openalea.oalab.control.manager import ControlManagerWidget
@@ -81,7 +81,7 @@ dataframe_attributes = {}
 dataframe_attributes['dataframe'] = {}
 dataframe_attributes['dataframe']['figure'] = dict(value=0,interface="IInt",constraints=cst_figure,label=u"Figure Number")
 for variable_type in ['X','Y','class','label']:
-    dataframe_attributes['dataframe'][variable_type+"_variable"] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label=variable_type.capitalize()+" Variable")  
+    dataframe_attributes['dataframe'][variable_type+"_variable"] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label=variable_type.capitalize()+" Variable")
     dataframe_attributes['dataframe'][variable_type+'_colormap'] = dict(value=dict(name='grey', color_points=dict([(0, (0, 0, 0)), (1, (1, 1, 1))])), interface=IColormap, label="Colormap")
     dataframe_attributes['dataframe'][variable_type+'_range'] = dict(value=(-1,101),interface=IIntRange,constraints=cst_extent_range,label=variable_type.capitalize()+" Range")
 dataframe_attributes['dataframe']['plot'] = dict(value=0,interface="IEnumStr",constraints=cst_plots,label=u"Plot Type")
@@ -188,7 +188,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
             world_object.silent = True
 
             setdefault(world_object, dtype, 'figure', attribute_definition=dataframe_attributes, **kwargs)
-            
+
             for variable_type in ['class']:
                 setdefault(world_object, dtype, variable_type+'_variable', conv=_dataframe_columns, attribute_definition=dataframe_attributes, **kwargs)
 
@@ -200,7 +200,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
             for variable_type in ['X','Y']:
                 setdefault(world_object, dtype, variable_type+'_variable', conv=_dataframe_columns, attribute_definition=dataframe_attributes, **kwargs)
                 setdefault(world_object, dtype, variable_type+'_range', attribute_definition=dataframe_attributes, **kwargs)
-            
+
 
             setdefault(world_object, dtype, 'plot', attribute_definition=dataframe_attributes, **kwargs)
 
@@ -225,7 +225,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
             #     if degree>1:
             #         setdefault(world_object, dtype, 'coef_'+str(degree), **kwargs)
             #     world_object.silent = False
-            
+
             # if not self._mesh.has_key(world_object.name):
             #     self._mesh[world_object.name] = dict([(0,None),(1,None),(2,None),(3,None)])
             #     self._mesh_matching[world_object.name] = dict([(0,None),(1,None),(2,None),(3,None)])
@@ -356,7 +356,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                         cbar_ticks = np.linspace(label_range[0],label_range[1],5)
                         cbar_ticklabels = np.round(cbar_ticks,decimals=3)
                     mpl_norm = mpl.colors.Normalize(vmin=label_range[0], vmax=label_range[1])
-                    
+
 
                     color_dict = dict(red=[],green=[],blue=[])
                     for k,c in enumerate(['red','green','blue']):
@@ -399,7 +399,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                         if world_object['regression'] == 'fireworks':
                             class_center = np.array([X[classes==c].mean(),Y[classes==c].mean()])
                             [figure.gca().plot([x,class_center[0]],[y,class_center[1]],color=class_color,alpha=alpha/5.,linewidth=linewidth) for x,y in zip(X[classes==c],Y[classes==c])]
-                    
+
 
                     if world_object['plot'] == 'scatter':
                         if are_classes_sublabels:
@@ -409,7 +409,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                             normalized_class_labels = np.maximum(0,np.minimum(1,(class_labels-label_range[0])/float(label_range[1]-label_range[0])))
                             label_colors = np.array([(1-0.8*np.abs(0.5-l)/0.5)*class_color + np.maximum(0,0.8*(0.5-l)/0.5)*np.zeros(3) + np.maximum(0,0.8*(l-0.5)/0.5)*np.ones(3) for l in normalized_class_labels])
                             simple_plot(figure,X[classes==c],Y[classes==c],label_colors,xlabel=xlabel,ylabel=ylabel,linked=False,marker_size=markersize,linewidth=linewidth,alpha=alpha,label=plot_label)
-                        
+
 
                     elif world_object['plot'] == 'line':
                         simple_plot(figure,np.sort(X[classes==c]),Y[classes==c][np.argsort(X[classes==c])],class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=(linewidth+1)/2.,alpha=alpha,label=plot_label)
@@ -568,8 +568,8 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                                     violin_plot(figure,x_classes,y_data,x_class_colors,xlabel=xlabel,ylabel=ylabel,violin_width=width,linewidth=linewidth,marker_size=(markersize+50)/10)
                                 else:
                                     box_plot(figure,x_classes,y_data,x_class_colors,xlabel=xlabel,ylabel=ylabel,box_width=width,linewidth=linewidth,marker_size=markersize,alpha=alpha)
-                   
-                    
+
+
                             for c,x,y in zip(x_represented_classes,x_classes,y_data):
                                 class_median[c] += [[x,np.percentile(y,50)]]
 
@@ -588,18 +588,18 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                             plot_label = str(label) if str(label) not in figure_labels else None
 
                             simple_plot(figure,np.array(class_median[c])[:,0],np.array(class_median[c])[:,1],class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=(linewidth+1)/2.,alpha=alpha/2,label=plot_label)
-                    
+
 
 
                 elif world_object['plot'] == 'PCA':
                     plot_legend = ['labels']
-                    pca, projected_data = pca_analysis(data,classes,class_colors,class_labels,variables,pca_figure=figure,linewidth=linewidth,marker_size=markersize,alpha=alpha,draw_classes=world_object['regression'] in ['fireworks'])  
+                    pca, projected_data = pca_analysis(data,classes,class_colors,class_labels,variables,pca_figure=figure,linewidth=linewidth,marker_size=markersize,alpha=alpha,draw_classes=world_object['regression'] in ['fireworks'])
                     x_min,x_max = np.percentile(projected_data[:,0],1)-4,np.percentile(projected_data[:,0],99)+4
-                    y_min,y_max = np.percentile(projected_data[:,1],1)-4,np.percentile(projected_data[:,1],99)+4    
+                    y_min,y_max = np.percentile(projected_data[:,1],1)-4,np.percentile(projected_data[:,1],99)+4
                     figure.gca().set_xlim(x_min + world_object['X_range'][0]*(x_max-x_min)/100.,x_min + world_object['X_range'][1]*(x_max-x_min)/100.)
                     figure.gca().set_xticklabels(figure.gca().get_xticks())
                     figure.gca().set_ylim(y_min + world_object['Y_range'][0]*(y_max-y_min)/100.,y_min + world_object['Y_range'][1]*(y_max-y_min)/100.)
-                    figure.gca().set_yticklabels(figure.gca().get_yticks())        
+                    figure.gca().set_yticklabels(figure.gca().get_yticks())
 
 
             if world_object['plot'] in ['boxplot','violin']:
@@ -632,7 +632,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                 figure.gca().set_xlim(*x_range)
                 figure.gca().set_xticklabels(figure.gca().get_xticks())
 
-            if world_object['plot'] in ['distribution','cumulative']: 
+            if world_object['plot'] in ['distribution','cumulative']:
                 figure.gca().set_ylim(*world_object['Y_range'])
                 figure.gca().set_yticklabels(figure.gca().get_yticks())
             elif world_object['plot'] in ['boxplot','violin'] and  Y_variable == "":
@@ -659,13 +659,6 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                     cb.set_ticks(cbar_ticks)
                     cb.set_ticklabels(cbar_ticklabels)
                     figure.sca(ax)
-            
+
             plt.draw()
             # time.sleep(0.05)
-
-
-
-
-
-
-

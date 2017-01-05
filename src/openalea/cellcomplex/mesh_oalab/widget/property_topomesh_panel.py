@@ -7,7 +7,7 @@
 #
 #       File author(s): Guillaume Cerutti <guillaume.cerutti@inria.fr>
 #
-#       File contributor(s): Guillaume Baty <guillaume.baty@inria.fr>, 
+#       File contributor(s): Guillaume Baty <guillaume.baty@inria.fr>,
 #                            Guillaume Cerutti <guillaume.cerutti@inria.fr>
 #
 #       Distributed under the Cecill-C License.
@@ -21,7 +21,7 @@
 __revision__ = ""
 
 # import weakref
-from openalea.vpltk.qt import QtGui, QtCore
+from Qt import QtCore, QtGui, QtWidgets
 from openalea.core.observer import AbstractListener
 from openalea.core.control import Control
 from openalea.oalab.control.manager import ControlManagerWidget
@@ -56,9 +56,9 @@ attribute_definition = {}
 attribute_definition['topomesh'] = {}
 for degree in xrange(4):
     attribute_definition['topomesh']["display_"+str(degree)] = dict(value=False,interface="IBool",constraints={},label="Display "+element_names[degree])
-    attribute_definition['topomesh']["property_degree_"+str(degree)] = dict(value=degree,interface="IInt",constraints=cst_degree,label="Degree") 
-    attribute_definition['topomesh']["property_name_"+str(degree)] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label="Property")     
-    attribute_definition['topomesh']["coef_"+str(degree)] = dict(value=1,interface="IFloat",constraints=cst_proba,label="Coef") 
+    attribute_definition['topomesh']["property_degree_"+str(degree)] = dict(value=degree,interface="IInt",constraints=cst_degree,label="Degree")
+    attribute_definition['topomesh']["property_name_"+str(degree)] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label="Property")
+    attribute_definition['topomesh']["coef_"+str(degree)] = dict(value=1,interface="IFloat",constraints=cst_proba,label="Coef")
 attribute_definition['topomesh']["cell_edges"] = dict(value=False,interface="IBool",constraints={},label="Cell edges")
 # attribute_definition['topomesh']["filename"] = dict(value="",interface="IFileStr",constraints={},label="Filename")
 # attribute_definition['topomesh']["save"] = dict(value=(lambda:None),interface="IAction",constraints={},label="Save PropertyTopomesh")
@@ -91,7 +91,8 @@ def _time_points(world_object, attr_name, time_point, **kwargs):
     return dict(value=value, constraints=constraints)
 
 
-class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
+
+class TopomeshControlPanel(QtWidgets.QWidget, AbstractListener):
     StyleTableView = 0
     StylePanel = 1
     DEFAULT_STYLE = StylePanel
@@ -102,10 +103,10 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
     property_colormaps['cells'] = 'glasbey'
     property_colormaps['volume'] = 'morocco'
     property_colormaps['eccentricity'] = 'jet'
-    
+
     def __init__(self, parent=None, style=None):
         AbstractListener.__init__(self)
-        QtGui.QWidget.__init__(self, parent=parent)
+        QtWidgets.QWidget.__init__(self, parent=parent)
 
         self.world = None
         self.model = WorldModel()
@@ -116,8 +117,8 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
 
         # self._manager = {}
 
-        # self._cb_world_object = QtGui.QComboBox()
-        # p = QtGui.QSizePolicy
+        # self._cb_world_object = QtWidgets.QComboBox()
+        # p = QtWidgets.QSizePolicy
         # self._cb_world_object.setSizePolicy(p(p.Expanding, p.Maximum))
         # self._cb_world_object.currentIndexChanged.connect(self._selected_object_changed)
 
@@ -132,7 +133,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
         self.interpreter = get_interpreter()
         self.interpreter.locals['topomesh_control'] = self
 
-        self._layout = QtGui.QVBoxLayout(self)
+        self._layout = QtWidgets.QVBoxLayout(self)
         # self._layout.addWidget(self._cb_world_object)
 
         if self.style == self.StyleTableView:
@@ -206,7 +207,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
         for object_name in world.keys():
             if isinstance(world[object_name].data,PropertyTopomesh):
                 self.refresh_world_object(world[object_name])
-    
+
     def notify(self, sender, event=None):
         signal, data = event
         if signal == 'world_changed':
@@ -282,12 +283,12 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                 elif degree == 1:
                     setdefault(world_object, dtype, 'cell_edges', attribute_definition=attribute_definition, **kwargs)
             world_object.silent = False
-            
+
             # world_object.silent = True
             # setdefault(world_object, dtype, 'filename', attribute_definition=attribute_definition, **kwargs)
             # world_object.silent = False
             # setdefault(world_object, dtype, 'save', attribute_definition=attribute_definition, **kwargs)
-            
+
             if not self._mesh.has_key(world_object.name):
                 self._mesh[world_object.name] = dict([(0,None),(1,None),(2,None),(3,None)])
                 self._mesh_matching[world_object.name] = dict([(0,None),(1,None),(2,None),(3,None)])
@@ -367,7 +368,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
     #         self._view.model.set_manager(manager)
     #     else:
     #         raise NotImplementedError('style %s' % self.style)
-    
+
     def select_world_object(self, object_name):
         if object_name != self._current:
             self._current = object_name
@@ -483,8 +484,9 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                     else:
                         coef = 1
                     print "Property : ",property_name," (",attribute['name'],")"
+
                     mesh, matching = topomesh_to_triangular_mesh(topomesh,degree=display_degree,coef=coef,wids=wids,mesh_center=[0,0,0],cell_edges=cell_edges,property_name=property_name,property_degree=property_degree)
-                    
+
                     self._mesh[world_object.name][display_degree] = mesh
                     self._mesh_matching[world_object.name][display_degree] = matching
 
@@ -588,8 +590,3 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
 
     # def _property_degree_changed(self, world_object, display_degree, old, new):
     #     if world_object:
-
-
-
-
-
