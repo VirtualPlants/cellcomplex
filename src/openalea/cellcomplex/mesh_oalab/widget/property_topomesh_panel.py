@@ -206,7 +206,6 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
         elif signal == 'world_object_changed':
             world, old_object, world_object = data
             if isinstance(world_object.data,PropertyTopomesh):
-                print world_object.data,": ",isinstance(world_object.data,PropertyTopomesh), isinstance(world_object.data,TemporalPropertyTopomesh)
                 # raw_input()
                 self.refresh_world_object(world_object)
         elif signal == 'world_object_item_changed':
@@ -237,14 +236,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
             dtype = 'topomesh'
 
             self._topomesh = world_object.data
-            temporal = isinstance(world_object.data,TemporalPropertyTopomesh)
-            print world_object.data," : ",temporal
             # raw_input()
-
-            self._topomesh = world_object.data
-            print isinstance(self._topomesh,TemporalPropertyTopomesh)
-            # raw_input()
-
             kwargs = world_kwargs(world_object)
 
             print "Set default attributes : ",world_object.name
