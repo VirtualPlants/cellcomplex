@@ -19,7 +19,7 @@
 
 import numpy as np
 
-from openalea.cellcomplex.property_topomesh.property_topomesh_creation import triangle_topomesh
+from openalea.cellcomplex.property_topomesh.property_topomesh_creation import triangle_topomesh, quad_topomesh, poly_topomesh
 
 def square_topomesh(side_length = 1):
     points = {}
@@ -94,6 +94,44 @@ def sphere_topomesh(radius=1.0,center=np.zeros(3)):
     positions = topomesh.wisp_property('barycenter',0)
     new_positions = array_dict(center + radius*positions.values()/np.linalg.norm(positions.values(),axis=1)[:,np.newaxis],positions.keys())
     topomesh.update_wisp_property('barycenter',0,new_positions)
+
+    return topomesh
+
+
+def triangular_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
+    """
+    """
+
+    return topomesh
+
+
+def square_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
+    """
+    """
+
+    x = y = np.linspace(-size,size,2*size+1)*resolution
+    x += center[0]
+    y += center[1]
+
+    xx,yy = np.meshgrid(x,y)
+
+    square_bl = np.concatenate([np.arange(2*size+1)[:-1]+i*(2*size+1) for i in np.arange(2*size+1)[:-1]])
+    square_br = np.concatenate([np.arange(2*size+1)[1:]+i*(2*size+1) for i in np.arange(2*size+1)[:-1]])
+    square_tl = np.concatenate([np.arange(2*size+1)[:-1]+i*(2*size+1) for i in np.arange(2*size+1)[1:]])
+    square_tr = np.concatenate([np.arange(2*size+1)[1:]+i*(2*size+1) for i in np.arange(2*size+1)[1:]])
+
+    squares = np.transpose([square_bl,square_tl,square_tr,square_br])
+
+    positions = dict(zip(range(len(np.ravel(xx))),np.transpose([np.ravel(xx),np.ravel(yy),np.zeros_like(np.ravel(xx))])))
+
+    topomesh = quad_topomesh(squares,positions,faces_as_cells=True)
+
+    return topomesh
+
+
+def hexagonal_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
+    """
+    """
 
     return topomesh
 

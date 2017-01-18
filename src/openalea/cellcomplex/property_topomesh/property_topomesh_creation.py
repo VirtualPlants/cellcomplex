@@ -30,6 +30,8 @@ tetra_triangle_edge_list  = np.array([[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]])
 tetra_triangle_list  = np.array([[0,1,2],[0,1,3],[0,2,3],[1,2,3]])
 triangle_edge_list  = np.array([[1, 2],[0, 2],[0, 1]])
 
+quad_edge_list  = np.array([[0,1],[1,2],[2,3],[3,0]])
+
 def tetrahedra_topomesh(tetrahedra, positions, **kwargs):
 
     tetrahedra = np.array(tetrahedra)
@@ -108,6 +110,90 @@ def triangle_topomesh(triangles, positions, **kwargs):
     print "<-- Generating triangle topomesh [",end_time-start_time,"s]"
 
     return triangle_topomesh
+
+
+def quad_topomesh(quads, positions, faces_as_cells=False, **kwargs):
+    quads = np.array(quads)
+    positions = array_dict(positions)
+
+    edges = array_unique(np.sort(np.concatenate(quads[:,quad_edge_list],axis=0)))
+
+    quad_edges = np.sort(np.concatenate(quads[:,quad_edge_list]))
+
+    start_time = time()
+    print "--> Generating quad topomesh"
+
+    quad_edge_matching = vq(quad_edges,edges)[0]
+
+    quad_topomesh = PropertyTopomesh(3)
+    for c in np.unique(quads):
+        quad_topomesh.add_wisp(0,c)
+    for e in edges:
+        eid = quad_topomesh.add_wisp(1)
+        for pid in e:
+            quad_topomesh.link(1,eid,pid)
+    for q in quads:
+        fid = quad_topomesh.add_wisp(2)
+        for eid in quad_edge_matching[4*fid:4*fid+4]:
+            quad_topomesh.link(2,fid,eid)
+    if not faces_as_cells:
+        quad_topomesh.add_wisp(3,0)
+        for fid in quad_topomesh.wisps(2):
+            quad_topomesh.link(3,0,fid)
+    else:
+        for fid in quad_topomesh.wisps(2):
+            quad_topomesh.add_wisp(3,fid)
+            quad_topomesh.link(3,fid,fid)
+
+    quad_topomesh.update_wisp_property('barycenter',0,positions.values(np.unique(quads)),keys=np.unique(quads))    
+
+    end_time = time()
+    print "<-- Generating quad topomesh [",end_time-start_time,"s]"
+
+    return quad_topomesh
+
+def poly_topomesh(polys, positions, aces_as_cells=False, **kwargs):
+    polys = np.array(polys)
+    positions = array_dict(positions)
+
+    poly_lengths = np.array(map(len,polys))
+    poly_edge_list = [np.transpose([np.arange(l),(np.arange(l)+1)%l]) for l in poly_lengths]
+
+    edges = array_unique(np.sort(np.concatenate([np.array(p)[l] for p,l in zip(polys,poly_edge_list)],axis=0)))
+
+    poly_edges = np.sort(np.concatenate([np.array(p)[l] for p,l in zip(polys,poly_edge_list)],axis=0))
+
+    start_time = time()
+    print "--> Generating poly topomesh"
+
+    poly_edge_matching = vq(poly_edges,edges)[0]
+
+    poly_topomesh = PropertyTopomesh(3)
+    for c in np.unique(polys):
+        poly_topomesh.add_wisp(0,c)
+    for e in edges:
+        eid = poly_topomesh.add_wisp(1)
+        for pid in e:
+            poly_topomesh.link(1,eid,pid)
+    total_poly_length = 0
+    for q,l in zip(polys,poly_lengths):
+        fid = poly_topomesh.add_wisp(2)
+        for eid in poly_edge_matching[total_poly_length:total_poly_length+l]:
+            poly_topomesh.link(2,fid,eid)
+        total_poly_length += l
+    if not faces_as_cells:
+        poly_topomesh.add_wisp(3,0)
+        for fid in poly_topomesh.wisps(2):
+            poly_topomesh.link(3,0,fid)
+    else:
+        for fid in poly_topomesh.wisps(2):
+            poly_topomesh.add_wisp(3,fid)
+            poly_topomesh.link(3,fid,fid)
+    poly_topomesh.update_wisp_property('barycenter',0,positions.values(np.unique(polys)),keys=np.unique(polys))    
+
+    end_time = time()
+    print "<-- Generating poly topomesh [",end_time-start_time,"s]"
+
 
 def edge_topomesh(edges, positions, **kwargs):
 
