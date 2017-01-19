@@ -152,7 +152,7 @@ def quad_topomesh(quads, positions, faces_as_cells=False, **kwargs):
 
     return quad_topomesh
 
-def poly_topomesh(polys, positions, aces_as_cells=False, **kwargs):
+def poly_topomesh(polys, positions, faces_as_cells=False, **kwargs):
     polys = np.array(polys)
     positions = array_dict(positions)
 
@@ -193,6 +193,8 @@ def poly_topomesh(polys, positions, aces_as_cells=False, **kwargs):
 
     end_time = time()
     print "<-- Generating poly topomesh [",end_time-start_time,"s]"
+
+    return poly_topomesh
 
 
 def edge_topomesh(edges, positions, **kwargs):

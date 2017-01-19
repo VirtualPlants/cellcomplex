@@ -115,6 +115,8 @@ def square_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
 
     xx,yy = np.meshgrid(x,y)
 
+    zz = np.zeros_like(xx) + center[2]
+
     square_bl = np.concatenate([np.arange(2*size+1)[:-1]+i*(2*size+1) for i in np.arange(2*size+1)[:-1]])
     square_br = np.concatenate([np.arange(2*size+1)[1:]+i*(2*size+1) for i in np.arange(2*size+1)[:-1]])
     square_tl = np.concatenate([np.arange(2*size+1)[:-1]+i*(2*size+1) for i in np.arange(2*size+1)[1:]])
@@ -122,7 +124,7 @@ def square_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
 
     squares = np.transpose([square_bl,square_tl,square_tr,square_br])
 
-    positions = dict(zip(range(len(np.ravel(xx))),np.transpose([np.ravel(xx),np.ravel(yy),np.zeros_like(np.ravel(xx))])))
+    positions = dict(zip(range(len(np.ravel(xx))),np.transpose([np.ravel(xx),np.ravel(yy),np.ravel(zz)])))
 
     topomesh = quad_topomesh(squares,positions,faces_as_cells=True)
 
@@ -132,6 +134,70 @@ def square_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
 def hexagonal_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
     """
     """
+
+    x = []
+    y = []
+    p = []
+    for n in range(size+1,2*size+2):
+        for r in [0,1]:
+            p += list(len(p)+np.arange(n+r))
+            x += list((np.arange(n+r)-((n+r-1)/2.))*resolution*np.sqrt(3.))
+            row_y = (((2*size+1 - n)+1)/2)*3
+            row_side = (((2*size+1 - n)+1)%2)
+            y += list((row_y+(2*row_side-1)-(row_side==r)*(2*row_side-1)/2.)*np.ones(n+r)*resolution)
+
+
+    for n in range(size+1,2*size+2)[::-1]:
+        for r in [1,0]:
+            p += list(len(p)+np.arange(n+r))
+            x += list((np.arange(n+r)-((n+r-1)/2.))*resolution*np.sqrt(3.))
+            row_y = (((2*size+1 - n)+1)/2)*3
+            row_side = (((2*size+1 - n)+1)%2)
+            y += list(-(row_y+(2*row_side-1)-(row_side==r)*(2*row_side-1)/2.)*np.ones(n+r)*resolution)
+
+    x = np.array(x) + center[0]
+    y = np.array(y) + center[1]
+    z = np.zeros_like(x) + center[2]
+
+    positions = dict(zip(range(len(x)),np.transpose([x,y,z])))
+
+    index_list = []
+    row_length_list = []
+    row_gaps = []
+    start = 0
+    for n in range(size+1,2*size+1):
+        index_list += list(np.arange(n)+start)
+        start += n+n+1
+        row_length_list += list(n*np.ones(n,int))
+        for h in xrange(n):
+            row_gaps += [[n+1,n+1,n+1,-(n+2),-(n+1)]]
+    for n in [2*size+1]:
+        index_list += list(np.arange(n)+start)
+        start += n+n+2
+        row_length_list += list(n*np.ones(n,int))
+        for h in xrange(n):
+            row_gaps += [[n+1,n+1,n,-(n+1),-(n+1)]]
+    for n in range(2*size,size,-1):
+        index_list += list(np.arange(n)+start)
+        start += n+n+3
+        row_length_list += list(n*np.ones(n,int))
+        for h in xrange(n):
+            row_gaps += [[n+2,n+1,n,-(n+1),-(n+1)]]
+
+    print index_list
+    print row_length_list
+
+    print "Hexagons"
+
+    hexagons = []
+    for i,n,gaps in zip(index_list,row_length_list,row_gaps):
+        hexagon = [i]
+        for p, gap in zip(xrange(5),gaps):
+            hexagon += [hexagon[-1]+gap]
+        print hexagon
+        hexagons += [hexagon]
+
+    topomesh = poly_topomesh(hexagons,positions,faces_as_cells=True)
 
     return topomesh
 
