@@ -104,11 +104,11 @@ def _dataframe_columns(world_object, attr_name, variable_name, **kwargs):
         return dict(value="", constraints=constraints)
 
 
-class DataframeControlPanel(QtGui.QWidget, AbstractListener):
+class DataframeControlPanel(QtWidgets.QWidget, AbstractListener):
 
     def __init__(self, parent=None, style=None):
         AbstractListener.__init__(self)
-        QtGui.QWidget.__init__(self, parent=parent)
+        QtWidgets.QWidget.__init__(self, parent=parent)
 
         self.world = None
         self.model = WorldModel()
@@ -120,7 +120,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
 
         self._figures = {}
 
-        self._layout = QtGui.QVBoxLayout(self)
+        self._layout = QtWidgets.QVBoxLayout(self)
         self._view = None
 
     def initialize(self):
