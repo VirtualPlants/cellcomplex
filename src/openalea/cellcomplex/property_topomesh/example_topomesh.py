@@ -18,8 +18,11 @@
 ###############################################################################
 
 import numpy as np
+from openalea.container import array_dict
 
 from openalea.cellcomplex.property_topomesh.property_topomesh_creation import triangle_topomesh, quad_topomesh, poly_topomesh
+from openalea.cellcomplex.property_topomesh.utils.delaunay_tools import delaunay_triangulation
+from openalea.cellcomplex.property_topomesh.property_topomesh_creation import dual_topomesh
 
 def square_topomesh(side_length = 1):
     points = {}
@@ -200,6 +203,53 @@ def hexagonal_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
     topomesh = poly_topomesh(hexagons,positions,faces_as_cells=True)
 
     return topomesh
+
+def circle_voronoi_topomesh(size = 1,resolution = 1.,circle_size = 100.,z_coef = 0.):
+    n_cells = 3*size*(size-1)+1
+    radius = size*resolution
+
+    circle_thetas = np.linspace(-np.pi,np.pi-2*np.pi/float(circle_size),circle_size)
+    circle_points = np.transpose([radius*np.cos(circle_thetas),radius*np.sin(circle_thetas)])
+
+    cell_thetas = np.array([np.pi*np.random.randint(-180,180)/180. for c in xrange(n_cells)])
+    cell_distances = 0.5*radius*np.sqrt([np.random.rand() for c in xrange(n_cells)])
+
+    cell_points = np.transpose([cell_distances*np.cos(cell_thetas),cell_distances*np.sin(cell_thetas)])
+
+    omega_forces = dict(repulsion=0.5)
+    sigma_deformation = 2.*radius/float(n_cells)
+
+    for iteration in xrange(n_cells/2):
+        cell_to_cell_vectors = np.array([[p-q for q in cell_points] for p in cell_points])
+        cell_to_cell_distances = np.linalg.norm(cell_to_cell_vectors,axis=2)/radius
+        cell_to_circle_vectors = np.array([[p-q for q in circle_points] for p in cell_points])
+        cell_to_circle_distances = np.linalg.norm(cell_to_circle_vectors,axis=2)/radius
+        
+        deformation_force = np.zeros_like(cell_points)
+        
+        cell_repulsion_force = np.nansum(cell_to_cell_vectors/np.power(cell_to_cell_distances,3)[:,:,np.newaxis],axis=1)
+        circle_repulsion_force = np.nansum(cell_to_circle_vectors/np.power(cell_to_circle_distances,3)[:,:,np.newaxis],axis=1)
+
+        deformation_force += omega_forces['repulsion']*cell_repulsion_force
+        deformation_force += 1.5*(n_cells/float(circle_size))*omega_forces['repulsion']*circle_repulsion_force
+
+        deformation_force_amplitude = np.linalg.norm(deformation_force,axis=1)
+        deformation_force = np.minimum(1.0,sigma_deformation/deformation_force_amplitude)[:,np.newaxis] * deformation_force
+
+        cell_points += deformation_force
+        cell_points = np.minimum(1.0,radius/(np.linalg.norm(cell_points,axis=1)))[:,np.newaxis] * cell_points
+
+    all_positions = array_dict(np.transpose([np.concatenate([cell_points[:,0],circle_points[:,0]]),np.concatenate([cell_points[:,1],circle_points[:,1]]),np.zeros(n_cells+circle_size)]),keys=np.arange(n_cells+circle_size).astype(int))
+    triangles = all_positions.keys()[delaunay_triangulation(all_positions.values())]
+
+    radial_distances = np.linalg.norm(all_positions.values(),axis=1)
+    radial_z = z_coef*np.power(radial_distances/radius,2)
+    all_positions = array_dict(np.transpose([all_positions.values()[:,0],all_positions.values()[:,1],radial_z]),keys=all_positions.keys())
+
+    triangulation_topomesh = triangle_topomesh(triangles,all_positions)
+    cell_topomesh = dual_topomesh(triangulation_topomesh,2,vertex_positions='voronoi')
+
+    return cell_topomesh
 
 
 def vtk_ellipsoid_topomesh(ellipsoid_radius=50.0, ellipsoid_scales=[1,1,1], ellipsoid_axes=np.diag(np.ones(3)), ellipsoid_center=np.zeros(3)):

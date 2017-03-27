@@ -23,6 +23,8 @@ from scipy.cluster.vq import vq
 
 from openalea.container import array_dict, PropertyTopomesh
 from openalea.cellcomplex.property_topomesh.utils.array_tools import array_unique
+from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property, is_triangular
+from copy import deepcopy
 
 from time import time
 
@@ -234,3 +236,50 @@ def vertex_topomesh(positions, **kwargs):
     print "<-- Generating vertex topomesh [",end_time-start_time,"s]"
 
     return vertex_topomesh
+
+
+def dual_topomesh(topomesh,degree=2,vertex_positions='barycenter'):
+
+    dual_topomesh = PropertyTopomesh(topomesh.degree())
+    
+    if degree == 2:
+        for d in xrange(3):
+            if d<2:
+                dual_topomesh._regions[d] = deepcopy(topomesh._borders[2-d])
+            if d>0:
+                dual_topomesh._borders[d] = deepcopy(topomesh._regions[2-d])
+        
+        dual_topomesh._borders[3] = dict(zip(dual_topomesh._borders[2].keys(),[[w] for w in dual_topomesh._borders[2].keys()]))
+        dual_topomesh._regions[2] = dict(zip(dual_topomesh._borders[2].keys(),[[w] for w in dual_topomesh._borders[2].keys()]))
+    
+        edges_to_remove = [e for e in dual_topomesh.wisps(1) if len(list(dual_topomesh.borders(1,e)))<2]
+        faces_to_remove = [f for f in dual_topomesh.wisps(2) if np.any([e in edges_to_remove for e in dual_topomesh.borders(2,f)])]
+        cells_to_remove = faces_to_remove
+    
+    for e in edges_to_remove:
+        dual_topomesh.remove_wisp(1,e)
+    for f in faces_to_remove:
+        dual_topomesh.remove_wisp(2,f)
+    for c in cells_to_remove:
+        dual_topomesh.remove_wisp(3,c)
+    
+    if 'voronoi' in vertex_positions:
+        assert is_triangular(topomesh)
+        if degree==2:
+            from openalea.cellcomplex.property_topomesh.utils.geometry_tools import triangle_geometric_features
+            compute_topomesh_property(topomesh,'vertices',2)
+            triangles = topomesh.wisp_property('vertices',2).values(list(dual_topomesh.wisps(0)))
+            positions = topomesh.wisp_property('barycenter',0)
+            if vertex_positions == 'projected_voronoi':
+                centers = triangle_geometric_features(triangles,positions,features=['projected_circumscribed_circle_center'])[:,0]
+            else:
+                centers = triangle_geometric_features(triangles,positions,features=['circumscribed_circle_center'])[:,0]
+            dual_positions = array_dict(centers,list(dual_topomesh.wisps(0)))
+    else:
+        compute_topomesh_property(topomesh,'barycenter',degree)
+        dual_positions = array_dict(topomesh.wisp_property('barycenter',degree).values(list(dual_topomesh.wisps(0))),list(dual_topomesh.wisps(0)))
+    
+   
+    dual_topomesh.update_wisp_property('barycenter',0,dual_positions)
+    
+    return dual_topomesh

@@ -21,7 +21,7 @@ import numpy as np
 from scipy import ndimage as nd
 
 import matplotlib
-matplotlib.use( "MacOSX" )
+# matplotlib.use( "MacOSX" )
 #matplotlib.use( "cairo" )
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
@@ -209,7 +209,7 @@ def density_contour_plot(figure,X,Y,color,XY_range=None,xlabel="",ylabel="",n_po
     axes.set_yticklabels(axes.get_yticks(),fontproperties=font, size=12)
 
 
-def map_plot(figure,X,Y,Z,colormap=None,XY_range=None,xlabel="",ylabel="",n_points=100,n_contours=20,smooth_factor=1.0,linewidth=1,alpha=1.0,label=""):
+def map_plot(figure,X,Y,Z,colormap=None,XY_range=None,xlabel="",ylabel="",n_points=100,n_contours=20,smooth_factor=1.0,linewidth=1,alpha=1.0,confidence=True,label=""):
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     figure.patch.set_facecolor('white')
     axes = figure.add_subplot(111)
@@ -265,7 +265,15 @@ def map_plot(figure,X,Y,Z,colormap=None,XY_range=None,xlabel="",ylabel="",n_poin
     # axes.contourf(xx,yy,zz_map,levels,cmap=colormap,alpha=alpha,antialiased=True,vmin=0,vmax=1)
     axes.pcolormesh(xx,yy,zz_map,cmap=colormap,alpha=alpha,antialiased=True,shading='gouraud',linewidth=0,vmin=0,vmax=1)
     axes.contourf(xx,yy,zz_map,levels,cmap=colormap,alpha=alpha/3.,antialiased=True,vmin=0,vmax=1)
-    axes.contour(xx,yy,zz_map,levels,cmap=colormap,alpha=alpha,linewidth=linewidth,antialiased=True,vmin=0,vmax=1)
+    #axes.contour(xx,yy,zz_map,levels,cmap=colormap,alpha=alpha,linewidth=linewidth,antialiased=True,vmin=0,vmax=1)
+    axes.contour(xx,yy,zz_map,levels,cmap='gray',alpha=0.2,linewidths=linewidth,antialiased=True,vmin=levels[0]-2,vmax=levels[0]-1)
+        
+
+    if confidence:
+        confidence_map = nd.gaussian_filter(data_density,sigma=1.0)
+        for a in xrange(16):
+            figure.gca().contourf(xx,yy,confidence_map,[-100,0.1+a/24.],cmap='gray_r',alpha=1-a/15.,vmin=1,vmax=2)
+   
 
     axes.set_xlim(*tuple(XY_range[0]))
     axes.set_xlabel(xlabel,fontproperties=font, size=10, style='italic')
@@ -330,16 +338,16 @@ def bar_plot(figure,X,Y,color1,color2,xlabel="",ylabel="",label=""):
 def histo_plot(figure,X,color,xlabel="",ylabel="",cumul=False,bar=True,n_points=400,smooth_factor=0.1,spline_order=3,linewidth=3,alpha=1.0,label=""):
     if '%' in xlabel:
         magnitude = 100
-        X_values = np.array(np.minimum(np.around(X),101),int)
+        X_values = np.array(np.minimum(np.around(X),n_points+1),int)
     else:
         # magnitude = np.power(10,np.around(4*np.log10(X.mean()))/4+0.5)
-        magnitude = np.power(10,np.around(4*np.log10(np.nanmean(X)+np.nanstd(X)+1e-7))/4+0.5)
+        magnitude = np.power(10,np.around(4*np.log10(np.nanmean(X)+np.nanstd(X)+1e-7))/4+1)
         magnitude = np.around(magnitude,int(-np.log10(magnitude))+1)
         # print magnitude
         #magnitude = X.mean()+5.0*X.std()
-        X_values = np.array(np.minimum(np.around(100*X[True-np.isnan(X)]/magnitude),101),int)
-    X_histo = np.zeros(101,float)
-    for x in xrange(101):
+        X_values = np.array(np.minimum(np.around(n_points*X[True-np.isnan(X)]/magnitude),n_points+1),int)
+    X_histo = np.zeros(n_points+1,float)
+    for x in np.linspace(0,n_points,n_points+1):
         X_histo[x] = nd.sum(np.ones_like(X_values,float),X_values,index=x)
         if '%' in ylabel:
             X_histo[x] /= X_values.size/100.0
@@ -347,9 +355,9 @@ def histo_plot(figure,X,color,xlabel="",ylabel="",cumul=False,bar=True,n_points=
             X_histo[x] += X_histo[x-1]
 
     if bar:
-        bar_plot(figure,np.linspace(0,magnitude,101),X_histo,np.array([1,1,1]),color,xlabel,ylabel,label=label)
+        bar_plot(figure,np.linspace(0,magnitude,n_points+1),X_histo,np.array([1,1,1]),color,xlabel,ylabel,label=label)
     else:
-        smooth_plot(figure,np.linspace(0,magnitude,101),X_histo,color,color,xlabel,ylabel,n_points=n_points,smooth_factor=smooth_factor,spline_order=spline_order,linewidth=linewidth,alpha=alpha,label=label)
+        smooth_plot(figure,np.linspace(0,magnitude,n_points+1),X_histo,color,color,xlabel,ylabel,n_points=n_points,smooth_factor=smooth_factor,spline_order=spline_order,linewidth=linewidth,alpha=alpha,label=label)
 
 
 def violin_plot(figure,X,data,colors,xlabel="",ylabel="",n_points=400,violin_width=None,linewidth=3,marker_size=20):
