@@ -30,7 +30,7 @@ from copy import deepcopy
 def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=None, epidermis=False, cell_edges=False, property_name=None, property_degree=None):
 
     topomesh = deepcopy(input_topomesh)
-    if not is_triangular(topomesh):
+    if not is_triangular(topomesh) and (degree>1):
         topomesh = star_interface_topomesh(topomesh)
 
     start_time = time()

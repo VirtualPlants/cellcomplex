@@ -68,7 +68,7 @@ from tissuelab.gui.vtkviewer.vtkworldviewer import setdefault, world_kwargs, _co
 
 cst_figure = dict(step=1,min=0,max=9)
 cst_plots = dict(enum=['scatter','line','distribution','cumulative','boxplot','violin','density','map','PCA'])
-cst_regression = dict(enum=['','linear','quadratic','cubic','exponential','logarithmic','density','fireworks'])
+cst_regression = dict(enum=['','linear','quadratic','cubic','invert','invert_quadratic','exponential','logarithmic','density','fireworks'])
 cst_legend = dict(enum=['','top_right','bottom_right','top_left','bottom_left'])
 cst_size = dict(step=5, min=0, max=100)
 cst_width = dict(step=1, min=0, max=10)
@@ -423,12 +423,20 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                         density_contour_plot(figure,X[classes==c],Y[classes==c],class_color,data_range,xlabel=xlabel,ylabel=ylabel,smooth_factor=smooth*10,marker_size=markersize,linewidth=linewidth,alpha=alpha,label=plot_label)
 
                     if world_object['plot'] in ['scatter','line','density']:
-                        if world_object['regression'] in ['linear','quadratic','cubic','exponential','logarithmic','density']:
+                        if world_object['regression'] in ['linear','quadratic','cubic','invert','invert_quadratic','exponential','logarithmic','density']:
+                            
+
                             reg_X = np.linspace(X.min() -0.5*(X.max()-X.min()),X.min() +1.5*(X.max()-X.min()),400)
                             if world_object['regression'] in ['linear','quadratic','cubic']:
                                 degree = 1 if world_object['regression']=='linear' else 2 if world_object['regression']=='quadratic' else 3
                                 p = np.polyfit(X[classes==c],Y[classes==c],deg=degree)
                                 reg_Y = np.polyval(p,reg_X)
+                            elif world_object['regression'] in ['invert']:
+                                p = np.polyfit(1./X[classes==c],Y[classes==c],deg=1)
+                                reg_Y = np.polyval(p,1./reg_X)
+                            elif world_object['regression'] in ['invert_quadratic']:
+                                p = np.polyfit(1./np.power(X[classes==c],0.5),Y[classes==c],deg=1)
+                                reg_Y = np.polyval(p,1./np.power(reg_X,0.5))
                             elif world_object['regression'] in ['exponential']:
                                 p = np.polyfit(X[classes==c],np.log(Y[classes==c]),deg=1)
                                 reg_Y = np.exp(np.polyval(p,reg_X))
@@ -524,8 +532,14 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                             magnitude = np.power(10,np.around(4*np.log10(np.nanmean(X)+np.nanstd(X)+1e-7))/4+0.5)
                             magnitude = np.around(magnitude,int(-np.log10(magnitude))+1)
 
+                            print magnitude,"(",n_slices,")  -> ",np.arange(-n_slices-1,n_slices+1)*magnitude
+
+                            print X
                             class_values = np.array(np.maximum(np.minimum(np.around(n_slices*X/magnitude),n_slices),-n_slices),int)
-                            X = (np.arange(-n_slices-1,n_slices+1)*magnitude)[class_values+n_slices+1]
+                            
+                            print class_values
+                            X = (np.arange(-n_slices-1,n_slices+1)*magnitude/float(n_slices))[class_values+n_slices+1]
+
 
                         X_values = np.sort(np.unique(X))
 
@@ -546,7 +560,7 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                             x_class_colors = np.array([class_colors[i] for i,c in enumerate(class_list) if (classes[X==x]==c).sum()>1])
                             x_represented_classes = np.array([c for c in class_list if (classes[X==x]==c).sum()>1])
 
-                            print y_data
+                            # print y_data
 
                             if len(x_classes)>0:
 
@@ -600,7 +614,8 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                     figure.gca().set_xlim(*x_range)
                     ticks = [i for i in range(len(X_values)) if (i>=x_range[0]) and (i<=x_range[1])]
                     ticklabels = [X_values[i] for i in ticks]
-
+                    print ticks,' -> ',ticklabels
+                    print X_values
                 # ticklabels = []
                 # for t in xrange(len(ticks)):
                     # if np.any(np.isclose(ticks[t],range(n_classes),1e-3)):

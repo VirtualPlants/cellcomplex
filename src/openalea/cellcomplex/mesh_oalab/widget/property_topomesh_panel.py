@@ -206,6 +206,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
         elif signal == 'world_object_changed':
             world, old_object, world_object = data
             if isinstance(world_object.data,PropertyTopomesh):
+                # raw_input()
                 self.refresh_world_object(world_object)
         elif signal == 'world_object_item_changed':
             world, world_object, item, old, new = data
@@ -235,6 +236,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
             dtype = 'topomesh'
 
             self._topomesh = world_object.data
+            # raw_input()
             kwargs = world_kwargs(world_object)
 
             print "Set default attributes : ",world_object.name
