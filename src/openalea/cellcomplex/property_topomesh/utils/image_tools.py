@@ -792,6 +792,40 @@ def topomesh_to_vtk_polydata(topomesh,degree=2,positions=None,topomesh_center=No
 
     return vtk_mesh
 
+def draw_triangular_mesh(mesh, mesh_id=None, colormap=None):
+    import openalea.plantgl.all as pgl
+    import openalea.plantgl.ext.color as color
+
+    triangle_points = array_dict(mesh.points).values(np.array(mesh.triangles.values()))
+    triangle_normals = np.cross(triangle_points[:,1]-triangle_points[:,0],triangle_points[:,2]-triangle_points[:,0])
+    mesh_center = np.mean(mesh.points.values(),axis=0)
+    reversed_normals = np.array(mesh.triangles.keys())[np.where(np.einsum('ij,ij->i',triangle_normals,triangle_points[:,0]-mesh_center) < 0)[0]]
+    for t in reversed_normals:
+        mesh.triangles[t] = list(reversed(mesh.triangles[t]))
+
+    if colormap is None:
+        colormap = color.GlasbeyMap(0,255)
+
+    points_index = array_dict(np.arange(len(mesh.points)),mesh.points.keys())
+
+    if isinstance(colormap,color.GlasbeyMap):
+        if isiterable(mesh.triangle_data.values()[0]):
+            colors = [pgl.Color4(colormap(mesh.triangle_data[t][0]%256).i3tuple()) if mesh.triangle_data.has_key(t) else pgl.Color4(colormap(0).i3tuple()) for t in mesh.triangles.keys()]
+        else:
+            colors = [pgl.Color4(colormap(mesh.triangle_data[t]%256).i3tuple()) if mesh.triangle_data.has_key(t) else pgl.Color4(colormap(0).i3tuple()) for t in mesh.triangles.keys()]
+    else:
+        if isiterable(mesh.triangle_data.values()[0]):
+            colors = [pgl.Color4(colormap(mesh.triangle_data[t][0]).i3tuple()) if mesh.triangle_data.has_key(t) else pgl.Color4(colormap(0).i3tuple()) for t in mesh.triangles.keys()]
+        else:
+            colors = [pgl.Color4(colormap(mesh.triangle_data[t]).i3tuple()) if mesh.triangle_data.has_key(t) else pgl.Color4(colormap(0).i3tuple()) for t in mesh.triangles.keys()]
+
+    scene = pgl.Scene()
+    if mesh_id is not None:
+        scene += pgl.Shape(pgl.FaceSet(mesh.points.values(),list(points_index.values(np.array(mesh.triangles.values()))),colorList=colors,colorPerVertex=False),id=int(mesh_id))
+    else:
+        scene += pgl.Shape(pgl.FaceSet(mesh.points.values(),list(points_index.values(np.array(mesh.triangles.values()))),colorList=colors,colorPerVertex=False))
+    return scene
+
 
 def image_to_pgl_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smooth=1.0,colormap=None):
     try:
