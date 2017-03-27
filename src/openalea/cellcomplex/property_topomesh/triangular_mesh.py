@@ -27,17 +27,19 @@ from openalea.cellcomplex.triangular_mesh import TriangularMesh
 from time import time
 from copy import deepcopy
 
-def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=None, epidermis=False, cell_edges=False, property_name=None, property_degree=None):
+def topomesh_to_triangular_mesh(input_topomesh, degree=3, wids=None, coef=1.0, mesh_center=None, epidermis=False, cell_edges=False, property_name=None, property_degree=None):
 
     topomesh = deepcopy(input_topomesh)
     if not is_triangular(topomesh) and (degree>1):
         topomesh = star_interface_topomesh(topomesh)
 
+
+
+
     start_time = time()
     print "--> Creating triangular mesh"
 
     triangular_mesh = TriangularMesh()
-
 
     if property_name is not None:
         if property_degree is None:
@@ -54,18 +56,37 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=
     else:
         mesh_center = np.array(mesh_center)
 
+
+    considered_start_time = time()
+    if wids is None:
+        wids = list(topomesh.wisps(degree))
+
+    considered_elements = {}
+    for d in xrange(4):
+        if d == degree:
+            considered_elements[d] = list(wids)
+        elif d<degree:
+            considered_elements[d] = list(np.unique(np.concatenate([list(topomesh.borders(degree,w,degree-d)) for w in wids])))
+        else:
+            considered_elements[d] = list(np.unique(np.concatenate([list(topomesh.regions(degree,w,d-degree)) for w in wids])))
+
     if degree>1:
         compute_topomesh_property(topomesh,'vertices',degree=2)
         compute_topomesh_property(topomesh,'triangles',degree=3)
         compute_topomesh_property(topomesh,'cells',degree=2)
 
-        cell_triangles = np.concatenate(topomesh.wisp_property('triangles',3).values(list(topomesh.wisps(3)))).astype(int)
+        cell_triangles = np.concatenate(topomesh.wisp_property('triangles',3).values(considered_elements[3])).astype(int)
+        # cell_triangles = [t for t in cell_triangles if t in considered_elements[2]]
+
+    considered_end_time = time()
+    print "  --> Filtering out mesh elements    [",considered_end_time - considered_start_time,"s]"
+
 
     if degree == 3:
         if property_name is not None:
-            property_data = topomesh.wisp_property(property_name,property_degree).values()
+            property_data = topomesh.wisp_property(property_name,property_degree).values(considered_elements[3])
         else:
-            property_data = np.array(list(topomesh.wisps(3)))
+            property_data = np.array(considered_elements[3])
 
 
         vertices_positions = []
@@ -75,7 +96,7 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=
         # triangle_topomesh_triangles = []
 
         if property_data.ndim == 1 or property_degree<3:
-            for c in topomesh.wisps(3):
+            for c in considered_elements[3]:
                 if len(list(topomesh.borders(3,c,3)))>0:
                     cell_center = topomesh.wisp_property('barycenter',0).values(list(topomesh.borders(3,c,3))).mean(axis=0)
                     cell_vertices_position = cell_center + coef*(topomesh.wisp_property('barycenter',0).values(list(topomesh.borders(3,c,3)))-cell_center) - mesh_center
@@ -85,7 +106,8 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=
                     triangle_vertices += list(cell_vertices_index.values(topomesh.wisp_property('vertices',2).values(topomesh.wisp_property('triangles',3)[c])))
                     triangle_topomesh_cells += list(c*np.ones_like(topomesh.wisp_property('triangles',3)[c]))
                     # triangle_topomesh_triangles += topomesh.wisp_property('triangles',3)[c]
-            print vertices_positions
+            print len(cell_triangles),"Cell triangles"
+            print len(triangle_vertices),"Triangle vertices"
             vertices_positions = array_dict(vertices_positions,np.arange(len(vertices_positions)))
             vertices_topomesh_vertices = array_dict(vertices_topomesh_vertices,np.arange(len(vertices_positions)))
             if epidermis:
@@ -115,7 +137,7 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=
             else:
                 triangular_mesh.triangle_data = triangle_topomesh_cells.to_dict()
         else:
-            for c in topomesh.wisps(3):
+            for c in considered_elements[3]:
                 if len(list(topomesh.borders(3,c,3)))>0:
                     cell_center = topomesh.wisp_property('barycenter',0).values(list(topomesh.borders(3,c,3))).mean(axis=0)
                     vertices_positions += [cell_center]
@@ -145,7 +167,7 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=
             triangle_vertices += list([triangle_vertices_index.values(topomesh.wisp_property('vertices',2)[t])])
         vertices_positions = array_dict(vertices_positions,np.arange(len(vertices_positions)))
         vertices_topomesh_vertices = array_dict(vertices_topomesh_vertices,np.arange(len(vertices_positions)))
-        triangle_topomesh_cells = np.concatenate([c*np.ones_like(topomesh.wisp_property('triangles',3)[c]) for c in topomesh.wisps(3)]).astype(int)
+        triangle_topomesh_cells = np.concatenate([c*np.ones_like([t for t in topomesh.wisp_property('triangles',3)[c] if t in considered_elements[2]]) for c in considered_elements[3]]).astype(int)
         if epidermis:
             compute_topomesh_property(topomesh,'epidermis',2)
             epidermis_triangles = topomesh.wisp_property('epidermis',2).values(cell_triangles)
@@ -175,14 +197,15 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=
 
     elif degree == 1:
         compute_topomesh_property(topomesh,'vertices',degree=1)
-        vertices_positions = topomesh.wisp_property('barycenter',0)
-        edge_vertices = topomesh.wisp_property('vertices',1)
+        vertices_positions = array_dict(topomesh.wisp_property('barycenter',0).values(considered_elements[0]),considered_elements[0])
+        edge_vertices = array_dict(topomesh.wisp_property('vertices',1).values(considered_elements[1]),considered_elements[1])
         triangular_mesh.points = vertices_positions.to_dict()
         triangular_mesh.edges = edge_vertices.to_dict()
 
         if property_name is not None:
             if property_degree == 1:
-                triangular_mesh.edge_data = topomesh.wisp_property(property_name,property_degree).to_dict()
+                edge_property = array_dict(topomesh.wisp_property(property_name,property_degree).values(considered_elements[1]),considered_elements[1])
+                triangular_mesh.edge_data = edge_property.to_dict()
         triangle_topomesh_cells = {}
         triangle_topomesh_triangles = {}
         edge_topomesh_edges = dict(zip(triangular_mesh.edges.keys(),triangular_mesh.edges.keys()))
@@ -208,12 +231,13 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, coef=1.0, mesh_center=
                     del triangular_mesh.edge_data[eid]
 
     elif degree == 0:
-        vertices_positions = topomesh.wisp_property('barycenter',0)
+        vertices_positions = array_dict(topomesh.wisp_property('barycenter',0).values(considered_elements[0]),considered_elements[0])
         triangular_mesh.points = vertices_positions.to_dict()
 
         if property_name is not None:
             if property_degree == 0:
-                triangular_mesh.point_data = topomesh.wisp_property(property_name,property_degree).to_dict()
+                vertex_property = array_dict(topomesh.wisp_property(property_name,property_degree).values(considered_elements[0]),considered_elements[0])
+                triangular_mesh.point_data = vertex_property.to_dict()
         triangle_topomesh_cells = {}
         triangle_topomesh_triangles = {}
         edge_topomesh_edges = {}

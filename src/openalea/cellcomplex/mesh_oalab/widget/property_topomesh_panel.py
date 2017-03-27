@@ -33,6 +33,7 @@ from openalea.oalab.widget.world import WorldModel
 from openalea.container import PropertyTopomesh, array_dict
 
 try:
+    from openalea.cellcomplex.property_topomesh.temporal_property_topomesh import TemporalPropertyTopomesh
     from openalea.cellcomplex.property_topomesh.triangular_mesh import topomesh_to_triangular_mesh
     from openalea.cellcomplex.property_topomesh.property_topomesh_io import save_ply_property_topomesh
 except:
@@ -41,6 +42,7 @@ except:
 
 
 import numpy as np
+from scipy.cluster.vq import vq
 
 from tissuelab.gui.vtkviewer.vtkworldviewer import setdefault, world_kwargs
 
@@ -61,6 +63,9 @@ attribute_definition['topomesh']["cell_edges"] = dict(value=False,interface="IBo
 # attribute_definition['topomesh']["filename"] = dict(value="",interface="IFileStr",constraints={},label="Filename")
 # attribute_definition['topomesh']["save"] = dict(value=(lambda:None),interface="IAction",constraints={},label="Save PropertyTopomesh")
 
+attribute_definition['temporal_topomesh'] = {}
+attribute_definition['temporal_topomesh']['time_point'] = dict(value=0,interface="IFloat",constraints=dict(min=0,max=0,step=1),label="Time Point") 
+
 
 def _property_names(world_object, attr_name, property_name, **kwargs):
     degree = int(attr_name[-1])
@@ -73,6 +78,18 @@ def _property_names(world_object, attr_name, property_name, **kwargs):
         return dict(value=property_name, constraints=constraints)
     else:
         return dict(value="", constraints=constraints)
+
+def _time_points(world_object, attr_name, time_point, **kwargs):
+    topomesh = world_object.data
+    if topomesh.has_wisp_property('time',0):
+        time_points = np.sort(np.unique(topomesh.wisp_property('time',0).values())).astype(float)
+    else:
+        time_points = np.zeros(1).astype(float)
+    constraints = dict(min=time_points.min(),max=time_points.max(),step=(time_points.max()-time_points.min())/100.)
+    print constraints
+    value = np.maximum(np.minimum(time_point,constraints['max']),constraints['min'])
+    return dict(value=value, constraints=constraints)
+
 
 class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
     StyleTableView = 0
@@ -206,7 +223,10 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
         elif signal == 'world_object_changed':
             world, old_object, world_object = data
             if isinstance(world_object.data,PropertyTopomesh):
+
+                print world_object.data,": ",isinstance(world_object.data,PropertyTopomesh), isinstance(world_object.data,TemporalPropertyTopomesh)
                 # raw_input()
+
                 self.refresh_world_object(world_object)
         elif signal == 'world_object_item_changed':
             world, world_object, item, old, new = data
@@ -235,11 +255,21 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
         if world_object:
             dtype = 'topomesh'
 
+            temporal = isinstance(world_object.data,TemporalPropertyTopomesh)
+            print world_object.data," : ",temporal
+            raw_input()
+
             self._topomesh = world_object.data
-            # raw_input()
+
+            print isinstance(self._topomesh,TemporalPropertyTopomesh)
+            #raw_input()
+
             kwargs = world_kwargs(world_object)
 
             print "Set default attributes : ",world_object.name
+
+            if temporal:
+                setdefault(world_object, 'temporal_topomesh', 'time_point', conv=_time_points, attribute_definition=attribute_definition, **kwargs)
             
             world_object.silent = True
             for degree in np.arange(4)[::-1]:
@@ -382,6 +412,53 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
 
     def update_topomesh_display(self, world_object, attribute):
         if world_object:
+
+            temporal = isinstance(world_object.data,TemporalPropertyTopomesh)
+
+            if 'time' in attribute['name']:
+                topomesh = world_object.data
+
+                for display_degree in xrange(4):
+                    if world_object['display_'+str(display_degree)]:
+                        property_name = world_object['property_name_'+str(display_degree)]
+                        property_degree = world_object['property_degree_'+str(display_degree)]
+                        cell_edges = world_object['cell_edges']
+
+                        if temporal:
+                            time = world_object['time_point']
+                            elements_times = topomesh.wisp_property('time',display_degree).values()
+                            topomesh_times = np.unique(elements_times)
+                            display_time = topomesh_times[vq(np.array([time]),topomesh_times)[0][0]]
+                            print "Displaying time ",display_time
+                            wids = np.array(list(topomesh.wisps(display_degree)))[elements_times==display_time]
+                        else:
+                            wids = None
+
+                        if display_degree > 1:
+                            coef = world_object['coef_'+str(display_degree)]
+                        else:
+                            coef = 1
+                        print "Property : ",property_name," (",attribute['name'],")"
+                        mesh, matching = topomesh_to_triangular_mesh(topomesh,degree=display_degree,coef=coef,wids=wids,mesh_center=[0,0,0],cell_edges=cell_edges,property_name=property_name,property_degree=property_degree)
+                        
+                        self._mesh[world_object.name][display_degree] = mesh
+                        self._mesh_matching[world_object.name][display_degree] = matching
+
+                        if self.world.has_key(world_object.name+"_"+self.element_names[display_degree]):
+                            kwargs = world_kwargs(self.world[world_object.name+"_"+self.element_names[display_degree]])
+                            if not 'coef_' in attribute['name']:
+                                if kwargs.has_key('intensity_range'):
+                                    kwargs.pop('intensity_range')
+                        else:
+                            kwargs = {}
+                            kwargs['colormap'] = 'glasbey' if (property_name == '') else self.property_colormaps.get(property_name,'grey')
+                            # kwargs['position'] = world_object['position']
+
+                        self.world.add(mesh,world_object.name+"_"+self.element_names[display_degree],**kwargs)
+                    else:
+                        self.world.remove(world_object.name+"_"+self.element_names[display_degree])
+
+
             if 'display_' in attribute['name'] or 'coef_' in attribute['name']:
                 display_degree = int(attribute['name'][-1])
                 if world_object['display_'+str(display_degree)]:
@@ -389,12 +466,24 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                     property_name = world_object['property_name_'+str(display_degree)]
                     property_degree = world_object['property_degree_'+str(display_degree)]
                     cell_edges = world_object['cell_edges']
+
+                    if temporal:
+                        time = world_object['time_point']
+                        
+                        elements_times = topomesh.wisp_property('time',display_degree).values()
+                        topomesh_times = np.unique(elements_times)
+                        display_time = topomesh_times[vq(np.array([time]),topomesh_times)[0][0]]
+                        print "Displaying time ",display_time
+                        wids = np.array(list(topomesh.wisps(display_degree)))[elements_times==display_time]
+                    else:
+                        wids = None
+
                     if display_degree > 1:
                         coef = world_object['coef_'+str(display_degree)]
                     else:
                         coef = 1
                     print "Property : ",property_name," (",attribute['name'],")"
-                    mesh, matching = topomesh_to_triangular_mesh(topomesh,degree=display_degree,coef=coef,mesh_center=[0,0,0],cell_edges=cell_edges,property_name=property_name,property_degree=property_degree)
+                    mesh, matching = topomesh_to_triangular_mesh(topomesh,degree=display_degree,coef=coef,wids=wids,mesh_center=[0,0,0],cell_edges=cell_edges,property_name=property_name,property_degree=property_degree)
                     
                     self._mesh[world_object.name][display_degree] = mesh
                     self._mesh_matching[world_object.name][display_degree] = matching
