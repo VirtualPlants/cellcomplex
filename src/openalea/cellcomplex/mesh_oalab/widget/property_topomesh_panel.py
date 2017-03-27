@@ -256,12 +256,12 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
             dtype = 'topomesh'
 
             temporal = isinstance(world_object.data,TemporalPropertyTopomesh)
-            print world_object.data," : ",temporal
-            raw_input()
+            # print world_object.data," : ",temporal
+            # raw_input()
 
             self._topomesh = world_object.data
 
-            print isinstance(self._topomesh,TemporalPropertyTopomesh)
+            # print isinstance(self._topomesh,TemporalPropertyTopomesh)
             #raw_input()
 
             kwargs = world_kwargs(world_object)
