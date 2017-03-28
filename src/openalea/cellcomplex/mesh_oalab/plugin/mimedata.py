@@ -25,7 +25,6 @@ from openalea.oalab.mimedata import QMimeCodecPlugin
 from openalea.core.authors import gcerutti
 
 
-
 @PluginDef
 class MeshFileCodecPlugin(QMimeCodecPlugin):
     authors = [gcerutti]
@@ -47,3 +46,21 @@ class MeshFileCodecPlugin(QMimeCodecPlugin):
         from openalea.cellcomplex.mesh_oalab.mimedata.codec import MeshFileCodec
         return MeshFileCodec
 
+
+@PluginDef
+class DataFrameFileCodecPlugin(QMimeCodecPlugin):
+    authors = [gcerutti]
+
+    qtdecode = [
+        ('text/uri-list', 'pandas/dataframe'),
+        ('text/uri-list', 'text/plain'),
+    ]
+
+    mimetype_desc = {
+        'pandas/dataframe': dict(title='Pandas DataFrame Object'),
+        'text/plain': dict(title='Plain Text'),
+    }
+
+    def __call__(self):
+        from openalea.cellcomplex.mesh_oalab.mimedata.codec import DataFrameFileCodec
+        return DataFrameFileCodec
