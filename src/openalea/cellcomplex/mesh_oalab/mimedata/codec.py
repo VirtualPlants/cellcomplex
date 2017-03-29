@@ -22,36 +22,34 @@ import mimetypes
 from openalea.oalab.mimedata.qcodec import QMimeCodec
 
 from openalea.core.path import path
-from openalea.cellcomplex.property_topomesh.property_topomesh_io import read_ply_property_topomesh
+from openalea.cellcomplex.property_topomesh import meshread
+from openalea.cellcomplex.property_topomesh.triangular_mesh import topomesh_to_triangular_mesh
 
 
 def is_mesh_path(path):
     mime, encoding = mimetypes.guess_type(path)
     if mime and mime.startswith('model/mesh'):
         return True
-    if path.ext in ('.ply', '.obj'):
+    if path.ext in ('.ply', '.obj', '.msh'):
         return True
     else:
         return False
 
 def encode_mesh(category, data, mimetype_in, mimetype_out):
     # openalea://user@localhost:/project/projectname/data/dataname
-    uri = 'openalea://user@localhost:/topomesh/%s' % (data.__str__())
-    return ('cellcomplex/%s' % category, uri)
+    # uri = 'openalea://user@localhost:/openalea/topomesh/%s' % (data.__str__())
+    print "Encoding Mesh!"
+    return ('openalea/interface.ITopomesh', data)
 
 def decode_mesh_file(filename, mimetype_in, mimetype_out):
     mesh = None
 
     if filename is not None:
-        print filename[-4:]
-        print "\""+filename+"\"",filename.exists()
         if filename.exists():
-            if filename[-4:] == ".ply":
-                try:
-                    mesh = read_ply_property_topomesh(filename)
-                except:
-                    mesh = None
-
+            try:
+                mesh = meshread(filename)
+            except:
+                mesh = None
     return mesh
 
 
@@ -108,6 +106,33 @@ class MeshFileCodec(QMimeCodec):
                 return data, kwds
         else:
             return None, {}
+
+
+class TopomeshCodec(QMimeCodec):
+
+    def quick_check(self, mimedata, mimetype_in, mimetype_out):
+        if mimetype_in == "openalea/interface.ITopomesh":
+            mesh = mimedata.data
+        else:
+            return False
+        return mesh is not None
+
+    def qtdecode(self, mimedata, mimetype_in, mimetype_out):
+        return self.decode(mimedata, mimetype_in, mimetype_out)
+
+    def decode(self, mimedata, mimetype_in, mimetype_out):
+        if mimetype_in == 'openalea/interface.ITopomesh':
+            mesh = mimedata.data
+            kwds = {}
+
+            if mimetype_out == "openalea/interface.ITopomesh":
+                return mesh, kwds
+            elif mimetype_out == "openalea/interface.ITriangularMesh":
+                return topomesh_to_triangular_mesh(mesh)
+
+
+
+
 
 def is_csv_path(path):
     mime, encoding = mimetypes.guess_type(path)

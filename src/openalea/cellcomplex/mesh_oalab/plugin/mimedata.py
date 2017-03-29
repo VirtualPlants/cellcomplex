@@ -34,7 +34,7 @@ class MeshFileCodecPlugin(QMimeCodecPlugin):
         ('text/uri-list', 'text/plain'),
     ]
     qtencode = [
-        ('cellcomplex/property_topomesh', 'openalea/interface.ITopomesh')
+        ('openalea/interface.ITopomesh', 'openalea/interface.ITopomesh')
     ]
 
     mimetype_desc = {
@@ -46,6 +46,24 @@ class MeshFileCodecPlugin(QMimeCodecPlugin):
         from openalea.cellcomplex.mesh_oalab.mimedata.codec import MeshFileCodec
         return MeshFileCodec
 
+
+@PluginDef
+class TopomeshCodecPlugin(QMimeCodecPlugin):
+    authors = [gcerutti]
+
+    qtdecode = [
+        ('openalea/interface.ITopomesh', 'openalea/interface.ITopomesh'),
+        ('openalea/interface.ITopomesh', 'openalea/interface.ITriangularMesh'),
+    ]
+
+    mimetype_desc = {
+        'openalea/interface.ITopomesh': dict(title='PropertyTopomesh Object'),
+        'openalea/interface.ITriangularMesh': dict(title='TriangularMesh Object'),
+    }
+
+    def __call__(self):
+        from openalea.cellcomplex.mesh_oalab.mimedata.codec import TopomeshCodec
+        return TopomeshCodec
 
 @PluginDef
 class DataFrameFileCodecPlugin(QMimeCodecPlugin):

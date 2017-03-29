@@ -29,6 +29,7 @@ from openalea.container                     import PropertyTopomesh, array_dict
 from openalea.cellcomplex.property_topomesh.utils.matching_tools import kd_tree_match
 from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property
 
+from openalea.core.path import path
 
 from copy                                   import copy
 from time                                   import time
@@ -905,9 +906,20 @@ def read_msh_property_topomesh(msh_filename, preserve_cells=True, verbose=False)
     return topomesh
 
 
-    
-
-
+def meshread(filename):
+    file_formats = ['.ply','.obj','.msh']
+    extension = path(filename).ext
+    try:
+        assert extension in file_formats
+    except AssertionError:
+        raise IOError("The file format "+extension+" is not recognized, only "+str(file_formats)+" mesh files are supported")
+    else:
+        if extension == '.ply':
+            return read_ply_property_topomesh(filename)
+        elif extension == '.obj':
+            return read_obj_property_topomesh(filename)
+        elif extension == '.msh':
+            return read_msh_property_topomesh(filename)
 
 
 
