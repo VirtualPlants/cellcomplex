@@ -60,14 +60,14 @@ except:
 import numpy as np
 import time
 
-from cute_plot import simple_plot, smooth_plot, histo_plot, violin_plot, box_plot, density_contour_plot, map_plot
+from cute_plot import simple_plot, smooth_plot, histo_plot, bar_histo_plot, violin_plot, box_plot, density_contour_plot, map_plot
 from pca_tools import pca_analysis
 
 from tissuelab.gui.vtkviewer.vtkworldviewer import setdefault, world_kwargs, _colormap
 
 
 cst_figure = dict(step=1,min=0,max=9)
-cst_plots = dict(enum=['scatter','line','distribution','cumulative','boxplot','violin','density','map','PCA'])
+cst_plots = dict(enum=['scatter','line','histogram','distribution','cumulative','boxplot','violin','density','map','PCA'])
 cst_regression = dict(enum=['','linear','quadratic','cubic','invert','invert_quadratic','exponential','logarithmic','density','fireworks'])
 cst_legend = dict(enum=['','top_right','bottom_right','top_left','bottom_left'])
 cst_size = dict(step=5, min=0, max=100)
@@ -91,7 +91,7 @@ dataframe_attributes['dataframe']['linewidth'] = dict(value=1,interface="IInt",c
 dataframe_attributes['dataframe']['alpha'] = dict(value=1.0, interface=IFloat, constraints=cst_proba,label=u"Alpha")
 dataframe_attributes['dataframe']['smooth_factor'] = dict(value=0.0, interface=IFloat, constraints=cst_proba,label=u"Smoothing")
 dataframe_attributes['dataframe']['regression'] = dict(value='', interface=IEnumStr, constraints=cst_regression,label=u"Regression")
-dataframe_attributes['dataframe']['n_points'] = dict(value=5, interface=IInt, constraints=cst_points,label=u"Number of Points")
+dataframe_attributes['dataframe']['n_points'] = dict(value=10, interface=IInt, constraints=cst_points,label=u"Number of Points")
 dataframe_attributes['dataframe']['legend'] = dict(value='',interface="IEnumStr",constraints=cst_legend,label="Legend")
 
 def _dataframe_columns(world_object, attr_name, variable_name, **kwargs):
@@ -414,6 +414,9 @@ class DataframeControlPanel(QtGui.QWidget, AbstractListener):
                     elif world_object['plot'] == 'line':
                         simple_plot(figure,np.sort(X[classes==c]),Y[classes==c][np.argsort(X[classes==c])],class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=(linewidth+1)/2.,alpha=alpha,label=plot_label)
                         # smooth_plot(figure,np.sort(X[classes==c]),Y[classes==c][np.argsort(X[classes==c])],class_color,class_color,xlabel=xlabel,ylabel=ylabel,smooth_factor=smooth*Y.mean(),linewidth=linewidth,alpha=alpha,label=plot_label)
+                    elif world_object['plot'] == 'histogram':
+                        x_range = (X.min() + world_object['X_range'][0]*(X.max()-X.min())/100.,X.min() + world_object['X_range'][1]*(X.max()-X.min())/100.)
+                        bar_histo_plot(figure,X[classes==c],class_color,xlabel=xlabel,ylabel="Number of Elements",n_bins=n_slices,X_range=x_range,linewidth=linewidth,alpha=alpha,label=plot_label)
                     elif world_object['plot'] == 'distribution':
                         histo_plot(figure,X[classes==c],class_color,xlabel=xlabel,ylabel="Number of Elements (%)",cumul=False,bar=False,smooth_factor=smooth*10,linewidth=linewidth,alpha=alpha,label=plot_label)
                     elif world_object['plot'] == 'cumulative':

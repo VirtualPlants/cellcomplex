@@ -25,6 +25,7 @@ from openalea.core.path import path
 from openalea.cellcomplex.property_topomesh import meshread
 from openalea.cellcomplex.property_topomesh.triangular_mesh import topomesh_to_triangular_mesh
 
+import sys
 
 def is_mesh_path(path):
     mime, encoding = mimetypes.guess_type(path)
@@ -49,6 +50,8 @@ def decode_mesh_file(filename, mimetype_in, mimetype_out):
             try:
                 mesh = meshread(filename)
             except:
+                print "Error importing mesh file ",filename
+                print sys.exc_info()
                 mesh = None
     return mesh
 

@@ -334,6 +334,25 @@ def bar_plot(figure,X,Y,color1,color2,xlabel="",ylabel="",label=""):
     axes.set_ylabel(ylabel, fontproperties=font, size=10, style='italic')
     axes.set_yticklabels(axes.get_yticks(),fontproperties=font, size=12)
 
+def bar_histo_plot(figure,X,color,xlabel="",ylabel="",n_bins=10,X_range=None,linewidth=3,alpha=1.0,label=""):
+    font = fm.FontProperties(family = 'Trebuchet', weight ='light')
+    #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
+    figure.patch.set_facecolor('white')
+    axes = figure.add_subplot(111)
+    if X_range is None:
+        X_range = (X.min(),X.max())
+    X_bins = np.linspace(X_range[0],X_range[1],n_bins+1)
+    histo, bins, patches = axes.hist(X,bins=X_bins,ec='k')
+    for h, p in zip(histo, patches):
+        h_ratio  = float(h)/float(histo.max())
+        p.set_facecolor(h_ratio*color + (1-h_ratio))
+    axes.plot((bins[1:]+bins[:-1])/2.,histo,linewidth=1,color=tuple(color),alpha=0.0,label=label)
+
+    axes.set_xlim(*X_range)
+    axes.set_xlabel(xlabel,fontproperties=font, size=10, style='italic')
+    axes.set_xticklabels(axes.get_xticks(),fontproperties=font, size=12)
+    axes.set_ylabel(ylabel, fontproperties=font, size=10, style='italic')
+   
 
 def histo_plot(figure,X,color,xlabel="",ylabel="",cumul=False,bar=True,n_points=400,smooth_factor=0.1,spline_order=3,linewidth=3,alpha=1.0,label=""):
     if '%' in xlabel:

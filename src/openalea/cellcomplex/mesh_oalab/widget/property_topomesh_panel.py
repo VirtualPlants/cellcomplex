@@ -451,8 +451,9 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                                     kwargs.pop('intensity_range')
                         else:
                             kwargs = {}
-                            kwargs['colormap'] = 'glasbey' if (property_name == '') else self.property_colormaps.get(property_name,'grey')
+                            kwargs['colormap'] = 'glasbey' if ((property_name == '')and(display_degree>0)) else self.property_colormaps.get(property_name,'grey')
                             # kwargs['position'] = world_object['position']
+
 
                         self.world.add(mesh,world_object.name+"_"+self.element_names[display_degree],**kwargs)
                     else:
@@ -495,7 +496,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                                 kwargs.pop('intensity_range')
                     else:
                         kwargs = {}
-                        kwargs['colormap'] = 'glasbey' if (property_name == '') else self.property_colormaps.get(property_name,'grey')
+                        kwargs['colormap'] = 'glasbey' if ((property_name == '')and(display_degree>0)) else self.property_colormaps.get(property_name,'grey')
                         # kwargs['position'] = world_object['position']
 
                     self.world.add(mesh,world_object.name+"_"+self.element_names[display_degree],**kwargs)
