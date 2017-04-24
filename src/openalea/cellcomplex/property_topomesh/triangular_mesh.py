@@ -34,8 +34,6 @@ def topomesh_to_triangular_mesh(input_topomesh, degree=3, wids=None, coef=1.0, m
         topomesh = star_interface_topomesh(topomesh)
 
 
-
-
     start_time = time()
     print "--> Creating triangular mesh"
 

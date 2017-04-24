@@ -49,6 +49,7 @@ setup_kwds = dict(
 
 setup_kwds['entry_points']['wralea'] = ['mesh = openalea.mesh_oalab_wralea']
 setup_kwds['entry_points']['oalab.applet'] = ['oalab.applet/mesh = openalea.cellcomplex.mesh_oalab.plugin.applet']
+setup_kwds['entry_points']['oalab.plugin'] = ['oalab/oalab.core = openalea.cellcomplex.mesh_oalab.plugin.mimedata']
 
 # do not change things below
 # {# pkglts, pysetup.call

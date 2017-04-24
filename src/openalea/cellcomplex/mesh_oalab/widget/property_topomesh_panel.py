@@ -256,12 +256,12 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
             dtype = 'topomesh'
 
             temporal = isinstance(world_object.data,TemporalPropertyTopomesh)
-            print world_object.data," : ",temporal
-            raw_input()
+            # print world_object.data," : ",temporal
+            # raw_input()
 
             self._topomesh = world_object.data
 
-            print isinstance(self._topomesh,TemporalPropertyTopomesh)
+            # print isinstance(self._topomesh,TemporalPropertyTopomesh)
             #raw_input()
 
             kwargs = world_kwargs(world_object)
@@ -451,8 +451,9 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                                     kwargs.pop('intensity_range')
                         else:
                             kwargs = {}
-                            kwargs['colormap'] = 'glasbey' if (property_name == '') else self.property_colormaps.get(property_name,'grey')
+                            kwargs['colormap'] = 'glasbey' if ((property_name == '')and(display_degree>0)) else self.property_colormaps.get(property_name,'grey')
                             # kwargs['position'] = world_object['position']
+
 
                         self.world.add(mesh,world_object.name+"_"+self.element_names[display_degree],**kwargs)
                     else:
@@ -495,7 +496,7 @@ class TopomeshControlPanel(QtGui.QWidget, AbstractListener):
                                 kwargs.pop('intensity_range')
                     else:
                         kwargs = {}
-                        kwargs['colormap'] = 'glasbey' if (property_name == '') else self.property_colormaps.get(property_name,'grey')
+                        kwargs['colormap'] = 'glasbey' if ((property_name == '')and(display_degree>0)) else self.property_colormaps.get(property_name,'grey')
                         # kwargs['position'] = world_object['position']
 
                     self.world.add(mesh,world_object.name+"_"+self.element_names[display_degree],**kwargs)
