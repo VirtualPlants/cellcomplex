@@ -20,7 +20,7 @@
 import numpy as np
 from copy import deepcopy
 
-def implicit_surface(density_field,size,resolution,iso=0.5):
+def implicit_surface(density_field,size,voxelsize,iso=0.5):
     import numpy as np
     from scipy.cluster.vq                       import kmeans, vq
     from openalea.container import array_dict
@@ -28,7 +28,7 @@ def implicit_surface(density_field,size,resolution,iso=0.5):
     from skimage.measure import marching_cubes
     surface_points, surface_triangles = marching_cubes(density_field,iso)
     
-    surface_points = (np.array(surface_points))*(size*resolution/np.array(density_field.shape)) - size*resolution/2.
+    surface_points = (np.array(surface_points))*(size*voxelsize/np.array(density_field.shape)) - size*voxelsize/2.
 
     points_ids = np.arange(len(surface_points))
     points_to_delete = []
@@ -117,16 +117,16 @@ def vtk_marching_cubes(field,iso=0.5):
 
     return polydata_points, polydata_triangles
 
-def implicit_surface_topomesh(density_field,size,resolution,iso=0.5,center=True):
+def implicit_surface_topomesh(density_field,size,voxelsize,iso=0.5,center=True):
     import numpy as np
     from scipy.cluster.vq                       import kmeans, vq
     from openalea.container import array_dict, PropertyTopomesh
 
     surface_points, surface_triangles = vtk_marching_cubes(density_field,iso)
 
-    surface_points = (np.array(surface_points))*(size*resolution/np.array(density_field.shape)) 
+    surface_points = (np.array(surface_points))*(size*voxelsize/np.array(density_field.shape)) 
     if center:
-        surface_points -= np.array(density_field.shape)*resolution/2.
+        surface_points -= np.array(density_field.shape)*voxelsize/2.
 
     # points_ids = np.arange(len(surface_points))
     # points_to_delete = []

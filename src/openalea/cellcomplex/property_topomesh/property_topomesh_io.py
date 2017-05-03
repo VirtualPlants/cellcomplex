@@ -250,7 +250,7 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
             face_pids = np.array(list(topomesh.borders(2,fid,2)))
             face_edges = np.array([list(topomesh.borders(1,eid)) for eid in topomesh.borders(2,fid)])
 
-            print fid," : ",face_pids, face_edges
+            # print fid," : ",face_pids, face_edges
 
             oriented_face_pids = [face_pids[0]]
             while len(oriented_face_pids) < len(face_pids):
@@ -262,7 +262,7 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
                 if len(list(candidate_pids))==0:
                     candidate_pids = set(list(face_pids)).difference(list(oriented_face_pids))
                 oriented_face_pids += [list(candidate_pids)[0]]
-            print fid," : ",oriented_face_pids
+            # print fid," : ",oriented_face_pids
 
         ply_file.write(str(len(list(topomesh.borders(2,fid,2))))+" ")
         for pid in oriented_face_pids:
@@ -486,7 +486,7 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
                 properties_tensor_dims[element_name] = {}
                 
             if re.split(' ',line)[0] == 'property':
-                print line
+                # print line
                 property_name = re.split(' ',line)[-1][:-1]
                 properties[element_name].append(property_name)
                 properties_types[element_name][property_name] = re.split(' ',line)[1]

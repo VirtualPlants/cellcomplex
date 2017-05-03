@@ -143,7 +143,6 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
         if degree == 0:
             topomesh.update_wisp_property('vertices',degree=degree,values=np.array(list(topomesh.wisps(degree))).astype(int),keys=np.array(list(topomesh.wisps(degree))))
         else:
-            print list(topomesh.wisps(degree))
             topomesh.update_wisp_property('vertices',degree=degree,values=np.array([np.unique(list(topomesh.borders(degree,w,degree))).astype(int) for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
         if degree == 1:
             topomesh.update_wisp_property('borders',degree=degree,values=np.array([np.unique(list(topomesh.borders(degree,w,degree))).astype(int) for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))

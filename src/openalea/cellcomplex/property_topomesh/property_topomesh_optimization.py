@@ -46,7 +46,7 @@ from time                                   import time
 from copy                                   import deepcopy
 
 
-def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,resolution=(1.0,1.0,1.0),target_normal=None,target_areas=None,fix_borders=False):
+def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,voxelsize=(1.0,1.0,1.0),target_normal=None,target_areas=None,fix_borders=False):
 
     """Optimize the positions of the mesh vertices along multiple criteria.
 
@@ -118,8 +118,8 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
             start_time = time()
             print "--> Computing vertex force"
             assert gradient_derivatives != None
-            gradient_force = property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,resolution)
-            print gradient_force
+            gradient_force = property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,voxelsize)
+            # print gradient_force
             deformation_force += omega_forces['gradient']*gradient_force
             end_time = time()
             print "<-- Computing vertex force   [",end_time-start_time,"s]"
@@ -208,7 +208,7 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
                 # planarization_force = property_topomesh_interface_planarization_force(topomesh) + property_topomesh_epidermis_planarization_force(topomesh)
                 # planarization_force = property_topomesh_interface_planarization_force(topomesh) + property_topomesh_epidermis_convexity_force(topomesh)
                 # planarization_force = property_topomesh_epidermis_convexity_force(topomesh)
-            print planarization_force
+            # print planarization_force
             deformation_force += omega_forces['planarization']*planarization_force
             end_time = time()
             print "<-- Computing planarization force [",end_time-start_time,"s]"
@@ -232,7 +232,7 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
         start_time = time()
         print "--> Applying Forces"
         deformation_force_amplitude = np.power(np.sum(np.power(deformation_force,2.0),axis=1),0.5)+np.power(10.,-8)
-        print deformation_force
+        # print deformation_force
         #deformation_force[np.where(deformation_force_amplitude>sigma_deformation)[0]] = sigma_deformation*deformation_force[np.where(deformation_force_amplitude>sigma_deformation)[0]]/deformation_force_amplitude[np.where(deformation_force_amplitude>sigma_deformation)[0]][:,np.newaxis]
         
         deformation_force = np.minimum(1.0,sigma_deformation/deformation_force_amplitude)[:,np.newaxis] * deformation_force
@@ -254,7 +254,7 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
         print topomesh.nb_wisps(0)," Vertices, ",topomesh.nb_wisps(2)," Triangles, ",topomesh.nb_wisps(3)," Cells"
 
 
-def property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,resolution):
+def property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,voxelsize):
     """
     Compute for each vertex of the topomesh the force guiding its displacement towards a cell vertex
     """
@@ -263,10 +263,10 @@ def property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,resolution
     gradient_y = gradient_derivatives[1]
     gradient_z = gradient_derivatives[2]
 
-    vertices_coords = np.rollaxis(np.array(topomesh.wisp_property('barycenter',degree=0).values()/np.array(resolution),np.uint16),1)
+    vertices_coords = np.rollaxis(np.array(topomesh.wisp_property('barycenter',degree=0).values()/np.array(voxelsize),np.uint16),1)
     vertices_coords = np.maximum(np.minimum(vertices_coords,([gradient_x.shape[0]-1],[gradient_x.shape[1]-1],[gradient_x.shape[2]-1])),0)
-    print vertices_coords
-    gradient_force = np.rollaxis(np.array([gradient_x[tuple(vertices_coords)],gradient_y[tuple(vertices_coords)],gradient_z[tuple(vertices_coords)]]),1)*np.array(resolution)[np.newaxis,:]
+    # print vertices_coords
+    gradient_force = np.rollaxis(np.array([gradient_x[tuple(vertices_coords)],gradient_y[tuple(vertices_coords)],gradient_z[tuple(vertices_coords)]]),1)*np.array(voxelsize)[np.newaxis,:]
     
     return gradient_force
 

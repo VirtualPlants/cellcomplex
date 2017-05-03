@@ -176,7 +176,7 @@ def triangle_geometric_features(triangles,positions,features=['area','max_distan
     triangle_features['cosinus'][:,2] = (triangle_edge_lengths[...,0]**2+triangle_edge_lengths[...,1]**2-triangle_edge_lengths[:,2]**2)/(2.0*triangle_edge_lengths[...,0]*triangle_edge_lengths[...,1])
 
     triangle_features['angles'] = np.arccos(triangle_features['cosinus'])
-    print triangle_features['angles']*180./np.pi
+    # print triangle_features['angles']*180./np.pi
 
     # if 'sinus_eccentricity' in features:
     triangle_features['sinus_eccentricity'] = 1.0 - (2.0*triangle_features['sinus'].sum(axis=1))/(3*np.sqrt(3))
@@ -192,8 +192,8 @@ def triangle_geometric_features(triangles,positions,features=['area','max_distan
     #triangle_tangent_sums = triangle_features['tangent'][...,triangle_edge_list].sum(axis=1)/triangle_features['tangent'][...,triangle_edge_list].sum(axis=1)[:,np.newaxis]
     #triangle_tangent_sums = np.maximum(triangle_tangent_sums,-1)/np.maximum(triangle_tangent_sums,-1).sum(axis=1)[:,np.newaxis]
     triangle_sincos = triangle_features['sinus']*triangle_features['cosinus']
-    print triangle_sincos
-    print triangle_sincos.sum(axis=1)
+    # print triangle_sincos
+    # print triangle_sincos.sum(axis=1)
     triangle_features['circumscribed_circle_center'] = (positions.values(triangles)*triangle_sincos[:,:,np.newaxis]).sum(axis=1)/(triangle_sincos.sum(axis=1) + 1e-5)[:,np.newaxis]
     
     triangle_features['projected_circumscribed_circle_center'] = np.copy(triangle_features['circumscribed_circle_center'])

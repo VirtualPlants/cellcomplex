@@ -101,18 +101,18 @@ def sphere_topomesh(radius=1.0,center=np.zeros(3)):
     return topomesh
 
 
-def triangular_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
+def triangular_grid_topomesh(size=1, voxelsize=1., center=np.zeros(3)):
     """
     """
 
     return topomesh
 
 
-def square_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
+def square_grid_topomesh(size=1, voxelsize=1., center=np.zeros(3)):
     """
     """
 
-    x = y = np.linspace(-size,size,2*size+1)*resolution
+    x = y = np.linspace(-size,size,2*size+1)*voxelsize
     x += center[0]
     y += center[1]
 
@@ -134,7 +134,7 @@ def square_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
     return topomesh
 
 
-def hexagonal_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
+def hexagonal_grid_topomesh(size=1, voxelsize=1., center=np.zeros(3)):
     """
     """
 
@@ -144,19 +144,19 @@ def hexagonal_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
     for n in range(size+1,2*size+2):
         for r in [0,1]:
             p += list(len(p)+np.arange(n+r))
-            x += list((np.arange(n+r)-((n+r-1)/2.))*resolution*np.sqrt(3.))
+            x += list((np.arange(n+r)-((n+r-1)/2.))*voxelsize*np.sqrt(3.))
             row_y = (((2*size+1 - n)+1)/2)*3
             row_side = (((2*size+1 - n)+1)%2)
-            y += list((row_y+(2*row_side-1)-(row_side==r)*(2*row_side-1)/2.)*np.ones(n+r)*resolution)
+            y += list((row_y+(2*row_side-1)-(row_side==r)*(2*row_side-1)/2.)*np.ones(n+r)*voxelsize)
 
 
     for n in range(size+1,2*size+2)[::-1]:
         for r in [1,0]:
             p += list(len(p)+np.arange(n+r))
-            x += list((np.arange(n+r)-((n+r-1)/2.))*resolution*np.sqrt(3.))
+            x += list((np.arange(n+r)-((n+r-1)/2.))*voxelsize*np.sqrt(3.))
             row_y = (((2*size+1 - n)+1)/2)*3
             row_side = (((2*size+1 - n)+1)%2)
-            y += list(-(row_y+(2*row_side-1)-(row_side==r)*(2*row_side-1)/2.)*np.ones(n+r)*resolution)
+            y += list(-(row_y+(2*row_side-1)-(row_side==r)*(2*row_side-1)/2.)*np.ones(n+r)*voxelsize)
 
     x = np.array(x) + center[0]
     y = np.array(y) + center[1]
@@ -187,26 +187,26 @@ def hexagonal_grid_topomesh(size=1, resolution=1., center=np.zeros(3)):
         for h in xrange(n):
             row_gaps += [[n+2,n+1,n,-(n+1),-(n+1)]]
 
-    print index_list
-    print row_length_list
+    # print index_list
+    # print row_length_list
 
-    print "Hexagons"
+    # print "Hexagons"
 
     hexagons = []
     for i,n,gaps in zip(index_list,row_length_list,row_gaps):
         hexagon = [i]
         for p, gap in zip(xrange(5),gaps):
             hexagon += [hexagon[-1]+gap]
-        print hexagon
+        # print hexagon
         hexagons += [hexagon]
 
     topomesh = poly_topomesh(hexagons,positions,faces_as_cells=True)
 
     return topomesh
 
-def circle_voronoi_topomesh(size = 1,resolution = 1.,circle_size = 100.,z_coef = 0.):
+def circle_voronoi_topomesh(size = 1,voxelsize = 1.,circle_size = 100.,z_coef = 0.):
     n_cells = 3*size*(size-1)+1
-    radius = size*resolution
+    radius = size*voxelsize
 
     circle_thetas = np.linspace(-np.pi,np.pi-2*np.pi/float(circle_size),circle_size)
     circle_points = np.transpose([radius*np.cos(circle_thetas),radius*np.sin(circle_thetas)])
