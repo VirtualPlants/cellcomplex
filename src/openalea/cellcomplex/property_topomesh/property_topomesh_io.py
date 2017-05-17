@@ -727,7 +727,7 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
     return topomesh
 
 
-def read_obj_property_topomesh(obj_filename, verbose=False):
+def read_obj_property_topomesh(obj_filename, verbose=True):
     """
     """
     import re
@@ -751,16 +751,20 @@ def read_obj_property_topomesh(obj_filename, verbose=False):
     face_normals = []
 
     for lineno, line in obj_stream:
-        if re.split(' ',line)[0] == 'v':
-            vertices += [np.array(re.split(' ',line)[1:]).astype(float)]
+        if len(line)>0:
+            if re.split(' ',line)[0] == 'v':
+                vertices += [np.array(re.split(' ',line)[1:4]).astype(float)]
 
-        if re.split(' ',line)[0] == 'f':
-            if '//' in line:
-                faces += [np.array([re.split('//',v)[0] for v in re.split(' ',line)[1:]]).astype(int) - 1]
-            elif '/' in line:
-                faces += [np.array([re.split('/',v)[0] for v in re.split(' ',line)[1:]]).astype(int) - 1]
+            if re.split(' ',line)[0] == 'f':
+                if '//' in line:
+                    faces += [np.array([re.split('//',v)[0] for v in re.split(' ',line)[1:]]).astype(int) - 1]
+                elif '/' in line:
+                    faces += [np.array([re.split('/',v)[0] for v in re.split(' ',line)[1:]]).astype(int) - 1]
+                else:
+                    faces += [np.array([v for v in re.split(' ',line)[1:4]]).astype(int) - 1]
 
     vertex_positions = dict(zip(range(len(vertices)),vertices))
+
     topomesh = triangle_topomesh(faces,vertex_positions)
 
     return topomesh
