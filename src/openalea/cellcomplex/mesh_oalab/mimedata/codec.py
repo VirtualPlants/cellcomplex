@@ -133,39 +133,45 @@ class TopomeshCodec(QMimeCodec):
             elif mimetype_out == "openalea/interface.ITriangularMesh":
                 return topomesh_to_triangular_mesh(mesh)
 
-
-
-
-
-def is_csv_path(path):
+def is_data_path(path):
     mime, encoding = mimetypes.guess_type(path)
     if mime and mime.startswith('text/csv'):
         return True
     if path.ext in ('.csv'):
         return True
+    elif path.ext in ('.xls','.xlsx'):
+        return True
     else:
         return False
 
-def decode_csv_file(filename, mimetype_in, mimetype_out):
+def decode_data_file(filename, mimetype_in, mimetype_out):
     try:
         import pandas as pd
     except ImportError:
-        print "Pandas should be installed to visualize CSV files"
+        print "Pandas should be installed to visualize CSV files (conda install pandas)"
         pass
     else:
         df = None
         if filename is not None:
-            print filename[-4:]
-            print "\""+filename+"\"",filename.exists()
             if filename.exists():
-                if filename[-4:] == ".csv":
+                print path(filename).ext 
+                if path(filename).ext in ('.csv'):
                     try:
                         df = pd.read_csv(filename)
                         if ";" in df.columns[0]:
                             df = pd.read_csv(filename,delimiter=";")
                     except:
                         df = None
-
+                elif path(filename).ext in ('.xls', '.xlsx'):
+                    try:
+                        df = pd.read_excel(filename,index_col=None)
+                    except ImportError:
+                        print "Please install xlrd to support Excel files (conda install xlrd)"
+                    except:
+                        df = None
+    if pd.isnull(df.index).sum()>0:
+        print "Please make sure the file you provided is a correct column/value DataFrame."
+        return None
     return df
 
 
@@ -187,7 +193,8 @@ class DataFrameFileCodec(QMimeCodec):
             url = raw_data[0]
         else:
             return False
-        return is_csv_path(url)
+        print url
+        return is_data_path(url)
 
     def qtdecode(self, mimedata, mimetype_in, mimetype_out):
         raw_data = self._raw_data(mimedata, mimetype_in, mimetype_out)
@@ -206,7 +213,7 @@ class DataFrameFileCodec(QMimeCodec):
         kwds['name'] = local_file.namebase
         
         if mimetype_in == 'text/uri-list':
-            data = decode_csv_file(local_file, mimetype_in, mimetype_out)
+            data = decode_data_file(local_file, mimetype_in, mimetype_out)
 
             if mimetype_out == "pandas/dataframe":
                 return data, kwds

@@ -44,9 +44,10 @@ def simple_plot(figure,X,Y,colors,xlabel="",ylabel="",linked=True,n_points=400,m
     #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
 
-    if linked:
+    if linked and len(X)>1:
         X_smooth = np.linspace(X.min(),X.max(),n_points)
         interpolator = interp1d(X,Y)
         Y_smooth = np.array([interpolator(x) for x in X_smooth])
@@ -64,7 +65,7 @@ def simple_plot(figure,X,Y,colors,xlabel="",ylabel="",linked=True,n_points=400,m
                 axes.plot(X_smooth[(i*n_points/100):((i+1)*n_points)/100+1],Y_smooth[(i*n_points/100):((i+1)*n_points)/100+1],linewidth=linewidth,color=color,alpha=alpha)
         # axes.plot(X,Y,linewidth=linewidth,color=color,alpha=alpha,label=label)
     # ratios = (Y-Y.min())/(Y.max()-Y.min())
-    axes.scatter(X,Y,c=colors,label=label if marker_size>0 else None,s=marker_size,alpha=alpha,linewidth=linewidth)
+    axes.scatter(X,Y,c=colors,label=label if np.any(marker_size>0) else None,s=marker_size,alpha=alpha,linewidth=linewidth,picker=True)
     # colors = 
     # for i in xrange(100):
     #   color = tuple(color1*(1.0-ratios[i]) + color2*ratios[i])
@@ -75,6 +76,33 @@ def simple_plot(figure,X,Y,colors,xlabel="",ylabel="",linked=True,n_points=400,m
     axes.set_xticklabels(axes.get_xticks(),fontproperties=font, size=12)
     axes.set_ylabel(ylabel, fontproperties=font, size=10, style='italic')
     # axes.set_ylim(Y.min(),Y.max())
+    axes.set_yticklabels(axes.get_yticks(),fontproperties=font, size=12)
+
+def average_plot(figure,X,Y,color,xlabel="",ylabel="",n_points=400,smooth_factor=0,linewidth=3,alpha=1.0,label=None):
+
+    font = fm.FontProperties(family = 'Trebuchet', weight ='light')
+    figure.patch.set_facecolor('white')
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
+
+    X_smooth = np.linspace(X.min(),X.max(),n_points)
+    dX = X_smooth[1]-X_smooth[0]
+    sigma = (5.*smooth_factor+1)*dX/2.
+    
+    X_distances = np.abs(X_smooth[np.newaxis,:]  - X[:,np.newaxis])
+    X_weights = np.exp(-np.power(X_distances,2)/np.power(sigma,2))
+
+    Y_smooth = (X_weights*Y[:,np.newaxis]).sum(axis=0)/X_weights.sum(axis=0)
+            
+    Y_squared = (X_weights*np.power(Y[:,np.newaxis],2)).sum(axis=0)/X_weights.sum(axis=0)
+    Y_std = np.sqrt(Y_squared - np.power(Y_smooth,2))
+    
+    axes.plot(X_smooth,Y_smooth,linewidth=linewidth,c=color,alpha=alpha,label=label)
+    axes.fill_between(X_smooth,Y_smooth-Y_std,Y_smooth+Y_std,color=color,alpha=alpha*0.2)
+
+    axes.set_xlabel(xlabel,fontproperties=font, size=10, style='italic')
+    axes.set_xticklabels(axes.get_xticks(),fontproperties=font, size=12)
+    axes.set_ylabel(ylabel, fontproperties=font, size=10, style='italic')
     axes.set_yticklabels(axes.get_yticks(),fontproperties=font, size=12)
 
 
@@ -118,7 +146,8 @@ def density_plot(figure,X,Y,color,xlabel="",ylabel="",n_points=10,linewidth=1,ma
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
     # axes.plot(X,Y,linewidth=1,color=tuple(color2),alpha=0.2)
     # ratios = (Y-Y.min())/(Y.max()-Y.min())
     # X_min = X.mean()-3*X.std()
@@ -158,7 +187,8 @@ def density_plot(figure,X,Y,color,xlabel="",ylabel="",n_points=10,linewidth=1,ma
 def density_contour_plot(figure,X,Y,color,XY_range=None,xlabel="",ylabel="",n_points=100,n_contours=10,smooth_factor=1.0,linewidth=1,marker_size=40.,alpha=1.0,label=""):
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
 
     if XY_range is None:
         XY_range = [[X.min(),X.max()],[Y.min(),Y.max()]]
@@ -212,7 +242,8 @@ def density_contour_plot(figure,X,Y,color,XY_range=None,xlabel="",ylabel="",n_po
 def map_plot(figure,X,Y,Z,colormap=None,XY_range=None,xlabel="",ylabel="",n_points=100,n_contours=20,smooth_factor=1.0,linewidth=1,alpha=1.0,confidence=True,label=""):
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
 
     if colormap is None:
         colormap = 'Greys'
@@ -296,7 +327,9 @@ def smooth_plot(figure,X,Y,color1,color2,xlabel="",ylabel="",filled=False,n_poin
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
+
     axes.plot(X,Y,linewidth=1,color=tuple(color2),alpha=0.2)
     if filled:
         axes.fill_between(X_smooth,Y_smooth,0,color=color2,alpha=0.1)
@@ -319,7 +352,9 @@ def bar_plot(figure,X,Y,color1,color2,xlabel="",ylabel="",label=""):
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
+
     width = X[1]-X[0]
     axes.plot(X,Y,linewidth=1,color=tuple(color2),alpha=0.0,label=label)
     for x in xrange(X.size):
@@ -383,7 +418,9 @@ def violin_plot(figure,X,data,colors,xlabel="",ylabel="",n_points=400,violin_wid
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
+
     if violin_width is None:
         if len(X)>1:
             violin_width = ((np.array(X)[1:] - np.array(X)[:-1]).mean())/3.
@@ -416,7 +453,9 @@ def box_plot(figure,X,data,colors,xlabel="",ylabel="",box_width=None,linewidth=3
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
+
     
     if box_width is None:
         if len(X)>1:
