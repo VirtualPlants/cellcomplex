@@ -65,9 +65,9 @@ def compute_topomesh_image(topomesh, img):
             
             start_time = time()
             bounding_box = np.array([[0,polydata_img.shape[0]],[0,polydata_img.shape[1]],[0,polydata_img.shape[2]]])
-            bounding_box[:,0] = np.floor(sub_topomesh.wisp_property('barycenter',0).values().min(axis=0)/np.array(img.resolution)).astype(int)-1
+            bounding_box[:,0] = np.floor(sub_topomesh.wisp_property('barycenter',0).values().min(axis=0)/np.array(img.voxelsize)).astype(int)-1
             bounding_box[:,0] = np.maximum(bounding_box[:,0],0)
-            bounding_box[:,1] = np.ceil(sub_topomesh.wisp_property('barycenter',0).values().max(axis=0)/np.array(img.resolution)).astype(int)+1
+            bounding_box[:,1] = np.ceil(sub_topomesh.wisp_property('barycenter',0).values().max(axis=0)/np.array(img.voxelsize)).astype(int)+1
             bounding_box[:,1] = np.minimum(bounding_box[:,1],np.array(img.shape)-1)
             
             sub_polydata_img = polydata_img[bounding_box[0,0]:bounding_box[0,1],bounding_box[1,0]:bounding_box[1,1],bounding_box[2,0]:bounding_box[2,1]]
@@ -80,7 +80,7 @@ def compute_topomesh_image(topomesh, img):
             print "  --> Extracting cell sub-image      [",end_time-start_time,"s]"
 
             start_time = time()
-            topomesh_center = bounding_box[:,0]*np.array(img.resolution)
+            topomesh_center = bounding_box[:,0]*np.array(img.voxelsize)
             positions = sub_topomesh.wisp_property('barycenter',0)
             
             polydata = vtk.vtkPolyData()
@@ -108,7 +108,7 @@ def compute_topomesh_image(topomesh, img):
             pol2stenc.SetTolerance(0)
             pol2stenc.SetOutputOrigin((0,0,0))
             #pol2stenc.SetOutputOrigin(tuple(-bounding_box[:,0]))
-            pol2stenc.SetOutputSpacing(img.resolution)
+            pol2stenc.SetOutputSpacing(img.voxelsize)
             SetInput(pol2stenc,polydata)
             pol2stenc.Update()
             end_time = time()
@@ -468,13 +468,13 @@ def image_to_vtk_polydata(img,considered_cells=None,mesh_center=None,coef=1.0,me
     reader.SetNumberOfScalarComponents(1)
     reader.SetDataExtent(0, nx - 1, 0, ny - 1, 0, nz - 1)
     reader.SetWholeExtent(0, nx - 1, 0, ny - 1, 0, nz - 1)
-    reader.SetDataSpacing(*img.resolution)
+    reader.SetDataSpacing(*img.voxelsize)
 
     if considered_cells is None:
         considered_cells = np.unique(img)[1:]
 
     if mesh_center is None:
-        mesh_center = np.array(img.resolution)*np.array(img.shape)/2.
+        mesh_center = np.array(img.voxelsize)*np.array(img.shape)/2.
 
     marching_cube_start_time = time()
     print "  --> Marching Cubes"
@@ -561,7 +561,7 @@ def image_to_vtk_polydata(img,considered_cells=None,mesh_center=None,coef=1.0,me
 
     decimate = vtk.vtkQuadricClustering()
     SetInput(decimate,smoother.GetOutput())
-    decimate.SetNumberOfDivisions(*tuple(mesh_fineness*np.array(np.array(img.shape)*np.array(img.resolution)/2.,np.uint16)))
+    decimate.SetNumberOfDivisions(*tuple(mesh_fineness*np.array(np.array(img.shape)*np.array(img.voxelsize)/2.,np.uint16)))
     decimate.SetFeaturePointsAngle(30.0)
     decimate.CopyCellDataOn()
     decimate.Update()
@@ -597,21 +597,21 @@ def image_to_vtk_cell_polydata(img,considered_cells=None,mesh_center=None,coef=1
     reader.SetNumberOfScalarComponents(1)
     reader.SetDataExtent(0, nx - 1, 0, ny - 1, 0, nz - 1)
     reader.SetWholeExtent(0, nx - 1, 0, ny - 1, 0, nz - 1)
-    reader.SetDataSpacing(*img.resolution)
+    reader.SetDataSpacing(*img.voxelsize)
     reader.Update()
 
     if considered_cells is None:
         considered_cells = np.unique(img)[1:]
 
     if mesh_center is None:
-        #mesh_center = np.array(img.resolution)*np.array(img.shape)/2.
+        #mesh_center = np.array(img.voxelsize)*np.array(img.shape)/2.
         mesh_center = np.array([0,0,0])
 
     for label in considered_cells:
 
         cell_start_time = time()
 
-        cell_volume = (img==label).sum()*np.array(img.resolution).prod()
+        cell_volume = (img==label).sum()*np.array(img.voxelsize).prod()
 
         # mask_data = vtk.vtkImageThreshold()
         # mask_data.SetInputConnection(reader.GetOutputPort())
@@ -835,11 +835,11 @@ def image_to_pgl_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smooth=1.0,
         raise
 
     try:
-        resolution = img.resolution
+        voxelsize = img.voxelsize
     except:
-        resolution = (1.0,1.0,1.0)
+        voxelsize = (1.0,1.0,1.0)
 
-    img = SpatialImage(img[0:-1:sampling,0:-1:sampling,0:-1:sampling],resolution=tuple(np.array(resolution)*sampling))
+    img = SpatialImage(img[0:-1:sampling,0:-1:sampling,0:-1:sampling],voxelsize=tuple(np.array(voxelsize)*sampling))
 
     img_polydata = image_to_vtk_cell_polydata(img,coef=cell_coef,mesh_fineness=mesh_fineness,smooth_factor=smooth)
     # img_mesh = vtk_polydata_to_triangular_mesh(img_polydata)
@@ -855,16 +855,16 @@ def image_to_pgl_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smooth=1.0,
     return scene
 
 
-def image_to_triangular_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smooth=1.0,resolution=None):
+def image_to_triangular_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smooth=1.0,voxelsize=None):
     from openalea.cellcomplex.triangular_mesh import TriangularMesh
     from time import time
 
-    if resolution is None:
+    if voxelsize is None:
         try:
-            resolution = img.resolution
+            voxelsize = img.voxelsize
         except:
-            resolution = (1.0,1.0,1.0)
-    img = SpatialImage(img[0:-1:sampling,0:-1:sampling,0:-1:sampling],resolution=tuple(np.array(resolution)*sampling))
+            voxelsize = (1.0,1.0,1.0)
+    img = SpatialImage(img[0:-1:sampling,0:-1:sampling,0:-1:sampling],voxelsize=tuple(np.array(voxelsize)*sampling))
 
     img_polydata = image_to_vtk_cell_polydata(img,coef=cell_coef,mesh_fineness=mesh_fineness,smooth_factor=smooth)
     img_mesh = vtk_polydata_to_triangular_mesh(img_polydata)

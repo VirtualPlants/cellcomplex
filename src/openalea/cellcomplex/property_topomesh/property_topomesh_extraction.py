@@ -409,8 +409,8 @@ def surface_dual_topomesh(topomesh, vertex_placement='center', exterior_vertex=1
             #exterior_centers = face_centers.values(exterior_edge_triangle_ids) + exterior_coef*(positions.values(exterior_edges).mean(axis=1)-face_centers.values(exterior_edge_triangle_ids))
             exterior_centers = exterior_face_dual_centers + np.maximum(exterior_distance-exterior_dual_distance,0)[:,np.newaxis]*exterior_edge_vectors
 
-        print list(triangle_ids),list(exterior_triangle_ids)
-        print list(topomesh.wisps(2))
+        # print list(triangle_ids),list(exterior_triangle_ids)
+        # print list(topomesh.wisps(2))
 
         dual_topomesh.update_wisp_property('barycenter',0,array_dict(list(centers)+list(exterior_centers),list(triangle_ids)+list(exterior_triangle_ids)))
     else:
@@ -426,7 +426,7 @@ def surface_dual_topomesh(topomesh, vertex_placement='center', exterior_vertex=1
 def triangulation_add_exterior(triangulation_topomesh):
     assert is_triangular(triangulation_topomesh)
 
-    print np.min(list(triangulation_topomesh.wisps(0)))
+    # print np.min(list(triangulation_topomesh.wisps(0)))
 
     positions = triangulation_topomesh.wisp_property('barycenter',0)
 
