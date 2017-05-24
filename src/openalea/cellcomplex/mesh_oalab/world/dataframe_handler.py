@@ -178,8 +178,8 @@ class DataframeHandler(AbstractListener):
             self.refresh()
 
         elif signal == 'data_point_picked':
-            fig, point = data
-            self.get_matching_data(fig,point)
+            fig, ax, point = data
+            self.get_matching_data(fig,ax,point)
 
     def clear(self):
         if self.world:
@@ -445,9 +445,9 @@ class DataframeHandler(AbstractListener):
                                     class_color = np.round(cmap.get_color((i_class+1)/float(n_classes+1)),decimals=3)
                             else:
                                 if are_classes_sublabels:
-                                    class_color = np.round(cmap.get_color((i_label+1)/255.),decimals=3)
+                                    class_color = np.round(cmap.get_color(((i_label+1) % 256)/255.),decimals=3)
                                 else:
-                                    class_color = np.round(cmap.get_color((i_class+1)/255.),decimals=3)
+                                    class_color = np.round(cmap.get_color(((i_class+1) % 256)/255.),decimals=3)
 
 
                             _,figure_labels = figure.gca().get_legend_handles_labels()
@@ -469,7 +469,10 @@ class DataframeHandler(AbstractListener):
                                 else:
                                     class_labels = labels[classes==c]
                                     normalized_class_labels = np.maximum(0,np.minimum(1,(class_labels-label_range[0])/float(label_range[1]-label_range[0])))
-                                    label_colors = np.array([(1-0.8*np.abs(0.5-l)/0.5)*class_color + np.maximum(0,0.8*(0.5-l)/0.5)*np.zeros(3) + np.maximum(0,0.8*(l-0.5)/0.5)*np.ones(3) for l in normalized_class_labels])
+                                    #label_colors = np.array([(1-0.8*np.abs(0.5-l)/0.5)*class_color + np.maximum(0,0.8*(0.5-l)/0.5)*np.zeros(3) + np.maximum(0,0.8*(l-0.5)/0.5)*np.ones(3) for l in normalized_class_labels])
+                                    label_colors = np.array([l*class_color + (1-l)*(0.9*np.ones(3) + 0.1*class_color) for l in normalized_class_labels])
+                                    
+
                                     simple_plot(figure,X[classes==c],Y[classes==c],label_colors,xlabel=xlabel,ylabel=ylabel,linked=False,marker_size=markersize*sizes[classes==c]/sizes.mean(),linewidth=linewidth,alpha=alpha,label=plot_label)
                                 
 
@@ -521,7 +524,9 @@ class DataframeHandler(AbstractListener):
                                         x_membership = x_potential/x_density[:,np.newaxis]
                                         reg_Y = (x_membership*Y[classes==c]).sum(axis=1)
 
-                                    simple_plot(figure,reg_X[True-np.isnan(reg_Y)],reg_Y[True-np.isnan(reg_Y)],class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=2*(linewidth+1)+np.sqrt(markersize)/np.pi,alpha=(alpha+1)/2.)
+                                    # regression_linewidth = 2*(linewidth+1)+np.sqrt(markersize)/np.pi
+                                    regression_linewidth = (linewidth+1)
+                                    simple_plot(figure,reg_X[True-np.isnan(reg_Y)],reg_Y[True-np.isnan(reg_Y)],class_color,xlabel=xlabel,ylabel=ylabel,linked=True,marker_size=0,linewidth=regression_linewidth,alpha=(alpha+1)/2.)
                                 elif world_object['regression'] in ['fireworks']:
                                     class_covariance = np.cov(np.transpose([X[classes==c],Y[classes==c]]),rowvar=False)
                                     vals, vecs = np.linalg.eigh(class_covariance)
@@ -863,7 +868,7 @@ class DataframeHandler(AbstractListener):
             plt.draw()
 
 
-    def get_matching_data(self, figure, point):
+    def get_matching_data(self, figure, axes, point):
         world_object_names = [w for w in self._figures.keys() if self._figures[w] == figure.number]
         if len(world_object_names)>0:
             world_object = self.world[world_object_names[0]]
@@ -873,6 +878,15 @@ class DataframeHandler(AbstractListener):
             # data = np.transpose([world_object.data[variable] for variable in variables])
 
             front_variables = []
+
+
+            subplot_variable = world_object['subplot_variable']
+            if subplot_variable != "":
+                subplots = np.array(world_object.data[subplot_variable])
+                if not subplot_variable in front_variables:
+                    front_variables += [subplot_variable]
+            else:
+                subplots = np.ones_like(world_object.data.index)
 
             class_variable = world_object['class_variable']
             if class_variable != "":
@@ -913,9 +927,15 @@ class DataframeHandler(AbstractListener):
             # if len(variables)>10:
                 # variables = variables[:10]
 
-            data_index = world_object.data.index[np.where((X==point[0])&(Y==point[1]))]
+            if subplot_variable != "":
+                axes_subplot = axes.get_title()
+                data_index = world_object.data.index[np.where((np.array([str(s) for s in subplots])==axes_subplot)&(X==point[0])&(Y==point[1]))]
+            else:
+                data_index = world_object.data.index[np.where((X==point[0])&(Y==point[1]))]
+
             if len(data_index)>0:
-                data_row = world_object.data.iloc[data_index[0]]
+                # data_row = world_object.data.iloc[data_index[0]]
+                data_row = world_object.data.loc[data_index[0]]
                 # print ""
                 # print data_row[variables]
                 # print ""
