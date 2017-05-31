@@ -26,35 +26,76 @@ from scipy.cluster.vq import vq
 def cell_vertex_extraction(img,**kwargs):
     
     shape = np.array(img.shape)
-    neighborhood_img = []
-    for x in np.arange(-1,1):
-        for y in np.arange(-1,1):
-            for z in np.arange(-1,1):
-                neighborhood_img.append(img[1+x:shape[0]+x,1+y:shape[1]+y,1+z:shape[2]+z])
-    neighborhood_img = np.sort(np.transpose(neighborhood_img,(1,2,3,0))).reshape((shape-1).prod(),8)
-    neighborhoods = np.array(map(np.unique,neighborhood_img))
-    neighborhood_size = np.array(map(len,neighborhoods)).reshape(shape[0]-1,shape[1]-1,shape[2]-1)
-    neighborhoods = np.array(neighborhoods).reshape(shape[0]-1,shape[1]-1,shape[2]-1)
 
-    vertex_coords = np.where(neighborhood_size==4)
-    #vertex_coords = np.where(neighborhood_size >= 4)
-    vertex_points = np.transpose(vertex_coords)+0.5
-    vertex_cells = np.array([p for p in neighborhoods[vertex_coords]],int)
-    #vertex_cells = np.array([p[:4] for p in neighborhoods[vertex_coords]],int)
+    if img.ndim==3 and shape[2]>1:
 
-    if (neighborhood_size>5).sum() > 0:
-        clique_vertex_coords = np.where(neighborhood_size==5)
-        clique_vertex_points = np.concatenate([(p,p) for p in np.transpose(clique_vertex_coords)])+0.5
-        clique_vertex_cells = np.concatenate([[p[:4],np.concatenate([[p[0]],p[2:]])] for p in neighborhoods[clique_vertex_coords]]).astype(int)
+        neighborhood_img = []
+        for x in np.arange(-1,1):
+            for y in np.arange(-1,1):
+                for z in np.arange(-1,1):
+                    neighborhood_img.append(img[1+x:shape[0]+x,1+y:shape[1]+y,1+z:shape[2]+z])
+        neighborhood_img = np.sort(np.transpose(neighborhood_img,(1,2,3,0))).reshape((shape-1).prod(),8)
+        neighborhoods = np.array(map(np.unique,neighborhood_img))
+        neighborhood_size = np.array(map(len,neighborhoods)).reshape(shape[0]-1,shape[1]-1,shape[2]-1)
+        neighborhoods = np.array(neighborhoods).reshape(shape[0]-1,shape[1]-1,shape[2]-1)
 
-        vertex_points = np.concatenate([vertex_points,clique_vertex_points])
-        vertex_cells = np.concatenate([vertex_cells,clique_vertex_cells])
+        vertex_coords = np.where(neighborhood_size==4)
+        #vertex_coords = np.where(neighborhood_size >= 4)
+        vertex_points = np.transpose(vertex_coords)+0.5
+        vertex_cells = np.array([p for p in neighborhoods[vertex_coords]],int)
+        #vertex_cells = np.array([p[:4] for p in neighborhoods[vertex_coords]],int)
 
-    unique_cell_vertices = array_unique(vertex_cells)
-    vertices_matching = vq(vertex_cells,unique_cell_vertices)[0]
-    unique_cell_vertex_points = np.array([np.mean(vertex_points[vertices_matching == v],axis=0) for v in xrange(len(unique_cell_vertices))])
-    
-    cell_vertex_dict = dict(zip([tuple(c) for c in unique_cell_vertices],list(unique_cell_vertex_points)))
+        if (neighborhood_size>=5).sum() > 0:
+            clique_vertex_coords = np.where(neighborhood_size==5)
+            clique_vertex_points = np.concatenate([(p,p) for p in np.transpose(clique_vertex_coords)])+0.5
+            clique_vertex_cells = np.concatenate([[p[:4],np.concatenate([[p[0]],p[2:]])] for p in neighborhoods[clique_vertex_coords]]).astype(int)
+            
+            # clique_vertex_points = np.concatenate([(p,p,p,p,p) for p in np.transpose(clique_vertex_coords)])+0.5
+            # clique_vertex_cells = np.concatenate([[np.concatenate([p[:i],p[i+1:]]) for i in xrange(5)] for p in neighborhoods[clique_vertex_coords]]).astype(int)
+
+            vertex_points = np.concatenate([vertex_points,clique_vertex_points])
+            vertex_cells = np.concatenate([vertex_cells,clique_vertex_cells])
+
+        unique_cell_vertices = array_unique(vertex_cells)
+        vertices_matching = vq(vertex_cells,unique_cell_vertices)[0]
+        unique_cell_vertex_points = np.array([np.mean(vertex_points[vertices_matching == v],axis=0) for v in xrange(len(unique_cell_vertices))])
+        
+        cell_vertex_dict = dict(zip([tuple(c) for c in unique_cell_vertices],list(unique_cell_vertex_points)))
+
+    elif img.ndim==2 or (img.ndim==3 and shape[2]==1):
+
+        if img.ndim==3:
+            img = img[:,:,0]
+            shape = np.array(img.shape)
+
+        neighborhood_img = []
+        for x in np.arange(-1,1):
+            for y in np.arange(-1,1):
+                neighborhood_img.append(img[1+x:shape[0]+x,1+y:shape[1]+y])
+        neighborhood_img = np.sort(np.transpose(neighborhood_img,(1,2,0))).reshape((shape-1).prod(),4)
+        neighborhoods = np.array(map(np.unique,neighborhood_img))
+        neighborhood_size = np.array(map(len,neighborhoods)).reshape(shape[0]-1,shape[1]-1)
+        neighborhoods = np.array(neighborhoods).reshape(shape[0]-1,shape[1]-1)
+
+        vertex_coords = np.where(neighborhood_size==3)
+        vertex_points = np.transpose(vertex_coords)+0.5
+        vertex_cells = np.array([p for p in neighborhoods[vertex_coords]],int)
+
+        if (neighborhood_size>=4).sum() > 0:
+            clique_vertex_coords = np.where(neighborhood_size==4)
+            clique_vertex_points = np.concatenate([(p,p) for p in np.transpose(clique_vertex_coords)])+0.5
+            clique_vertex_cells = np.concatenate([[p[:3],np.concatenate([[p[0]],p[2:]])] for p in neighborhoods[clique_vertex_coords]]).astype(int)
+            vertex_points = np.concatenate([vertex_points,clique_vertex_points])
+            vertex_cells = np.concatenate([vertex_cells,clique_vertex_cells])
+            
+        unique_cell_vertices = array_unique(vertex_cells)
+        vertices_matching = vq(vertex_cells,unique_cell_vertices)[0]
+        unique_cell_vertex_points = np.array([np.mean(vertex_points[vertices_matching == v],axis=0) for v in xrange(len(unique_cell_vertices))])
+        
+        cell_vertex_dict = dict(zip([tuple(c) for c in unique_cell_vertices],list(unique_cell_vertex_points)))
+
+    else:
+        cell_vertex_dict = {}
     
     return cell_vertex_dict
 

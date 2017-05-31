@@ -1419,6 +1419,7 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
 
     projected = kwargs.get("projected_map_display",False)
 
+    img_edges = kwargs.get("image_edges",np.array([]))
 
     if simulated_annealing:
         iterations = kwargs.get('iterations',20)
@@ -1471,7 +1472,11 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
         flippable_edge_flipped_triangle_areas[np.isnan(flippable_edge_flipped_triangle_areas)] = 100.
         average_area = np.nanmean(topomesh.wisp_property('area',2).values())
 
-        wrong_edges = np.where(np.abs(flippable_edge_triangle_areas.sum(axis=1)-flippable_edge_flipped_triangle_areas.sum(axis=1)) > average_area/10.)
+        flat = topomesh.wisp_property('barycenter',0).values()[:,2].std() < 1e-6
+        if flat:
+            wrong_edges = np.where(np.abs(flippable_edge_triangle_areas.sum(axis=1)-flippable_edge_flipped_triangle_areas.sum(axis=1)) > 1e-6)
+        else:
+            wrong_edges = np.where(np.abs(flippable_edge_triangle_areas.sum(axis=1)-flippable_edge_flipped_triangle_areas.sum(axis=1)) > average_area/10.)
         
         flippable_edges = np.delete(flippable_edges,wrong_edges,0)
         flippable_edge_vertices = np.delete(flippable_edge_vertices,wrong_edges,0)
@@ -1503,7 +1508,6 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
             flippable_edge_energy_variation += omega_energies['length']*flippable_edge_length_energy_variation.values(flippable_edges)
 
         if omega_energies.has_key('neighborhood'):
-
             compute_topomesh_property(topomesh,'valence',0)
 
             nested_mesh = kwargs.get("nested_mesh",False)
@@ -1520,6 +1524,10 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
             flippable_edge_neighborhood_flipped_error += np.power(np.abs(topomesh.wisp_property('valence',0).values(flippable_edge_flipped_vertices)+1-target_neighborhood.values(flippable_edge_flipped_vertices)),2.0).sum(axis=1)
             flippable_edge_neighborhood_energy_variation = array_dict(flippable_edge_neighborhood_flipped_error-flippable_edge_neighborhood_error,flippable_edges)
             flippable_edge_energy_variation += omega_energies['neighborhood']*flippable_edge_neighborhood_energy_variation.values(flippable_edges)
+
+        if omega_energies.has_key('image'):
+            if img_edges is not None and len(img_edges)>0:
+                flippable_edge_energy_variation += omega_energies['image']*((vq(flippable_edge_vertices,img_edges)[1]==0).astype(float) - (vq(flippable_edge_flipped_vertices,img_edges)[1]==0 ).astype(float))
 
         flippable_edge_energy_variation = array_dict(flippable_edge_energy_variation,flippable_edges)
         
