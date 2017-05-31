@@ -369,19 +369,34 @@ def bar_plot(figure,X,Y,color1,color2,xlabel="",ylabel="",label=""):
     axes.set_ylabel(ylabel, fontproperties=font, size=10, style='italic')
     axes.set_yticklabels(axes.get_yticks(),fontproperties=font, size=12)
 
-def bar_histo_plot(figure,X,color,xlabel="",ylabel="",n_bins=10,X_range=None,linewidth=3,alpha=1.0,label=""):
+def bar_histo_plot(figure,X,colors,xlabel="",ylabel="",n_bins=10,X_range=None,linewidth=3,alpha=1.0,label=""):
     font = fm.FontProperties(family = 'Trebuchet', weight ='light')
     #font = fm.FontProperties(family = 'CenturyGothic',fname = '/Library/Fonts/Microsoft/Century Gothic', weight ='light')
     figure.patch.set_facecolor('white')
-    axes = figure.add_subplot(111)
+    # axes = figure.add_subplot(111)
+    axes= figure.gca()
+
+    if np.array(colors).ndim == 1:
+        single_color = True
+        colors = np.array([colors for i in xrange(n_bins)])
+    else:
+        single_color = False
+
     if X_range is None:
         X_range = (X.min(),X.max())
     X_bins = np.linspace(X_range[0],X_range[1],n_bins+1)
-    histo, bins, patches = axes.hist(X,bins=X_bins,ec='k')
-    for h, p in zip(histo, patches):
-        h_ratio  = float(h)/float(histo.max())
-        p.set_facecolor(h_ratio*color + (1-h_ratio))
-    axes.plot((bins[1:]+bins[:-1])/2.,histo,linewidth=1,color=tuple(color),alpha=0.0,label=label)
+    histo, bins, patches = axes.hist(X,bins=X_bins,ec='none',alpha=alpha)
+    for i_bin, p in enumerate(patches):
+        p.set_facecolor(colors[i_bin])
+    if single_color:
+        for h, p in zip(histo, patches):
+            h_ratio  = float(h)/float(histo.max())
+            p.set_alpha(h_ratio*alpha)
+    for i_bin in xrange(len(histo)):
+        axes.plot(bins[i_bin:i_bin+2],[histo[i_bin],histo[i_bin]],color=colors[i_bin],linewidth=linewidth,alpha=np.sqrt(alpha))
+        if i_bin<len(histo)-1:
+            figure.gca().plot([bins[i_bin+1],bins[i_bin+1]],histo[i_bin:i_bin+2],color=colors[i_bin],linewidth=linewidth,alpha=np.sqrt(alpha))
+    axes.plot((bins[1:]+bins[:-1])/2.,histo,linewidth=1,color=tuple(colors[n_bins/2]),alpha=0.0,label=label)
 
     axes.set_xlim(*X_range)
     axes.set_xlabel(xlabel,fontproperties=font, size=10, style='italic')

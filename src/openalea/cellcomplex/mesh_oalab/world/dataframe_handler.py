@@ -401,6 +401,7 @@ class DataframeHandler(AbstractListener):
                 if (n_classes > 1) or (n_labels == 1) or np.all(labels == classes):
                     plot_legend = ['labels']
 
+
                     are_classes_sublabels = np.all([len(np.unique(labels[classes==c]))==1 for c in class_list])
 
                     if not are_classes_sublabels:
@@ -482,7 +483,8 @@ class DataframeHandler(AbstractListener):
                             elif world_object['plot'] == 'average curve':
                                 average_plot(figure,X[classes==c],Y[classes==c],class_color,xlabel=xlabel,ylabel=ylabel,linewidth=(linewidth+1)/2.,n_points=n_slices,smooth_factor=smooth,alpha=alpha,label=plot_label)
                             elif world_object['plot'] == 'histogram':
-                                x_range = (X.min() + world_object['X_range'][0]*(X.max()-X.min())/100.,X.min() + world_object['X_range'][1]*(X.max()-X.min())/100.)
+                                #x_range = (X.min() + world_object['X_range'][0]*(X.max()-X.min())/100.,X.min() + world_object['X_range'][1]*(X.max()-X.min())/100.)
+                                x_range = (all_X.min() + world_object['X_range'][0]*(all_X.max()-all_X.min())/100.,all_X.min() + world_object['X_range'][1]*(all_X.max()-all_X.min())/100.)
                                 bar_histo_plot(figure,X[classes==c],class_color,xlabel=xlabel,ylabel="Number of Elements",n_bins=n_slices,X_range=x_range,linewidth=linewidth,alpha=alpha,label=plot_label)
                             elif world_object['plot'] == 'distribution':
                                 histo_plot(figure,X[classes==c],class_color,xlabel=xlabel,ylabel="Number of Elements (%)",cumul=False,bar=False,smooth_factor=smooth*10,linewidth=linewidth,alpha=alpha,label=plot_label)
@@ -577,7 +579,13 @@ class DataframeHandler(AbstractListener):
                         data_range = [[all_X.min()-0.5*(all_X.max()-all_X.min()),all_X.max()+0.5*(all_X.max()-all_X.min())],[all_Y.min()-0.5*(all_Y.max()-all_Y.min()),all_Y.max()+0.5*(all_Y.max()-all_Y.min())]]
                         # print mpl_norm(labels)
                         map_plot(figure,X,Y,mpl_norm(labels),mpl_cmap,data_range,xlabel=xlabel,ylabel=ylabel,smooth_factor=smooth*10,n_points=10.*world_object['n_points'],linewidth=linewidth,alpha=alpha)
-
+                    elif world_object['plot'] == 'histogram' and label_variable == X_variable:
+                        x_range = (all_X.min() + world_object['X_range'][0]*(all_X.max()-all_X.min())/100.,all_X.min() + world_object['X_range'][1]*(all_X.max()-all_X.min())/100.)
+                        x_bins = np.linspace(x_range[0],x_range[1],n_slices+1)
+                        bin_colors = np.array([np.round(cmap.get_color(b),decimals=3) for b in (x_bins-label_range[0])/float(label_range[1]-label_range[0])])
+                        
+                        bar_histo_plot(figure,X,bin_colors,xlabel=xlabel,ylabel="Number of Elements",n_bins=n_slices,X_range=x_range,linewidth=linewidth,alpha=alpha)
+                            
 
 
                 if world_object['plot'] in ['boxplot','violin','PCA']:
@@ -840,6 +848,10 @@ class DataframeHandler(AbstractListener):
 
                     if world_object['plot'] in ['distribution','cumulative']: 
                         axes.set_ylim(*world_object['Y_range'])
+                        axes.set_yticklabels(axes.get_yticks())
+                    elif world_object['plot'] in ['histgram']:
+                        y_range = (world_object['Y_range'][0]*len(all_X)/100.,world_object['Y_range'][1]*len(all_X)/100.)
+                        axes.set_ylim(*y_range)
                         axes.set_yticklabels(axes.get_yticks())
                     elif world_object['plot'] in ['boxplot','violin'] and  Y_variable == "":
                             x_range = (X.min() + world_object['X_range'][0]*(X.max()-X.min())/100.,X.min() + world_object['X_range'][1]*(X.max()-X.min())/100.)
