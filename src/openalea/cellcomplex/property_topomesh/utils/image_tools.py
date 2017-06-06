@@ -871,6 +871,72 @@ def image_to_triangular_mesh(img,sampling=4,cell_coef=1.0,mesh_fineness=1.0,smoo
     return img_mesh
 
 
+def img_extent(sp_img):
+    extent = []
+    for ind in range(0,len(sp_img.shape)):
+        extent.append(sp_img.shape[ind]*sp_img.voxelsize[ind])
+    return extent
+
+
+def img_resize(sp_img, sub_factor=2, option=None):
+    """
+    Down interpolation of image 'sp_img' by a factor 'sub_factor'. 
+    For intensity image use 'option="gray"', for segmented images use 'option="label"'.
+    """
+    from timagetk.algorithms.trsf import BalTransformation, create_trsf, apply_trsf
+
+    vx = sp_img.voxelsize
+    poss_opt = ['gray', 'label']
+    if option is None:
+        option='label'
+    else:
+        if option not in poss_opt:
+            option='label'
+    
+    extent = img_extent(sp_img)
+    tmp_voxelsize = np.array(sp_img.voxelsize) *sub_factor
+    print tmp_voxelsize
+    new_shape, new_voxelsize = [], []
+    for ind in range(0,len(sp_img.shape)):
+        new_shape.append(int(np.ceil(extent[ind]/tmp_voxelsize[ind])))
+        new_voxelsize.append(extent[ind]/new_shape[ind])
+    identity_trsf = create_trsf(param_str_2='-identity', trsf_type=BalTransformation.RIGID_3D, trsf_unit=BalTransformation.REAL_UNIT)
+    template_img = np.zeros((new_shape[0],new_shape[1],new_shape[2]), dtype=sp_img.dtype)
+    template_img = SpatialImage(template_img, voxelsize=new_voxelsize)
+    if option=='gray':
+        param_str_2 = '-interpolation linear'
+    elif option=='label':
+        param_str_2 = '-interpolation nearest'
+    out_img = apply_trsf(sp_img, identity_trsf,template_img=template_img, param_str_2=param_str_2)
+
+    return out_img
+
+
+def composed_triangular_mesh(triangular_mesh_dict):
+    from time import time 
+
+    start_time = time()
+    print "--> Composing triangular mesh..."
+
+    mesh = TriangularMesh()
+
+    triangle_cell_matching = {}
+
+    mesh_points = np.concatenate([triangular_mesh_dict[c].points.keys() for c in triangular_mesh_dict.keys()])
+    mesh_point_positions = np.concatenate([triangular_mesh_dict[c].points.values() for c in triangular_mesh_dict.keys()])
+    mesh.points = dict(zip(mesh_points,mesh_point_positions))
+
+    mesh_triangles = np.concatenate([triangular_mesh_dict[c].triangles.values() for c in triangular_mesh_dict.keys()])
+    mesh.triangles = dict(zip(np.arange(len(mesh_triangles)),mesh_triangles))
+
+    mesh_cells = np.concatenate([c*np.ones_like(triangular_mesh_dict[c].triangles.keys()) for c in triangular_mesh_dict.keys()])
+    triangle_cell_matching = dict(zip(np.arange(len(mesh_triangles)),mesh_cells))
+
+    end_time = time()
+    print "<-- Composing triangular mesh     [",end_time-start_time,"]"
+    return mesh, triangle_cell_matching
+
+
 
 
 

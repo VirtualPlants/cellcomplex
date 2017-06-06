@@ -28,29 +28,29 @@ class AppletPlugin(object):
     name_conversion = PluginDef.DROP_PLUGIN
 
 
-@PluginDef
-class TopomeshControl(AppletPlugin):
-    label = 'Topomesh Controls'
-    icon = 'topomesh_control.png'
-    authors = [gcerutti]
-    implement = 'IApplet'
-    __plugin__ = True
+#@PluginDef
+# class TopomeshControl(AppletPlugin):
+#     label = 'Topomesh Controls'
+#     icon = 'topomesh_control.png'
+#     authors = [gcerutti]
+#     implement = 'IApplet'
+#     __plugin__ = True
 
-    def __call__(self):
-        # Load and instantiate graphical component that actually provide feature
-        from openalea.cellcomplex.mesh_oalab.widget.property_topomesh_panel import TopomeshControlPanel
-        return TopomeshControlPanel
+#     def __call__(self):
+#         # Load and instantiate graphical component that actually provide feature
+#         from openalea.cellcomplex.mesh_oalab.widget.property_topomesh_panel import TopomeshControlPanel
+#         return TopomeshControlPanel
 
 
-@PluginDef
-class DataframeControl(AppletPlugin):
-    label = 'Dataframe Controls'
-    icon = 'dataframe_control.png'
-    authors = [gcerutti]
-    implement = 'IApplet'
-    __plugin__ = True
+#@PluginDef
+# class DataframeControl(AppletPlugin):
+#     label = 'Dataframe Controls'
+#     icon = 'dataframe_control.png'
+#     authors = [gcerutti]
+#     implement = 'IApplet'
+#     __plugin__ = True
 
-    def __call__(self):
-        # Load and instantiate graphical component that actually provide feature
-        from openalea.cellcomplex.mesh_oalab.widget.dataframe_panel import DataframeControlPanel
-        return DataframeControlPanel
+#     def __call__(self):
+#         # Load and instantiate graphical component that actually provide feature
+#         from openalea.cellcomplex.mesh_oalab.widget.dataframe_panel import DataframeControlPanel
+#         return DataframeControlPanel
