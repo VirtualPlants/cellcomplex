@@ -8,7 +8,7 @@ from matplotlib.colors import Normalize
 from matplotlib.collections import PolyCollection
 import matplotlib.pyplot as plt
 
-def mpl_draw_topomesh(topomesh,figure,degree=2,coef=1,property_name="",colormap='viridis',color='k',alpha=1.0,cell_edges=False):
+def mpl_draw_topomesh(topomesh,figure,degree=2,coef=1,property_name="",colormap='viridis',color='k',alpha=1.0,cell_edges=False,intensity_range=None):
 
     positions = topomesh.wisp_property('barycenter',0)
 
@@ -29,7 +29,9 @@ def mpl_draw_topomesh(topomesh,figure,degree=2,coef=1,property_name="",colormap=
         else:
             triangle_property = topomesh.wisp_property(property_name,2).values()
             if triangle_property.ndim == 1:
-                mpl_colormap = cm.ScalarMappable(norm=Normalize(vmin=triangle_property.min(), vmax=triangle_property.max()),cmap=cm.cmap_d[colormap])
+                if intensity_range is None:
+                    intensity_range = (triangle_property.min(),triangle_property.max())
+                mpl_colormap = cm.ScalarMappable(norm=Normalize(vmin=intensity_range[0], vmax=intensity_range[1]),cmap=cm.cmap_d[colormap])
                 colors = mpl_colormap.to_rgba(triangle_property)[:,:3]
                 print colors
         figure.gca().add_collection(PolyCollection(triangle_positions[:,:2].reshape((len(triangles),3,2)),facecolors=colors,cmap=colormap,linewidth=0.5,alpha=0.8*alpha))
