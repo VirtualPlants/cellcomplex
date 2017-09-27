@@ -188,7 +188,7 @@ def save_tissue_property_topomesh(topomesh,tissue_filename='tissue.zip'):
 
     tissue_db.write(tissue_filename)
 
-def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colormap=None,oriented=True):
+def save_ply_cellcomplex_topomesh(topomesh,ply_filename,properties_to_save=dict([(0,[]),(1,['length']),(2,['area','epidermis']),(3,[])]),color_faces=False,colormap=None,oriented=True):
     """
     Implementing the PLY standard defined at Saisnbury Computational Workshop 2015
     """
@@ -218,6 +218,11 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
     ply_file.write("property float x\n")
     ply_file.write("property float y\n")
     ply_file.write("property float z\n")
+    for property_name in properties_to_save[0]:
+        if property_name != coordinatepropname and topomesh.has_wisp_property(property_name,0,is_computed=True):
+            property_type = property_types[str(topomesh.wisp_property(property_name,0).values().dtype)]
+            ply_file.write("property "+property_type+" "+property_name+"\n")
+
     ply_file.write("element face "+str(topomesh.nb_wisps(2))+"\n")
     ply_file.write("property list int int vertex_index\n")
     if color_faces:
@@ -225,12 +230,29 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
         ply_file.write("property uchar green\n")
         ply_file.write("property uchar blue\n")
         triangle_data = array_dict(np.array([(list(topomesh.regions(2,t))[0])%256 for t in topomesh.wisps(2)]),list(topomesh.wisps(2)))
+    for property_name in properties_to_save[2]:
+        if topomesh.has_wisp_property(property_name,2,is_computed=True):
+            property_type = property_types[str(topomesh.wisp_property(property_name,2).values().dtype)]
+            ply_file.write("property "+property_type+" "+property_name+"\n")
+
     ply_file.write("element edge "+str(topomesh.nb_wisps(1))+"\n")
     ply_file.write("property int source\n")
     ply_file.write("property int target\n")
+    for property_name in properties_to_save[1]:
+        if topomesh.has_wisp_property(property_name,1,is_computed=True):
+            property_type = property_types[str(topomesh.wisp_property(property_name,1).values().dtype)]
+            ply_file.write("property "+property_type+" "+property_name+"\n")
+
     ply_file.write("element volume "+str(topomesh.nb_wisps(3))+"\n")
     ply_file.write("property list int int face_index\n")
     ply_file.write("property int label\n")
+    for property_name in properties_to_save[3]:
+        if topomesh.has_wisp_property(property_name,3,is_computed=True):
+            property_type = property_types[str(topomesh.wisp_property(property_name,3).values().dtype)]
+            ply_file.write("property "+property_type+" "+property_name+"\n")
+
+    ply_file.write("element global 1\n")
+    ply_file.write("property list char type\n")
     ply_file.write("end_header\n")   
 
     vertex_index = {}
@@ -238,6 +260,13 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
         ply_file.write(str(topomesh.wisp_property('barycenter',0)[pid][0])+" ")
         ply_file.write(str(topomesh.wisp_property('barycenter',0)[pid][1])+" ")
         ply_file.write(str(topomesh.wisp_property('barycenter',0)[pid][2])+" ")
+        for property_name in properties_to_save[0] :
+            if property_name != coordinatepropname and topomesh.has_wisp_property(property_name,0,is_computed=True):
+                property_type = property_types[str(topomesh.wisp_property(property_name,0).values().dtype)]
+                if property_type == 'int':
+                    ply_file.write(str(int(topomesh.wisp_property(property_name,0)[pid]))+" ")
+                else:
+                    ply_file.write(str(topomesh.wisp_property(property_name,0)[pid])+" ")
         ply_file.write("\n")
         vertex_index[pid] = v
 
@@ -277,6 +306,13 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
                 ply_file.write(str(int(255*color[0]))+" ")
                 ply_file.write(str(int(255*color[1]))+" ")
                 ply_file.write(str(int(255*color[2]))+" ")
+        for property_name in properties_to_save[2]:
+            if topomesh.has_wisp_property(property_name,2,is_computed=True):
+                property_type = property_types[str(topomesh.wisp_property(property_name,2).values().dtype)]
+                if property_type == 'int':
+                    ply_file.write(str(int(topomesh.wisp_property(property_name,2)[fid]))+" ")
+                else:
+                    ply_file.write(str(topomesh.wisp_property(property_name,2)[fid])+" ")
         ply_file.write("\n")
         face_index[fid] = t
 
@@ -284,6 +320,9 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
     for e,eid in enumerate(topomesh.wisps(1)):
         ply_file.write(str(vertex_index[list(topomesh.borders(1,eid))[0]])+" ")
         ply_file.write(str(vertex_index[list(topomesh.borders(1,eid))[1]])+" ")
+        for property_name in properties_to_save[1]:
+            if topomesh.has_wisp_property(property_name,1,is_computed=True):
+                ply_file.write(str(topomesh.wisp_property(property_name,1)[eid])+" ")
         ply_file.write("\n")
         edge_index[eid] = e
 
@@ -298,7 +337,12 @@ def save_ply_cellcomplex_topomesh(topomesh,ply_filename,color_faces=False,colorm
             for fid in topomesh.borders(3,cid):
                 ply_file.write(str(face_index[fid]+1)+" ")
         ply_file.write(str(cid)+" ")
+        for property_name in properties_to_save[3]:
+            if topomesh.has_wisp_property(property_name,3,is_computed=True):
+                ply_file.write(str(topomesh.wisp_property(property_name,3)[cid])+" ")
         ply_file.write("\n")
+
+    ply_file.write("12 cell_complex\n")
 
     ply_file.flush()
     ply_file.close()
@@ -611,21 +655,32 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
         edge_vertices = {}
         edge_faces = {}
         for eid in xrange(n_wisps['edge']):
+            edge_faces[eid] = []
             edge_vertices[eid] = point_matching.values(np.array([element_properties['edge'][eid][dim] for dim in ['source','target']]))
             if element_properties['edge'][eid].has_key('face_index'):
                 edge_faces[eid] = element_properties['edge'][eid]['face_index']
         #print element_properties['edge']
-        if not 'face_index' in properties['edge']:
+        if not 'face_index' in properties['edge'] and len(faces)>0:
             face_edge_vertices = np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))
             face_edge_faces = np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])
             face_edge_matching = kd_tree_match(face_edge_vertices,np.sort(edge_vertices.values()))
             for eid in xrange(n_wisps['edge']):
                 edge_faces[eid] = []
             for eid, fid in zip(face_edge_matching, face_edge_faces):
-                edge_faces[eid] += [fid]
+                if eid is not None:
+                    edge_faces[eid] += [fid]
+            
     else:
-        edge_vertices = dict(zip(range(3*len(unique_triangles)),np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))))
-        edge_faces = dict(zip(range(3*len(unique_triangles)),np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])))
+        if triangular:
+            edge_vertices = dict(zip(range(3*len(unique_triangles)),np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))))
+            edge_faces = dict(zip(range(3*len(unique_triangles)),np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])))
+        else:
+            edge_index = range(len(unique_triangles[0]))
+            for v in unique_triangles[1:]:
+                edge_index += [edge_index[-1]+1+r for r in range(len(v))]
+            edge_vertices = dict(zip(edge_index,np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))))
+            edge_faces = dict(zip(edge_index,np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])))
+
     if verbose: print len(edge_vertices)," Edges" 
 
     if len(edge_vertices)>0:
@@ -651,6 +706,10 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
 
     cell_matching = {}
     if n_wisps.has_key('volume'):
+        oriented_cells = False
+        if np.any([np.any([f<0 for f in element_properties['volume'][c]['face_index']]) for c in xrange(n_wisps['volume'])]):
+            oriented_cells = True
+
         if 'label' in properties['volume']:
             for cid in xrange(n_wisps['volume']):
                 cell_matching[cid] = element_properties['volume'][cid]['label']
@@ -660,7 +719,10 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
         if 'face_index' in properties['volume']:
             for c in xrange(n_wisps['volume']):
                 for f in element_properties['volume'][c]['face_index']:
-                    face_cells[triangle_matching[f]] = face_cells[triangle_matching[f]].union({cell_matching[c]})
+                    if oriented_cells:
+                        face_cells[triangle_matching[np.abs(f)-1]] = face_cells[triangle_matching[np.abs(f)-1]].union({cell_matching[c]})
+                    else:
+                        face_cells[triangle_matching[f]] = face_cells[triangle_matching[f]].union({cell_matching[c]})
         else:
             for f in xrange(len(unique_triangles)):
                 face_cells[triangle_matching[f]] = {0}
@@ -697,7 +759,7 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
             for f in edge_faces[e]:
                 fid = triangle_matching[f]
                 topomesh.link(2,fid,eid)
-        else:
+        else:   
             fid = edge_faces[e]
             topomesh.link(2,fid,eid)
     if timecheck: print 'topomesh topo creation:',time()-check_time 

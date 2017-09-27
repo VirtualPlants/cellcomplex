@@ -23,8 +23,13 @@ import numpy as np
 from openalea.cellcomplex.property_topomesh.utils.array_tools import array_unique
 from scipy.cluster.vq import vq
 
+from time import time
+
 def cell_vertex_extraction(img,**kwargs):
     
+    start_time = time()
+    print "--> Extracting cell vertices"
+
     shape = np.array(img.shape)
 
     if img.ndim==3 and shape[2]>1:
@@ -35,20 +40,33 @@ def cell_vertex_extraction(img,**kwargs):
                 for z in np.arange(-1,1):
                     neighborhood_img.append(img[1+x:shape[0]+x,1+y:shape[1]+y,1+z:shape[2]+z])
         neighborhood_img = np.sort(np.transpose(neighborhood_img,(1,2,3,0))).reshape((shape-1).prod(),8)
-        neighborhoods = np.array(map(np.unique,neighborhood_img))
-        neighborhood_size = np.array(map(len,neighborhoods)).reshape(shape[0]-1,shape[1]-1,shape[2]-1)
-        neighborhoods = np.array(neighborhoods).reshape(shape[0]-1,shape[1]-1,shape[2]-1)
 
-        vertex_coords = np.where(neighborhood_size==4)
+        vertex_coords = np.transpose(np.mgrid[0:shape[0]-1,0:shape[1]-1,0+z:shape[2]-1],(1,2,3,0)).reshape((shape-1).prod(),3)+0.5
+
+        non_flat = np.sum(neighborhood_img == np.tile(neighborhood_img[:,:1],(1,8)),axis=1)!=8
+        neighborhood_img = neighborhood_img[non_flat]
+        vertex_coords = vertex_coords[non_flat]
+
+        neighborhoods = np.array(map(np.unique,neighborhood_img))
+        neighborhood_size = np.array(map(len,neighborhoods))
+        neighborhoods = np.array(neighborhoods)
+
+        # vertex_coords = np.where(neighborhood_size==4)
         #vertex_coords = np.where(neighborhood_size >= 4)
-        vertex_points = np.transpose(vertex_coords)+0.5
-        vertex_cells = np.array([p for p in neighborhoods[vertex_coords]],int)
+        # vertex_points = np.transpose(vertex_coords)+0.5
+        vertex_points = vertex_coords[neighborhood_size==4]
+        # vertex_cells = np.array([p for p in neighborhoods[vertex_coords]],int)
+        vertex_cells = np.array([p for p in neighborhoods[neighborhood_size==4]],int)
         #vertex_cells = np.array([p[:4] for p in neighborhoods[vertex_coords]],int)
 
         if (neighborhood_size>=5).sum() > 0:
-            clique_vertex_coords = np.where(neighborhood_size==5)
-            clique_vertex_points = np.concatenate([(p,p) for p in np.transpose(clique_vertex_coords)])+0.5
-            clique_vertex_cells = np.concatenate([[p[:4],np.concatenate([[p[0]],p[2:]])] for p in neighborhoods[clique_vertex_coords]]).astype(int)
+            clique_vertex_points = np.concatenate([(p,p) for p in vertex_coords[neighborhood_size==5]])
+            clique_vertex_cells = np.concatenate([[p[:4],np.concatenate([[p[0]],p[2:]])] for p in neighborhoods[neighborhood_size==5]]).astype(int)
+            
+
+            # clique_vertex_coords = np.where(neighborhood_size==5)
+            # clique_vertex_points = np.concatenate([(p,p) for p in np.transpose(clique_vertex_coords)])+0.5
+            # clique_vertex_cells = np.concatenate([[p[:4],np.concatenate([[p[0]],p[2:]])] for p in neighborhoods[clique_vertex_coords]]).astype(int)
             
             # clique_vertex_points = np.concatenate([(p,p,p,p,p) for p in np.transpose(clique_vertex_coords)])+0.5
             # clique_vertex_cells = np.concatenate([[np.concatenate([p[:i],p[i+1:]]) for i in xrange(5)] for p in neighborhoods[clique_vertex_coords]]).astype(int)
@@ -96,6 +114,9 @@ def cell_vertex_extraction(img,**kwargs):
 
     else:
         cell_vertex_dict = {}
+
+    end_time = time()
+    print "<-- Extracting cell vertices (",len(cell_vertex_dict),"vertices )    [",end_time - start_time,"s]"
     
     return cell_vertex_dict
 

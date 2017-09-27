@@ -135,7 +135,8 @@ else:
 
                 if draw_points > 0:
                     points_to_draw = np.where(np.random.rand(class_effectives[c]) <= draw_points/100.)
-                    axes.scatter(projected_data[:,0][np.where(data_classes==c)][points_to_draw],projected_data[:,1][np.where(data_classes==c)][points_to_draw],c=class_color,linewidth=linewidth,s=marker_size,alpha=alpha,label=plot_label)
+                    # axes.scatter(projected_data[:,0][np.where(data_classes==c)][points_to_draw],projected_data[:,1][np.where(data_classes==c)][points_to_draw],c=class_color,linewidth=linewidth,s=marker_size,alpha=alpha,label=plot_label)
+                    axes.scatter(projected_data[:,0][np.where(data_classes==c)][points_to_draw],projected_data[:,1][np.where(data_classes==c)][points_to_draw],c=class_color,linewidth=0,s=marker_size,alpha=alpha,label=plot_label)
                     if draw_classes and fireworks:
                         [axes.plot([p[0],class_center[0]],[p[1],class_center[1]],color=class_color,alpha=alpha/5.,linewidth=linewidth) for p in projected_data[np.where(data_classes==c)][points_to_draw]]
                 
