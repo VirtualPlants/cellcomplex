@@ -171,7 +171,7 @@ def poly_topomesh(polys, positions, faces_as_cells=False, **kwargs):
     poly_edge_matching = vq(poly_edges,edges)[0]
 
     poly_topomesh = PropertyTopomesh(3)
-    for c in np.unique(polys):
+    for c in np.unique(np.concatenate(polys)):
         poly_topomesh.add_wisp(0,c)
     for e in edges:
         eid = poly_topomesh.add_wisp(1)
