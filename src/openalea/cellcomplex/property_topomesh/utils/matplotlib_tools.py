@@ -71,11 +71,11 @@ def mpl_draw_topomesh(topomesh,figure,degree=2,coef=1,property_name="",property_
                 colors = color
             figure.gca().scatter(positions.values()[:,0],positions.values()[:,1],s=20,edgecolor=color,color=colors,alpha=alpha)
         else:
-            vertex_property = topomesh.wisp_property(property_name,0).values()
+            vertex_property = topomesh.wisp_property(property_name,0).values(list(topomesh.wisps(0)))
             if vertex_property.ndim == 1:
                 if intensity_range is None:
                     intensity_range = (vertex_property.min(),vertex_property.max())
-                figure.gca().scatter(positions.values()[:,0],positions.values()[:,1],c=vertex_property,s=size,linewidth=linewidth,cmap=colormap,alpha=alpha,vmin=intensity_range[0],vmax=intensity_range[1])
+                figure.gca().scatter(positions.values(list(topomesh.wisps(0)))[:,0],positions.values(list(topomesh.wisps(0)))[:,1],c=vertex_property,s=size,linewidth=linewidth,cmap=colormap,alpha=alpha,vmin=intensity_range[0],vmax=intensity_range[1])
 
     figure.canvas.draw()
     plt.pause(1e-3)
