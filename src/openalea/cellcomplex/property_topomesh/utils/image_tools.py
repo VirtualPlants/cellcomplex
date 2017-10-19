@@ -19,6 +19,7 @@
 
 
 import numpy as np
+from scipy.cluster.vq import vq
 
 try:
     import vtk
@@ -40,6 +41,7 @@ from openalea.image.spatial_image import SpatialImage
 from openalea.cellcomplex.property_topomesh import PropertyTopomesh
 from openalea.cellcomplex.triangular_mesh import TriangularMesh
 from openalea.cellcomplex.property_topomesh.property_topomesh_extraction import cell_topomesh
+from openalea.cellcomplex.property_topomesh.utils.array_tools import array_unique
 
 from time import time
 
