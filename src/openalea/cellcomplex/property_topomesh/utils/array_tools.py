@@ -34,3 +34,20 @@ def where_list(array,values):
 def array_difference(array,subarray):
     import numpy as np
     return np.array(list(set(array).difference(set(subarray))))
+
+def weighted_percentile(values, percentiles, sample_weight=None, values_sorted=False):
+    values = np.array(values)
+    percentiles = np.array(percentiles)
+    if sample_weight is None:
+        sample_weight = np.ones(len(values))
+    sample_weight = np.array(sample_weight)
+    assert np.all(percentiles >= 0) and np.all(percentiles <= 100), 'percentiles should be in [0, 1]'
+
+    if not values_sorted:
+        sorter = np.argsort(values)
+        values = values[sorter]
+        sample_weight = sample_weight[sorter]
+
+    weighted_percentiles = 100.*(np.cumsum(sample_weight) - 0.5*sample_weight)/np.sum(sample_weight)
+    return np.interp(percentiles, weighted_percentiles, values)
+    
