@@ -23,7 +23,11 @@ from scipy.spatial import cKDTree
 def kd_tree_match(obs, codebook):
     data = cKDTree(obs)
     res1 = data.query_ball_tree(cKDTree(codebook), 1e-5, 1, 1e-5)
-    res1 = np.array(res1)[:,0]
+    # print res1
+    if np.array(res1).ndim == 2:
+        res1 = np.array(res1)[:,0]
+    else:
+        res1 = np.array([r[0] if len(r)>0 else None for r in res1])
     #print res1
     #res2 = vq(obs, codebook)[0]
     #print res2

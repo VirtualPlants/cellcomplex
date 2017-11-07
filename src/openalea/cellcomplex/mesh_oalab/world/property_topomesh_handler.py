@@ -36,6 +36,7 @@ try:
     from openalea.cellcomplex.property_topomesh.temporal_property_topomesh import TemporalPropertyTopomesh
     from openalea.cellcomplex.property_topomesh.triangular_mesh import topomesh_to_triangular_mesh
     from openalea.cellcomplex.property_topomesh.property_topomesh_io import save_ply_property_topomesh
+    from openalea.cellcomplex.property_topomesh.utils.pandas_tools import topomesh_to_dataframe
 except:
     print "Openalea.Cellcomplex must be installed to use TopomeshHandler!"
     raise
@@ -60,6 +61,9 @@ for degree in xrange(4):
     attribute_definition['topomesh']["property_name_"+str(degree)] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label="Property")     
     attribute_definition['topomesh']["coef_"+str(degree)] = dict(value=1,interface="IFloat",constraints=cst_proba,label="Coef") 
 attribute_definition['topomesh']["cell_edges"] = dict(value=False,interface="IBool",constraints={},label="Cell edges")
+
+attribute_definition['topomesh']["dataframe_degree"] = dict(value=0,interface="IInt",constraints=cst_degree,label="Data degree")
+attribute_definition['topomesh']["dataframe_display"] = dict(value=False,interface="IBool",constraints={},label="Display data")
 
 attribute_definition['temporal_topomesh'] = {}
 attribute_definition['temporal_topomesh']['time_point'] = dict(value=0,interface="IFloat",constraints=dict(min=0,max=0,step=1),label="Time Point") 
@@ -192,6 +196,10 @@ class TopomeshHandler(AbstractListener):
                     setdefault(world_object, dtype, 'coef_'+str(degree), attribute_definition=attribute_definition, **kwargs)
                 elif degree == 1:
                     setdefault(world_object, dtype, 'cell_edges', attribute_definition=attribute_definition, **kwargs)
+
+
+            setdefault(world_object, dtype, 'dataframe_degree', attribute_definition=attribute_definition, **kwargs)
+            setdefault(world_object, dtype, 'dataframe_display', attribute_definition=attribute_definition, **kwargs)
             world_object.silent = False
             
             if not self._mesh.has_key(world_object.name):
@@ -199,6 +207,7 @@ class TopomeshHandler(AbstractListener):
                 self._mesh_matching[world_object.name] = dict([(0,None),(1,None),(2,None),(3,None)])
 
             world_object.set_attribute("display_"+str(max([degree for degree in xrange(4) if world_object.data.nb_wisps(degree)>0])),True)
+            world_object.set_attribute("dataframe_degree",max([degree for degree in xrange(4) if world_object.data.nb_wisps(degree)>0]))
     
     def select_world_object(self, object_name):
         if object_name != self._current:
@@ -332,6 +341,16 @@ class TopomeshHandler(AbstractListener):
                 world_object.silent = True
                 setdefault(world_object, dtype, 'property_name_'+str(display_degree), conv=_property_names, attribute_definition=attribute_definition, **kwargs)
                 world_object.silent = False
+
+            elif 'dataframe' in attribute['name']:
+                dtype = 'topomesh'
+                kwargs = world_kwargs(world_object)
+                if world_object['dataframe_display']:
+                    topomesh = world_object.data
+                    data = topomesh_to_dataframe(topomesh,world_object['dataframe_degree'])
+                    self.world.add(data,world_object.name+"_data",**kwargs)
+                else:
+                    self.world.remove(world_object.name+"_data")
 
 
 
