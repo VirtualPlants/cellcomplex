@@ -84,9 +84,15 @@ def marching_cubes(field,iso=0.5):
 
     return surface_points, surface_triangles
 
-def vtk_marching_cubes(field,iso=0.5):
+def vtk_marching_cubes(field,iso=0.5, smoothing=2, decimation=2):
 
     import vtk
+
+    def SetInput(obj, _input):
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            obj.SetInput(_input)
+        else:
+            obj.SetInputData(_input)
 
     int_field = (np.minimum(field*255,255)).astype(np.uint8)
     nx, ny, nz = int_field.shape
@@ -101,28 +107,62 @@ def vtk_marching_cubes(field,iso=0.5):
     reader.Update()
 
     contour = vtk.vtkImageMarchingCubes()
-    if vtk.VTK_MAJOR_VERSION <= 5:
-        contour.SetInput(reader.GetOutput())
-    else:
-        contour.SetInputData(reader.GetOutput())   
+    SetInput(contour,reader.GetOutput())  
     contour.ComputeNormalsOn()
     contour.ComputeGradientsOn()
     contour.SetValue(0,int(iso*255))
     contour.Update()
 
-    field_polydata = contour.GetOutput()
+    print "Marching cubes :",contour.GetOutput().GetNumberOfPoints()
+
+    if smoothing>0:
+        smoother = vtk.vtkWindowedSincPolyDataFilter()
+        SetInput(smoother,contour.GetOutput())
+        smoother.BoundarySmoothingOn()
+        smoother.FeatureEdgeSmoothingOn()
+        smoother.SetFeatureAngle(120.0)
+        smoother.SetPassBand(1)
+        smoother.SetNumberOfIterations(smoothing)
+        # smoother.NonManifoldSmoothingOn()
+        smoother.NormalizeCoordinatesOn()
+        smoother.Update()
+
+        print "Smoothing :",smoother.GetOutput().GetNumberOfPoints()
+
+    if decimation>0:
+        # decimate = vtk.vtkQuadricClustering()
+        decimate = vtk.vtkQuadricDecimation()
+        # decimate = vtk.vtkDecimatePro()
+
+        if smoothing>0:
+            SetInput(decimate,smoother.GetOutput())
+        else:
+            SetInput(decimate,contour.GetOutput())
+        decimate.SetTargetReduction(1. - 1/float(decimation))
+        # decimate.SetNumberOfDivisions(int(decimation),int(decimation),int(decimation))
+        # decimate.SetFeaturePointsAngle(60.0)
+        decimate.Update()
+
+        print "Decimation :",decimate.GetOutput().GetNumberOfPoints()
+
+    if decimation>0:
+        field_polydata = decimate.GetOutput()
+    elif smoothing>0:
+        field_polydata = smoother.GetOutput()
+    else:
+        field_polydata = contour.GetOutput()
 
     polydata_points = np.array([field_polydata.GetPoints().GetPoint(p) for p in xrange(field_polydata.GetPoints().GetNumberOfPoints())])
     polydata_triangles =  np.array([[field_polydata.GetCell(t).GetPointIds().GetId(i) for i in xrange(3)] for t in xrange(field_polydata.GetNumberOfCells())])
 
     return polydata_points, polydata_triangles
 
-def implicit_surface_topomesh(density_field,size,voxelsize,iso=0.5,center=True):
+def implicit_surface_topomesh(density_field,size,voxelsize,smoothing=1,decimation=2,iso=0.5,center=True):
     import numpy as np
     from scipy.cluster.vq                       import kmeans, vq
     from openalea.container import array_dict, PropertyTopomesh
 
-    surface_points, surface_triangles = vtk_marching_cubes(density_field,iso)
+    surface_points, surface_triangles = vtk_marching_cubes(density_field,iso,smoothing=smoothing,decimation=decimation)
 
     surface_points = (np.array(surface_points))*(size*voxelsize/np.array(density_field.shape)) 
     if center:
