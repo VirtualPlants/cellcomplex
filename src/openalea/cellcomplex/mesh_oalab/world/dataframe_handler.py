@@ -83,7 +83,7 @@ dataframe_attributes = {}
 dataframe_attributes['dataframe'] = {}
 dataframe_attributes['dataframe']['figure'] = dict(value=0,interface="IInt",constraints=cst_figure,label=u"Figure Number")
 dataframe_attributes['dataframe']['title'] = dict(value="",interface="IStr",constraints={},label=u"Figure Title")
-for variable_type in ['X','Y','class','label','size','subplot']:
+for variable_type in ['X','Y','class','label','size','subplot','filter']:
     dataframe_attributes['dataframe'][variable_type+"_variable"] = dict(value="",interface="IEnumStr",constraints=dict(enum=[""]),label=variable_type.capitalize()+" Variable")  
     dataframe_attributes['dataframe'][variable_type+'_colormap'] = dict(value=dict(name='grey', color_points=dict([(0, (0, 0, 0)), (1, (1, 1, 1))])), interface=IColormap, label="Colormap")
     dataframe_attributes['dataframe'][variable_type+'_range'] = dict(value=(-1,101),interface=IIntRange,constraints=cst_extent_range,label=variable_type.capitalize()+" Range")
@@ -207,7 +207,11 @@ class DataframeHandler(AbstractListener):
                 setdefault(world_object, dtype, variable_type+'_variable', conv=_dataframe_columns, attribute_definition=dataframe_attributes, **kwargs)
 
             setdefault(world_object, dtype, 'title', attribute_definition=dataframe_attributes, **kwargs)
-
+            
+            for variable_type in ['filter']:
+                setdefault(world_object, dtype, variable_type+'_variable', conv=_dataframe_columns, attribute_definition=dataframe_attributes, **kwargs)
+                setdefault(world_object, dtype, variable_type+'_range', attribute_definition=dataframe_attributes, **kwargs)
+             
             for variable_type in ['class']:
                 setdefault(world_object, dtype, variable_type+'_variable', conv=_dataframe_columns, attribute_definition=dataframe_attributes, **kwargs)
 
@@ -219,7 +223,6 @@ class DataframeHandler(AbstractListener):
             for variable_type in ['X','Y']:
                 setdefault(world_object, dtype, variable_type+'_variable', conv=_dataframe_columns, attribute_definition=dataframe_attributes, **kwargs)
                 setdefault(world_object, dtype, variable_type+'_range', attribute_definition=dataframe_attributes, **kwargs)
-            
 
             setdefault(world_object, dtype, 'plot', attribute_definition=dataframe_attributes, **kwargs)
 
@@ -308,6 +311,12 @@ class DataframeHandler(AbstractListener):
             else:
                 all_labels = all_classes
 
+            filter_variable = world_object['filter_variable']
+            if filter_variable != "":
+                all_filters = np.array(world_object.data[filter_variable])
+            else:
+                all_filters = all_classes
+
 
             if world_object['plot'] != 'PCA':
                 point_invalidity = np.zeros(len(all_classes)).astype(bool)
@@ -318,6 +327,7 @@ class DataframeHandler(AbstractListener):
 
                 point_invalidity = point_invalidity | np.isnan(all_X)
                 point_invalidity = point_invalidity | np.isnan(all_Y)
+                point_invalidity = point_invalidity | np.isnan(all_filters)
                 point_invalidity = point_invalidity | np.isnan(all_sizes)
                 if all_classes.dtype != np.dtype('O'):
                     point_invalidity = point_invalidity | np.isnan(all_classes)
@@ -344,6 +354,17 @@ class DataframeHandler(AbstractListener):
             all_sizes = all_sizes[valid_points]
             all_classes = all_classes[valid_points]
             all_labels = all_labels[valid_points]
+            all_filters = all_filters[valid_points]
+
+            if all_filters.dtype != np.dtype('O'):
+                filter_range = (all_filters.min() + world_object['filter_range'][0]*(all_filters.max()-all_filters.min())/100.,all_filters.min() + world_object['filter_range'][1]*(all_filters.max()-all_filters.min())/100.) 
+                subplots = subplots[(all_filters>=filter_range[0])&(all_filters<=filter_range[1])]
+                all_X = all_X[(all_filters>=filter_range[0])&(all_filters<=filter_range[1])]
+                all_Y = all_Y[(all_filters>=filter_range[0])&(all_filters<=filter_range[1])]
+                all_sizes = all_sizes[(all_filters>=filter_range[0])&(all_filters<=filter_range[1])]
+                all_classes = all_classes[(all_filters>=filter_range[0])&(all_filters<=filter_range[1])]
+                all_labels = all_labels[(all_filters>=filter_range[0])&(all_filters<=filter_range[1])]
+                all_data = all_data[(all_filters>=filter_range[0])&(all_filters<=filter_range[1])]
             
             subplot_index = np.sort(np.unique(subplots))
             n_subplots = len(subplot_index)
@@ -413,7 +434,7 @@ class DataframeHandler(AbstractListener):
                             cbar_ticklabels = label_list
                             label_list = np.sort(np.unique(labels))
                         else:
-                            label_range = (all_labels.min() + world_object['label_range'][0]*(all_labels.max()-all_labels.min())/100.,labels.min() + world_object['label_range'][1]*(all_labels.max()-all_labels.min())/100.)
+                            label_range = (all_labels.min() + world_object['label_range'][0]*(all_labels.max()-all_labels.min())/100.,all_labels.min() + world_object['label_range'][1]*(all_labels.max()-all_labels.min())/100.)
                             #label_range = (labels.min() + world_object['label_range'][0]*(labels.max()-labels.min())/100.,labels.min() + world_object['label_range'][1]*(labels.max()-labels.min())/100.)
                             cbar_ticks = np.linspace(label_range[0],label_range[1],5)
                             cbar_ticklabels = np.round(cbar_ticks,decimals=3)

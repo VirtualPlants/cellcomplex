@@ -379,7 +379,11 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
     for property_name in properties_to_save[0]:
         if property_name != coordinatepropname and topomesh.has_wisp_property(property_name,0,is_computed=True):
             property_type = property_types[str(topomesh.wisp_property(property_name,0).values().dtype)]
-            ply_file.write("property "+property_type+" "+property_name+"\n")
+            if topomesh.wisp_property(property_name,0).values().ndim == 1:
+                ply_file.write("property "+property_type+" "+property_name+"\n")
+            elif topomesh.wisp_property(property_name,0).values().ndim == 2:
+                ply_file.write("property list int "+property_type+" "+property_name+"\n")
+
 
     ply_file.write("element face "+str(topomesh.nb_wisps(2))+"\n")
     ply_file.write("property list int int vertex_index\n")
@@ -391,7 +395,11 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
     for property_name in properties_to_save[2]:
         if topomesh.has_wisp_property(property_name,2,is_computed=True):
             property_type = property_types[str(topomesh.wisp_property(property_name,2).values().dtype)]
-            ply_file.write("property "+property_type+" "+property_name+"\n")
+            if topomesh.wisp_property(property_name,2).values().ndim == 1:
+                ply_file.write("property "+property_type+" "+property_name+"\n")
+            elif topomesh.wisp_property(property_name,2).values().ndim == 2:
+                ply_file.write("property list int "+property_type+" "+property_name+"\n")
+
     ply_file.write("element edge "+str(topomesh.nb_wisps(1))+"\n")
     ply_file.write("property int source\n")
     ply_file.write("property int target\n")
@@ -413,10 +421,18 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
         for property_name in properties_to_save[0] :
             if property_name != coordinatepropname and topomesh.has_wisp_property(property_name,0,is_computed=True):
                 property_type = property_types[str(topomesh.wisp_property(property_name,0).values().dtype)]
-                if property_type == 'int':
-                    ply_file.write(str(int(topomesh.wisp_property(property_name,0)[pid]))+" ")
-                else:
-                    ply_file.write(str(topomesh.wisp_property(property_name,0)[pid])+" ")
+                if topomesh.wisp_property(property_name,0).values().ndim == 1:
+                    if property_type == 'int':
+                        ply_file.write(str(int(topomesh.wisp_property(property_name,0)[pid]))+" ")
+                    else:
+                        ply_file.write(str(topomesh.wisp_property(property_name,0)[pid])+" ")
+                elif topomesh.wisp_property(property_name,0).values().ndim == 0:
+                    ply_file.write(str(int(len(topomesh.wisp_property(property_name,0)[fid])))+" ")
+                    for p in topomesh.wisp_property(property_name,0)[fid]:
+                        if property_type == 'int':
+                            ply_file.write(str(int(p))+" ")
+                        else:
+                            ply_file.write(str(p)+" ")
         ply_file.write("\n")
         vertex_index[pid] = v        
 
@@ -444,10 +460,18 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
         for property_name in properties_to_save[2]:
             if topomesh.has_wisp_property(property_name,2,is_computed=True):
                 property_type = property_types[str(topomesh.wisp_property(property_name,2).values().dtype)]
-                if property_type == 'int':
-                    ply_file.write(str(int(topomesh.wisp_property(property_name,2)[fid]))+" ")
-                else:
-                    ply_file.write(str(topomesh.wisp_property(property_name,2)[fid])+" ")
+                if topomesh.wisp_property(property_name,2).values().ndim == 1:
+                    if property_type == 'int':
+                        ply_file.write(str(int(topomesh.wisp_property(property_name,2)[fid]))+" ")
+                    else:
+                        ply_file.write(str(topomesh.wisp_property(property_name,2)[fid])+" ")
+                elif topomesh.wisp_property(property_name,2).values().ndim == 2:
+                    ply_file.write(str(int(len(topomesh.wisp_property(property_name,2)[fid])))+" ")
+                    for p in topomesh.wisp_property(property_name,2)[fid]:
+                        if property_type == 'int':
+                            ply_file.write(str(int(p))+" ")
+                        else:
+                            ply_file.write(str(p)+" ")
         ply_file.write("\n")
         face_index[fid] = t
 
