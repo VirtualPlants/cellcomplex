@@ -384,7 +384,6 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
             elif topomesh.wisp_property(property_name,0).values().ndim == 2:
                 ply_file.write("property list int "+property_type+" "+property_name+"\n")
 
-
     ply_file.write("element face "+str(topomesh.nb_wisps(2))+"\n")
     ply_file.write("property list int int vertex_index\n")
     if color_faces:
@@ -407,12 +406,24 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
     for property_name in properties_to_save[1]:
         if topomesh.has_wisp_property(property_name,1,is_computed=True):
             property_type = property_types[str(topomesh.wisp_property(property_name,1).values().dtype)]
-            ply_file.write("property "+property_type+" "+property_name+"\n")
+            if topomesh.wisp_property(property_name,1).values().ndim == 1:
+                ply_file.write("property "+property_type+" "+property_name+"\n")
+            elif topomesh.wisp_property(property_name,1).values().ndim == 2:
+                ply_file.write("property list int "+property_type+" "+property_name+"\n")
+
     ply_file.write("element volume "+str(topomesh.nb_wisps(3))+"\n")
     ply_file.write("property list int int face_index\n")
     ply_file.write("property int label\n")
+    for property_name in properties_to_save[3]:
+        if topomesh.has_wisp_property(property_name,3,is_computed=True):
+            property_type = property_types[str(topomesh.wisp_property(property_name,3).values().dtype)]
+            if topomesh.wisp_property(property_name,3).values().ndim == 1:
+                ply_file.write("property "+property_type+" "+property_name+"\n")
+            elif topomesh.wisp_property(property_name,3).values().ndim == 2:
+                ply_file.write("property list int "+property_type+" "+property_name+"\n")
 
-    ply_file.write("end_header\n")    
+    ply_file.write("end_header\n")   
+
     vertex_index = {}
     for v,pid in enumerate(topomesh.wisps(0)):
         ply_file.write(str(topomesh.wisp_property(coordinatepropname,0)[pid][0])+" ")
@@ -484,7 +495,19 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
             ply_file.write(str(face_index[fid])+" ")
         for property_name in properties_to_save[1]:
             if topomesh.has_wisp_property(property_name,1,is_computed=True):
-                ply_file.write(str(topomesh.wisp_property(property_name,1)[eid])+" ")
+                property_type = property_types[str(topomesh.wisp_property(property_name,1).values().dtype)]
+                if topomesh.wisp_property(property_name,1).values().ndim == 1:
+                    if property_type == 'int':
+                        ply_file.write(str(int(topomesh.wisp_property(property_name,1)[eid]))+" ")
+                    else:
+                        ply_file.write(str(topomesh.wisp_property(property_name,1)[eid])+" ")
+                elif topomesh.wisp_property(property_name,1).values().ndim == 2:
+                    ply_file.write(str(int(len(topomesh.wisp_property(property_name,1)[eid])))+" ")
+                    for p in topomesh.wisp_property(property_name,1)[eid]:
+                        if property_type == 'int':
+                            ply_file.write(str(int(p))+" ")
+                        else:
+                            ply_file.write(str(p)+" ")
         ply_file.write("\n")
         edge_index[eid] = e
 
@@ -493,6 +516,21 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
         for fid in topomesh.borders(3,cid):
             ply_file.write(str(face_index[fid])+" ")
         ply_file.write(str(cid)+" ")
+        for property_name in properties_to_save[3]:
+            if topomesh.has_wisp_property(property_name,3,is_computed=True):
+                property_type = property_types[str(topomesh.wisp_property(property_name,3).values().dtype)]
+                if topomesh.wisp_property(property_name,3).values().ndim == 1:
+                    if property_type == 'int':
+                        ply_file.write(str(int(topomesh.wisp_property(property_name,3)[cid]))+" ")
+                    else:
+                        ply_file.write(str(topomesh.wisp_property(property_name,3)[cid])+" ")
+                elif topomesh.wisp_property(property_name,3).values().ndim == 2:
+                    ply_file.write(str(int(len(topomesh.wisp_property(property_name,3)[cid])))+" ")
+                    for p in topomesh.wisp_property(property_name,3)[cid]:
+                        if property_type == 'int':
+                            ply_file.write(str(int(p))+" ")
+                        else:
+                            ply_file.write(str(p)+" ")
         ply_file.write("\n")
 
     ply_file.flush()
@@ -586,6 +624,9 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
             try:
                 for prop in properties[element_name]:
                     prop_type = properties_types[element_name][prop]
+
+                    if verbose:
+                        print element_name," ",wid," - ",prop," (",property_types[prop_type],")"
                     if property_types[prop_type] == 'float':
                         line_props[prop] = float(re.split(' ',line)[prop_index])
                         prop_index += 1
@@ -611,8 +652,10 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
                         list_type =  properties_list_types[element_name][prop]
                         line_props[prop] = np.array(re.split(' ',line)[prop_index:prop_index+np.prod(tensor_dims)]).astype(property_types[list_type]).reshape(tensor_dims)
                         prop_index += np.prod(tensor_dims)
+                    if verbose:
+                        print element_name," ",wid," - ",prop," : ",line_props[prop]
             except Exception, e:
-                raise ValueError(ply_filename, lineno, line, e)
+                raise ValueError(ply_filename, lineno, line, prop, property_types[prop_type], e)
 
             element_properties[element_name][wid] = line_props
     ply_file.close()

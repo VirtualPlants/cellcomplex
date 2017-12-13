@@ -186,11 +186,14 @@ else:
         # axes.axis('equal')
         # plt.show()
 
-        # correlation_figure = kwargs.get('correlation_figure',plt.figure("PCA Axes"))
-        # correlation_figure.clf()
-        # correlation_figure.patch.set_facecolor('white')
-        # axes = correlation_figure.add_subplot(111)
-        axins = zoomed_inset_axes(axes,2.)
+        correlation_figure = kwargs.get('correlation_figure',None)
+
+        if correlation_figure is not None:
+            correlation_figure.clf()
+            correlation_figure.patch.set_facecolor('white')
+            axins = correlation_figure.add_subplot(111)
+        else:
+            axins = zoomed_inset_axes(axes,2.)
         circle = patch.Circle((0, 0), 1, facecolor='none',edgecolor=(0.8,0.8,0.8), linewidth=3, alpha=0.5)
         axins.add_patch(circle)
         for i,a in enumerate(projected_axes):
