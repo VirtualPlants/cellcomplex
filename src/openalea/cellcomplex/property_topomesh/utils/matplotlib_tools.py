@@ -16,7 +16,7 @@ def mpl_draw_topomesh(topomesh,figure,degree=2,coef=1,property_name="",property_
     positions = topomesh.wisp_property('barycenter',0)
 
     compute_topomesh_property(topomesh,'vertices',2)
-    triangles = topomesh.wisp_property('vertices',2).values()
+    triangles = topomesh.wisp_property('vertices',2).values(list(topomesh.wisps(2)))
     
     compute_topomesh_property(topomesh,'barycenter',2)
     triangle_positions = np.concatenate([b + coef*(p-b) for p,b in zip(positions.values(triangles),topomesh.wisp_property('barycenter',2).values())])

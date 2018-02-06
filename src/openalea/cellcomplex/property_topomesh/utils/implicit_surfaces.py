@@ -164,6 +164,7 @@ def implicit_surface_topomesh(density_field,size,voxelsize,smoothing=1,decimatio
 
     surface_points, surface_triangles = vtk_marching_cubes(density_field,iso,smoothing=smoothing,decimation=decimation)
 
+    print (size*voxelsize/np.array(density_field.shape))
     surface_points = (np.array(surface_points))*(size*voxelsize/np.array(density_field.shape)) 
     if center:
         surface_points -= np.array(density_field.shape)*voxelsize/2.
@@ -198,34 +199,38 @@ def implicit_surface_topomesh(density_field,size,voxelsize,smoothing=1,decimatio
     #     #     triangles_to_delete.append(t)
     # surface_triangles = np.delete(surface_triangles,triangles_to_delete,0)
 
-    surface_topomesh = PropertyTopomesh(3)
+    # surface_topomesh = PropertyTopomesh(3)
 
-    for p in surface_points:
-        pid = surface_topomesh.add_wisp(0)
+    # for p in surface_points:
+    #     pid = surface_topomesh.add_wisp(0)
 
-    triangle_edge_list  = np.array([[1, 2],[0, 2],[0, 1]])
-    surface_edges = np.sort(np.concatenate(surface_triangles[:,triangle_edge_list]))
-    _,unique_edges = np.unique(np.ascontiguousarray(surface_edges).view(np.dtype((np.void,surface_edges.dtype.itemsize * surface_edges.shape[1]))),return_index=True)
-    surface_edges = surface_edges[unique_edges]
+    # triangle_edge_list  = np.array([[1, 2],[0, 2],[0, 1]])
+    # surface_edges = np.sort(np.concatenate(surface_triangles[:,triangle_edge_list]))
+    # _,unique_edges = np.unique(np.ascontiguousarray(surface_edges).view(np.dtype((np.void,surface_edges.dtype.itemsize * surface_edges.shape[1]))),return_index=True)
+    # surface_edges = surface_edges[unique_edges]
 
-    for e in surface_edges:
-        eid = surface_topomesh.add_wisp(1)
-        for pid in e:
-            surface_topomesh.link(1,eid,pid)
+    # for e in surface_edges:
+    #     eid = surface_topomesh.add_wisp(1)
+    #     for pid in e:
+    #         surface_topomesh.link(1,eid,pid)
 
-    surface_triangle_edges = np.sort(np.concatenate(surface_triangles[:,triangle_edge_list]))
-    surface_triangle_edge_matching = vq(surface_triangle_edges,surface_edges)[0].reshape(surface_triangles.shape[0],3)
+    # surface_triangle_edges = np.sort(np.concatenate(surface_triangles[:,triangle_edge_list]))
+    # surface_triangle_edge_matching = vq(surface_triangle_edges,surface_edges)[0].reshape(surface_triangles.shape[0],3)
 
-    for t in surface_triangles:
-        fid = surface_topomesh.add_wisp(2)
-        for eid in surface_triangle_edge_matching[fid]:
-            surface_topomesh.link(2,fid,eid)
+    # for t in surface_triangles:
+    #     fid = surface_topomesh.add_wisp(2)
+    #     for eid in surface_triangle_edge_matching[fid]:
+    #         surface_topomesh.link(2,fid,eid)
 
-    cid = surface_topomesh.add_wisp(3)
-    for fid in surface_topomesh.wisps(2):
-        surface_topomesh.link(3,cid,fid)
+    # cid = surface_topomesh.add_wisp(3)
+    # for fid in surface_topomesh.wisps(2):
+    #     surface_topomesh.link(3,cid,fid)
 
-    surface_topomesh.update_wisp_property('barycenter',0,array_dict(surface_points),keys=list(surface_topomesh.wisps(0)))
+    # surface_topomesh.update_wisp_property('barycenter',0,array_dict(surface_points),keys=list(surface_topomesh.wisps(0)))
+
+    from openalea.cellcomplex.property_topomesh.property_topomesh_creation import triangle_topomesh
+
+    surface_topomesh = triangle_topomesh(surface_triangles,surface_points)
 
     return surface_topomesh
 

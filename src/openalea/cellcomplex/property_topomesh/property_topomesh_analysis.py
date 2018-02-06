@@ -1525,6 +1525,68 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     print "<-- Computing vertex property from faces [",end_time-start_time,"s]"
 
 
+def compute_topomesh_vertex_property_from_cells(topomesh,property_name,weighting='volume'):
+    """Compute a property on degree 0 using the same property defined at degree 3.
+
+    The vertex property is computed by averaging the properties of its neighbor
+    cells, weighting them differently according to the chosen method.
+
+    Args:
+        topomesh (:class:`openalea.cellcomplex.property_topomesh.PropertyTopomesh`): 
+            The structure on which to compute the property.
+        property_name (str): 
+            The name of the property to compute (must be already computed on faces).
+        weighting (str): 
+            The way weights are assigned to each cell for the averaging of the property (default is *volume*)
+                * *uniform*: all the cells have the same weight (1)
+                * *volume*: the weight on the cells is equal to their volume
+
+    Returns:
+        None
+
+    Note:
+        The PropertyTopomesh passed as argument is updated.
+
+    """
+
+    start_time = time()
+    print "--> Computing vertex property from cells"
+
+    assert topomesh.has_wisp_property(property_name,3,is_computed=True)
+    assert weighting in ['uniform','volume']
+
+    cell_property = topomesh.wisp_property(property_name,3)
+
+    assert not cell_property.values().dtype == np.object
+
+    vertex_cells = np.concatenate([list(topomesh.regions(0,v,3)) for v in topomesh.wisps(0)]).astype(np.uint32)
+    vertex_cell_vertices = np.concatenate([v*np.ones_like(list(topomesh.regions(0,v,3))) for v in topomesh.wisps(0)]).astype(np.uint32)
+    
+    if weighting == 'uniform':
+        vertex_cell_weight = np.ones_like(vertex_cells)
+    elif weighting == 'volume':
+        if not topomesh.has_wisp_property('volume',3,is_computed=True):
+            compute_topomesh_property(topomesh,'volume',3)
+        vertex_cell_weight = topomesh.wisp_property('volume',3).values(vertex_cells)
+    
+    vertex_cell_property = cell_property.values(vertex_cells)
+
+    if vertex_cell_property.ndim == 1:
+        vertex_property = nd.sum(vertex_cell_weight*vertex_cell_property,vertex_cell_vertices,index=list(topomesh.wisps(0)))/nd.sum(vertex_cell_weight,vertex_cell_vertices,index=list(topomesh.wisps(0)))
+    elif vertex_cell_property.ndim == 2:
+        vertex_property = np.transpose([nd.sum(vertex_cell_weight*vertex_cell_property[:,k],vertex_cell_vertices,index=list(topomesh.wisps(0)))/nd.sum(vertex_cell_weight,vertex_cell_vertices,index=list(topomesh.wisps(0))) for k in xrange(vertex_cell_property.shape[1])])
+    elif vertex_cell_property.ndim == 3:
+        vertex_property = np.transpose([[nd.sum(vertex_cell_weight*vertex_cell_property[:,j,k],vertex_cell_vertices,index=list(topomesh.wisps(0)))/nd.sum(vertex_cell_weight,vertex_cell_vertices,index=list(topomesh.wisps(0))) for k in xrange(vertex_cell_property.shape[2])] for j in xrange(vertex_cell_property.shape[1])])
+
+    vertex_property[np.isnan(vertex_property)] = 0
+
+    topomesh.update_wisp_property(property_name,degree=0,values=array_dict(vertex_property,keys=list(topomesh.wisps(0))))
+    
+    end_time = time()
+    print "<-- Computing vertex property from cells [",end_time-start_time,"s]"
+
+
+
 def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate='mean', weighting='area'):
     """Compute a property on degree 3 using the same property defined at degree 2.
 
