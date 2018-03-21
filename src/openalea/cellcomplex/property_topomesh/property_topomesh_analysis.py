@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -*- python -*-
 #
 #       PropertyTopomesh
@@ -143,6 +142,7 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
         if degree == 0:
             topomesh.update_wisp_property('vertices',degree=degree,values=np.array(list(topomesh.wisps(degree))).astype(int),keys=np.array(list(topomesh.wisps(degree))))
         else:
+            if verbose: print list(topomesh.wisps(degree))
             topomesh.update_wisp_property('vertices',degree=degree,values=np.array([np.unique(list(topomesh.borders(degree,w,degree))).astype(int) for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
         if degree == 1:
             topomesh.update_wisp_property('borders',degree=degree,values=np.array([np.unique(list(topomesh.borders(degree,w,degree))).astype(int) for w in topomesh.wisps(degree)]),keys=np.array(list(topomesh.wisps(degree))))
@@ -1305,7 +1305,7 @@ def compute_topomesh_property(topomesh, property_name, degree=0, positions=None,
         print "<-- Computing",property_name,"property (",degree,") [",end_time-start_time,"s]"
 
 
-def compute_topomesh_triangle_properties(topomesh,positions=None):
+def compute_topomesh_triangle_properties(topomesh,positions=None, verbose=False):
     """Compute an usual set of properties over the faces of a PropertyTopomesh.
 
     The function computes several geometrical properties assuming the structure
@@ -1336,7 +1336,7 @@ def compute_topomesh_triangle_properties(topomesh,positions=None):
     """
 
     start_time = time()
-    print "--> Computing triangle properties"
+    if verbose: print "--> Computing triangle properties"
 
     if positions is None:
         positions = topomesh.wisp_property('barycenter',degree=0)
@@ -1371,10 +1371,10 @@ def compute_topomesh_triangle_properties(topomesh,positions=None):
     topomesh.update_wisp_property('eccentricity',degree=2,values=triangle_sinus_eccentricities,keys=np.array(list(topomesh.wisps(2))))
 
     end_time = time()
-    print "<-- Computing triangle properties    [",end_time-start_time,"s]"
+    if verbose: print "<-- Computing triangle properties    [",end_time-start_time,"s]"
 
 
-def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting='area',neighborhood=1,adjacency_sigma=0.5):
+def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting='area',neighborhood=1,adjacency_sigma=0.5, verbose=False):
     """Compute a property on degree 0 using the same property defined at degree 2.
 
     The vertex property is computed by averaging the properties of its neighbor
@@ -1414,7 +1414,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     """
 
     start_time = time()
-    print "--> Computing vertex property from faces"
+    if verbose: print "--> Computing vertex property from faces"
 
     assert topomesh.has_wisp_property(property_name,2,is_computed=True)
     assert weighting in ['uniform','area','angle','cotangent','angular sector']
@@ -1472,7 +1472,7 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
 
         vertex_face_face_angles = topomesh.wisp_property('angles',2).values(vertex_faces)
         vertex_face_vertex_angles = np.array([angles[vertices == v] for v,vertices,angles in zip(vertex_face_vertices,vertex_face_face_vertices,vertex_face_face_angles)])
-        print vertex_face_vertex_angles
+        if verbose: print vertex_face_vertex_angles
         vertex_face_weight = vertex_face_vertex_angles[:,0]
     elif weighting == 'cotangent':
         compute_topomesh_property(topomesh,'vertices',2)
@@ -1522,9 +1522,10 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     topomesh.update_wisp_property(property_name,degree=0,values=array_dict(vertex_property,keys=list(topomesh.wisps(0))))
     
     end_time = time()
-    print "<-- Computing vertex property from faces [",end_time-start_time,"s]"
+    if verbose: print "<-- Computing vertex property from faces [",end_time-start_time,"s]"
 
 
+<<<<<<< HEAD
 def compute_topomesh_vertex_property_from_cells(topomesh,property_name,weighting='volume'):
     """Compute a property on degree 0 using the same property defined at degree 3.
 
@@ -1585,9 +1586,8 @@ def compute_topomesh_vertex_property_from_cells(topomesh,property_name,weighting
     end_time = time()
     print "<-- Computing vertex property from cells [",end_time-start_time,"s]"
 
+def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate='mean', weighting='area', verbose=False):
 
-
-def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate='mean', weighting='area'):
     """Compute a property on degree 3 using the same property defined at degree 2.
 
     The cell property is computed by averaging or summing the properties of its
@@ -1616,7 +1616,7 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
     """
 
     start_time = time()
-    print "--> Computing cell property from faces"
+    if verbose: print "--> Computing cell property from faces"
 
     assert topomesh.has_wisp_property(property_name,2,is_computed=True)
     assert weighting in ['uniform','area']
@@ -1644,7 +1644,7 @@ def compute_topomesh_cell_property_from_faces(topomesh, property_name, aggregate
     topomesh.update_wisp_property(property_name,degree=3,values=array_dict(cell_property,keys=list(topomesh.wisps(3))))
     
     end_time = time()
-    print "<-- Computing cell property from faces [",end_time-start_time,"s]"
+    if verbose: print "<-- Computing cell property from faces [",end_time-start_time,"s]"
 
 
 def filter_topomesh_property(topomesh,property_name,degree,coef=0.5,normalize=False):
@@ -1682,7 +1682,6 @@ def filter_topomesh_property(topomesh,property_name,degree,coef=0.5,normalize=Fa
         filtered_property = filtered_property/filetered_property_norms[:,np.newaxis]
 
     topomesh.update_wisp_property(property_name,degree=degree,values=filtered_property,keys=np.array(list(topomesh.wisps(degree))))
-
 
 def topomesh_property_gaussian_filtering(topomesh,property_name,degree,neighborhood=3,adjacency_sigma=1.0,distance_sigma=1.0):
     """Filter an existing property by a gaussian-like operator.
