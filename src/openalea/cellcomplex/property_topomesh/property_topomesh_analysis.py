@@ -1524,8 +1524,6 @@ def compute_topomesh_vertex_property_from_faces(topomesh,property_name,weighting
     end_time = time()
     if verbose: print "<-- Computing vertex property from faces [",end_time-start_time,"s]"
 
-
-<<<<<<< HEAD
 def compute_topomesh_vertex_property_from_cells(topomesh,property_name,weighting='volume'):
     """Compute a property on degree 0 using the same property defined at degree 3.
 
