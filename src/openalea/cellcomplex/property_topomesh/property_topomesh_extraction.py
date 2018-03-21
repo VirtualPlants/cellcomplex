@@ -22,6 +22,7 @@ import numpy as np
 from copy import deepcopy
 
 from openalea.container import array_dict
+from openalea.container.utils import IdDict
 
 from openalea.cellcomplex.property_topomesh import PropertyTopomesh
 from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import compute_topomesh_property, is_triangular
@@ -153,6 +154,36 @@ def clean_topomesh(input_topomesh, clean_properties=False, degree=2):
                 topomesh.update_wisp_property(property_name,degree,dict(zip(list(topomesh.wisps(degree)),topomesh.wisp_property(property_name,degree).values(list(topomesh.wisps(degree))))))
 
     return topomesh
+
+
+def contiguous_wisps_topomesh(input_topomesh):
+
+    topomesh = deepcopy(input_topomesh)
+
+    wisp_conversion = {} 
+    for degree in xrange(topomesh.degree()+1):
+        old_wisps = np.array(list(topomesh.wisps(degree)))
+        new_wisps = np.arange(topomesh.nb_wisps(degree))
+        wisp_conversion[degree] = array_dict(dict(zip(old_wisps,new_wisps)))
+
+    for degree in xrange(topomesh.degree()+1):
+        old_wisps = np.array(list(topomesh.wisps(degree)))
+        new_wisps = np.arange(topomesh.nb_wisps(degree))
+        if degree>0:
+            new_borders = dict(zip(new_wisps,[list(wisp_conversion[degree-1].values(topomesh._borders[degree][o_w])) for o_w in old_wisps]))
+            topomesh._borders[degree] = IdDict(new_borders)
+        if degree<topomesh.degree():
+            new_regions = dict(zip(new_wisps,[list(wisp_conversion[degree+1].values(topomesh._regions[degree][o_w])) for o_w in old_wisps]))
+            if degree == 0:
+                topomesh._regions[degree] = IdDict(new_regions)
+            else:
+                topomesh._regions[degree] = new_regions
+
+        for property_name in topomesh._wisp_properties[degree].keys():
+            topomesh._wisp_properties[degree][property_name] = array_dict(topomesh._wisp_properties[degree][property_name].values(old_wisps),keys=new_wisps)
+
+    return topomesh
+            
     
 
 def cell_topomesh(input_topomesh, cells=None, copy_properties=False):

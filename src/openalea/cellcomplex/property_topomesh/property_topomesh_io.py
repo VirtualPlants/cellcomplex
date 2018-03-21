@@ -369,6 +369,7 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
     property_types['float32'] = "float"
     property_types['float64'] = "float"
     property_types['object'] = "list"
+    property_types['|S7'] = "str"
 
     ply_file.write("ply\n")
     ply_file.write("format ascii 1.0\n")
@@ -564,6 +565,8 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
     property_types['list'] = 'list'
     property_types['tensor'] = 'tensor'
     property_types['string'] = 'str'
+    property_types['|S7'] = 'str'
+    property_types['str'] = 'str'
 
     ply_file = open(ply_filename,'rU')
     ply_stream = enumerate(ply_file,1)
