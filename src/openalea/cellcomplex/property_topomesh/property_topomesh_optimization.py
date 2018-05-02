@@ -42,11 +42,12 @@ from openalea.cellcomplex.property_topomesh.property_topomesh_analysis import *
 from openalea.cellcomplex.property_topomesh.utils.array_tools import array_unique
 # from openalea.container.topomesh_algo import is_collapse_topo_allowed, collapse_edge
 
-from time                                   import time
-from copy                                   import deepcopy
+from time import time
+from copy import deepcopy
+import logging
 
 
-def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,voxelsize=(1.0,1.0,1.0),target_normal=None,target_areas=None,fix_borders=False):
+def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=dict(taubin_smoothing=0.65),sigma_deformation=0.1,gradient_derivatives=None,gaussian_sigma=10.0,voxelsize=(1.0,1.0,1.0),target_normal=None,target_areas=None,fix_borders=False,verbose=False, debug=False, loglevel=0):
 
     """Optimize the positions of the mesh vertices along multiple criteria.
 
@@ -102,6 +103,9 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
 
     """
 
+    logging.getLogger().setLevel(logging.INFO if verbose else logging.DEBUG if debug else logging.ERROR)
+
+
     if fix_borders:
         compute_topomesh_property(topomesh,'triangles',1)
         compute_topomesh_property(topomesh,'vertices',1)
@@ -116,90 +120,90 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
 
         if omega_forces.has_key('gradient') and omega_forces['gradient']!=0.0:
             start_time = time()
-            print "--> Computing vertex force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"-->  Computing vertex force")
             assert gradient_derivatives != None
             gradient_force = property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,voxelsize)
-            # print gradient_force
+            # logging.info("".join(["  " for l in xrange(loglevel)])+gradient_force
             deformation_force += omega_forces['gradient']*gradient_force
             end_time = time()
-            print "<-- Computing vertex force   [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing vertex force   ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('regularization') and omega_forces['regularization']!=0.0:
             start_time = time()
-            print "--> Computing regularization force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing regularization force")
             regularization_force = property_topomesh_triangle_regularization_force(topomesh)
             deformation_force += omega_forces['regularization']*regularization_force
             end_time = time()
-            print "<-- Computing regularization force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing regularization force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('area') and omega_forces['area']!=0.0:
             start_time = time()
-            print "--> Computing area force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing area force")
             area_force = property_topomesh_area_smoothing_force(topomesh,target_areas)
             deformation_force += omega_forces['area']*area_force
             end_time = time()
-            print "<-- Computing area force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing area force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('laplacian') and omega_forces['laplacian']!=0.0:
             start_time = time()
-            print "--> Computing laplacian smoothing force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing laplacian smoothing force")
             # laplacian_force = property_topomesh_laplacian_smoothing_force(topomesh)
             laplacian_force = property_topomesh_laplacian_epidermis_convexity_force(topomesh)
             deformation_force += omega_forces['laplacian']*laplacian_force
             end_time = time()
-            print "<-- Computing laplacian smoothing force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing laplacian smoothing force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('laplacian_smoothing') and omega_forces['laplacian_smoothing']!=0.0:
             start_time = time()
-            print "--> Computing laplacian smoothing force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing laplacian smoothing force")
             laplacian_force = property_topomesh_laplacian_smoothing_force(topomesh)
             deformation_force += omega_forces['laplacian_smoothing']*laplacian_force
             end_time = time()
-            print "<-- Computing laplacian smoothing force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing laplacian smoothing force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('gaussian_smoothing') and omega_forces['gaussian_smoothing']!=0.0:
             start_time = time()
-            print "--> Computing gaussian smoothing force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing gaussian smoothing force")
             gaussian_force = property_topomesh_gaussian_smoothing_force(topomesh,gaussian_sigma=gaussian_sigma)
             deformation_force += omega_forces['gaussian_smoothing']*gaussian_force
             end_time = time()
-            print "<-- Computing gaussian smoothing force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing gaussian smoothing force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('curvature_flow_smoothing') and omega_forces['curvature_flow_smoothing']!=0.0:
             start_time = time()
-            print "--> Computing curvature flow smoothing force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing curvature flow smoothing force")
             curvature_flow_force = property_topomesh_cotangent_laplacian_smoothing_force(topomesh)
             deformation_force += omega_forces['curvature_flow_smoothing']*curvature_flow_force
             end_time = time()
-            print "<-- Computing curvature flow smoothing force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing curvature flow smoothing force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('mean_curvature_smoothing') and omega_forces['mean_curvature_smoothing']!=0.0:
             start_time = time()
-            print "--> Computing mean curvature smoothing force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing mean curvature smoothing force")
             mean_curvature_force = property_topomesh_mean_curvature_smoothing_force(topomesh)
             deformation_force += omega_forces['mean_curvature_smoothing']*mean_curvature_force
             end_time = time()
-            print "<-- Computing mean curvature smoothing force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing mean curvature smoothing force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('taubin_smoothing') and omega_forces['taubin_smoothing']!=0.0:
             start_time = time()
-            print "--> Computing taubin smoothing force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing taubin smoothing force")
             taubin_force = property_topomesh_taubin_smoothing_force(topomesh,gaussian_sigma=gaussian_sigma)
             deformation_force += omega_forces['taubin_smoothing']*taubin_force
             end_time = time()
-            print "<-- Computing taubin smoothing force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing taubin smoothing force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('global_taubin_smoothing') and omega_forces['global_taubin_smoothing']!=0.0:
             start_time = time()
-            print "--> Computing taubin smoothing force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing taubin smoothing force")
             taubin_force = property_topomesh_taubin_smoothing_force(topomesh,gaussian_sigma=20.0,cellwise_smoothing=False)
             deformation_force += omega_forces['global_taubin_smoothing']*taubin_force
             end_time = time()
-            print "<-- Computing taubin smoothing force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing taubin smoothing force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('planarization') and omega_forces['planarization']!=0.0:
             start_time = time()
-            print "--> Computing planarization force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing planarization force")
             if target_normal is not None:
                 planarization_force = property_topomesh_planarization_force(topomesh,target_normal)
             else:
@@ -208,31 +212,31 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
                 # planarization_force = property_topomesh_interface_planarization_force(topomesh) + property_topomesh_epidermis_planarization_force(topomesh)
                 # planarization_force = property_topomesh_interface_planarization_force(topomesh) + property_topomesh_epidermis_convexity_force(topomesh)
                 # planarization_force = property_topomesh_epidermis_convexity_force(topomesh)
-            # print planarization_force
+            # logging.info("".join(["  " for l in xrange(loglevel)])+planarization_force
             deformation_force += omega_forces['planarization']*planarization_force
             end_time = time()
-            print "<-- Computing planarization force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing planarization force ["+str(end_time-start_time)+" s]")
         
         if omega_forces.has_key('epidermis_planarization') and omega_forces['epidermis_planarization']!=0.0:
             start_time = time()
-            print "--> Computing planarization force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing planarization force")
             planarization_force = property_topomesh_epidermis_planarization_force(topomesh)
             deformation_force += omega_forces['epidermis_planarization']*planarization_force
             end_time = time()
-            print "<-- Computing planarization force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing planarization force ["+str(end_time-start_time)+" s]")
 
         if omega_forces.has_key('convexity') and omega_forces['convexity']!=0.0:
             start_time = time()
-            print "--> Computing epidermis convexity force"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"--> Computing epidermis convexity force")
             convexity_force = property_topomesh_epidermis_convexity_force(topomesh)
             deformation_force += omega_forces['convexity']*convexity_force
             end_time = time()
-            print "<-- Computing epidermis convexity force [",end_time-start_time,"s]"
+            logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Computing epidermis convexity force ["+str(end_time-start_time)+" s]")
 
         start_time = time()
-        print "--> Applying Forces"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Applying Forces")
         deformation_force_amplitude = np.power(np.sum(np.power(deformation_force,2.0),axis=1),0.5)+np.power(10.,-8)
-        # print deformation_force
+        # logging.info("".join(["  " for l in xrange(loglevel)])+deformation_force
         #deformation_force[np.where(deformation_force_amplitude>sigma_deformation)[0]] = sigma_deformation*deformation_force[np.where(deformation_force_amplitude>sigma_deformation)[0]]/deformation_force_amplitude[np.where(deformation_force_amplitude>sigma_deformation)[0]][:,np.newaxis]
         
         deformation_force = np.minimum(1.0,sigma_deformation/deformation_force_amplitude)[:,np.newaxis] * deformation_force
@@ -243,18 +247,18 @@ def property_topomesh_vertices_deformation(topomesh,iterations=1,omega_forces=di
         topomesh.update_wisp_property('barycenter',degree=0,values=topomesh.wisp_property('barycenter',degree=0).values(list(topomesh.wisps(0))) + deformation_force,keys=list(topomesh.wisps(0)))
         
         end_time = time()
-        print "<-- Applying Forces          [",end_time-start_time,"s]"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Applying Forces          ["+str(end_time-start_time)+" s]")
 
         start_time = time()
-        print "--> Updating distances"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Updating distances")
         compute_topomesh_property(topomesh,'length',degree=1)
         end_time = time()
-        print "<-- Updating distances       [",end_time-start_time,"s]"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Updating distances       ["+str(end_time-start_time)+" s]")
 
-        print topomesh.nb_wisps(0)," Vertices, ",topomesh.nb_wisps(2)," Triangles, ",topomesh.nb_wisps(3)," Cells"
+        logging.info("".join(["  " for l in xrange(loglevel)])+str(topomesh.nb_wisps(0))+" Vertices, "+str(topomesh.nb_wisps(2))+" Triangles, "+str(topomesh.nb_wisps(3))+" Cells")
 
 
-def property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,voxelsize):
+def property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,voxelsize, verbose=False, debug=False, loglevel=0):
     """
     Compute for each vertex of the topomesh the force guiding its displacement towards a cell vertex
     """
@@ -265,13 +269,13 @@ def property_topomesh_cell_vertex_force(topomesh,gradient_derivatives,voxelsize)
 
     vertices_coords = np.rollaxis(np.array(topomesh.wisp_property('barycenter',degree=0).values()/np.array(voxelsize),np.uint16),1)
     vertices_coords = np.maximum(np.minimum(vertices_coords,([gradient_x.shape[0]-1],[gradient_x.shape[1]-1],[gradient_x.shape[2]-1])),0)
-    # print vertices_coords
+    # logging.info("".join(["  " for l in xrange(loglevel)])+vertices_coords
     gradient_force = np.rollaxis(np.array([gradient_x[tuple(vertices_coords)],gradient_y[tuple(vertices_coords)],gradient_z[tuple(vertices_coords)]]),1)*np.array(voxelsize)[np.newaxis,:]
     
     return gradient_force
 
 
-def property_topomesh_triangle_regularization_force(topomesh):
+def property_topomesh_triangle_regularization_force(topomesh, verbose=False, debug=False, loglevel=0):
     """todo"""
 
     if not topomesh.has_wisp_property('vertices',degree=2,is_computed=True):
@@ -335,7 +339,7 @@ def property_topomesh_triangle_regularization_force(topomesh):
     return triangle_force
 
 
-def property_topomesh_area_smoothing_force(topomesh,target_areas=None):
+def property_topomesh_area_smoothing_force(topomesh,target_areas=None, verbose=False, debug=False, loglevel=0):
 
     compute_topomesh_property(topomesh,'vertices',degree=2)
     compute_topomesh_property(topomesh,'length',degree=1)
@@ -372,7 +376,7 @@ def property_topomesh_area_smoothing_force(topomesh,target_areas=None):
     return triangle_force
 
 
-def property_topomesh_laplacian_smoothing_force(topomesh,cellwise_smoothing=False):
+def property_topomesh_laplacian_smoothing_force(topomesh,cellwise_smoothing=False, verbose=False, debug=False, loglevel=0):
 
     if not topomesh.has_wisp_property('vertices',degree=1,is_computed=True):
         compute_topomesh_property(topomesh,'vertices',degree=1)
@@ -412,7 +416,7 @@ def property_topomesh_laplacian_smoothing_force(topomesh,cellwise_smoothing=Fals
     return laplacian_force
 
 
-def property_topomesh_cotangent_laplacian_smoothing_force(topomesh):
+def property_topomesh_cotangent_laplacian_smoothing_force(topomesh, verbose=False, debug=False, loglevel=0):
     
     compute_topomesh_property(topomesh,'vertices',degree=2)
     compute_topomesh_property(topomesh,'length',degree=1)
@@ -468,7 +472,7 @@ def property_topomesh_cotangent_laplacian_smoothing_force(topomesh):
     return laplacian_force
 
 
-def property_topomesh_gaussian_smoothing_force(topomesh,gaussian_sigma=10.0):
+def property_topomesh_gaussian_smoothing_force(topomesh,gaussian_sigma=10.0, verbose=False, debug=False, loglevel=0):
 
     compute_topomesh_property(topomesh,'vertices',degree=1)
     edge_vertices = topomesh.wisp_property('vertices',degree=1).values()
@@ -489,7 +493,7 @@ def property_topomesh_gaussian_smoothing_force(topomesh,gaussian_sigma=10.0):
     return gaussian_force
 
 
-def property_topomesh_taubin_smoothing_force(topomesh,gaussian_sigma=10.0,positive_factor=0.33,negative_factor=-0.34,cellwise_smoothing=True):
+def property_topomesh_taubin_smoothing_force(topomesh,gaussian_sigma=10.0,positive_factor=0.33,negative_factor=-0.34,cellwise_smoothing=True, verbose=False, debug=False, loglevel=0):
 
     if not topomesh.has_wisp_property('vertices',degree=1,is_computed=True):
         compute_topomesh_property(topomesh,'vertices',degree=1)
@@ -533,7 +537,7 @@ def property_topomesh_taubin_smoothing_force(topomesh,gaussian_sigma=10.0,positi
     return taubin_force
 
 
-def property_topomesh_mean_curvature_smoothing_force(topomesh):
+def property_topomesh_mean_curvature_smoothing_force(topomesh, verbose=False, debug=False, loglevel=0):
     """todo"""
 
     if not topomesh.has_wisp_property('vertices',degree=2,is_computed=True):
@@ -589,7 +593,7 @@ def property_topomesh_mean_curvature_smoothing_force(topomesh):
     return vertex_mean_curvature_vectors
 
 
-def property_topomesh_laplacian_epidermis_convexity_force(topomesh):
+def property_topomesh_laplacian_epidermis_convexity_force(topomesh, verbose=False, debug=False, loglevel=0):
     """todo"""
 
     if not topomesh.has_wisp_property('vertices',degree=1,is_computed=True):
@@ -641,7 +645,7 @@ def property_topomesh_laplacian_epidermis_convexity_force(topomesh):
     return epidermis_convexity_force.values()
 
 
-def property_topomesh_interface_planarization_force(topomesh):
+def property_topomesh_interface_planarization_force(topomesh, verbose=False, debug=False, loglevel=0):
 
     if not topomesh.has_wisp_property('barycenter',degree=3,is_computed=True):
         compute_topomesh_property(topomesh,'barycenter',degree=3)
@@ -696,9 +700,9 @@ def property_topomesh_interface_planarization_force(topomesh):
 
     triangle_point_vectors = topomesh.wisp_property('barycenter',degree=0).values(triangle_vertices[:,0]) - np.tile(triangle_interface_barycenters,(3,1))
     # triangle_point_projectors = -np.dot(triangle_point_vectors,triange_target_normals)[:,np.newaxis]*triangle_target_normals
-    # print triangle_point_vectors.shape,triangle_target_normals.shape
+    # logging.info("".join(["  " for l in xrange(loglevel)])+triangle_point_vectors.shape,triangle_target_normals.shape
     triangle_point_projectors = -np.einsum('ij,ij->i',triangle_point_vectors,np.tile(triangle_target_normals,(3,1)))[:,np.newaxis]*np.tile(triangle_target_normals,(3,1))
-    # print triangle_point_projectors.shape
+    # logging.info("".join(["  " for l in xrange(loglevel)])+triangle_point_projectors.shape
     triangle_projectors_norm = np.linalg.norm(triangle_point_projectors,axis=1)
     non_planar_points = np.where(triangle_projectors_norm > 1.)[0]
     triangle_point_projectors[non_planar_points] = triangle_point_projectors[non_planar_points]/triangle_projectors_norm[non_planar_points,np.newaxis]
@@ -714,7 +718,7 @@ def property_topomesh_interface_planarization_force(topomesh):
     return interface_planarization_force
 
 
-def property_topomesh_epidermis_convexity_force(topomesh):
+def property_topomesh_epidermis_convexity_force(topomesh, verbose=False, debug=False, loglevel=0):
     if not topomesh.has_wisp_property('barycenter',degree=3,is_computed=True):
         compute_topomesh_property(topomesh,'barycenter',degree=3)
 
@@ -743,9 +747,9 @@ def property_topomesh_epidermis_convexity_force(topomesh):
     cell_epidermis_barycenters = array_dict(cell_epidermis_barycenters,keys=list(topomesh.wisps(3)))
     triangle_epidermis_barycenters = cell_epidermis_barycenters.values(triangle_cell)
 
-    # print triangle_epidermis_barycenters.shape
+    # logging.info("".join(["  " for l in xrange(loglevel)])+triangle_epidermis_barycenters.shape
     triangle_epidermis_directions = triangle_epidermis_barycenters - triangle_cell_barycenters
-    # print triangle_epidermis_directions.shape
+    # logging.info("".join(["  " for l in xrange(loglevel)])+triangle_epidermis_directions.shape
 
 
     triangle_normal_vectors = topomesh.wisp_property('normal',degree=2).values(epidermis_triangles)
@@ -792,7 +796,7 @@ def property_topomesh_epidermis_convexity_force(topomesh):
     return epidermis_convexity_force
 
 
-def property_topomesh_epidermis_planarization_force(topomesh):
+def property_topomesh_epidermis_planarization_force(topomesh, verbose=False, debug=False, loglevel=0):
     if not topomesh.has_wisp_property('epidermis',degree=2,is_computed=True):
         compute_topomesh_property(topomesh,'epidermis',degree=2)
     if not topomesh.has_wisp_property('epidermis',degree=3,is_computed=True):
@@ -848,7 +852,7 @@ def property_topomesh_epidermis_planarization_force(topomesh):
     return vertex_projectors
 
 
-def property_topomesh_cell_interface_planarization_force(topomesh):
+def property_topomesh_cell_interface_planarization_force(topomesh, verbose=False, debug=False, loglevel=0):
 
     if not topomesh.has_wisp_property('vertices',degree=3,is_computed=True):
         compute_topomesh_property(topomesh,'vertices',degree=3)
@@ -862,7 +866,7 @@ def property_topomesh_cell_interface_planarization_force(topomesh):
     planarization_force = np.zeros_like(topomesh.wisp_property('barycenter',degree=0).values(),np.float32)
 
     for c in topomesh.wisps(3):
-        print "Cell",c,"interface planarization"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"Cell "+str(c)+" interface planarization")
         for n in topomesh.wisp_property("neighbors",degree=3)[c]:
             normal_direction = topomesh.wisp_property("barycenter",degree=3)[n] - topomesh.wisp_property("barycenter",degree=3)[c]
 
@@ -890,12 +894,12 @@ def property_topomesh_cell_interface_planarization_force(topomesh):
             normal_vectors[reversed_normals] = np.cross(triangle_edge_vectors[reversed_normals,2],triangle_edge_vectors[reversed_normals,1])
             normal_vectors = normal_vectors/np.linalg.norm(normal_vectors,axis=1)[:,np.newaxis]
             if(np.isnan(normal_vectors).any()):
-                print "Interface ",c,"->",n," planarization force  [",end_time-start_time,"]"
+                logging.info("".join(["  " for l in xrange(loglevel)])+"Interface "+str(c)+" -> "+str(n)+" planarization force  ["+str(end_time-start_time)+" s]")
 
             normal_target = np.mean(normal_vectors,axis=0)
             normal_target = normal_target/np.linalg.norm(normal_target)
             if(np.isnan(normal_target).any()):
-                print "Interface ",c,"->",n," planarization force  [",end_time-start_time,"]"
+                logging.info("".join(["  " for l in xrange(loglevel)])+"Interface "+str(c)+" -> "+str(n)+" planarization force  ["+str(end_time-start_time)+" s]")
             # normal_errors = 1.0 - np.dot(normal_vectors,normal_target)
 
             barycenter = np.mean(topomesh.wisp_property('barycenter',degree=0).values(interface_vertices),axis=0)
@@ -908,7 +912,7 @@ def property_topomesh_cell_interface_planarization_force(topomesh):
             planarization_unitary_force = point_projectors
 
             if(np.isnan(planarization_unitary_force).any()):
-                print "Interface ",c,"->",n," planarization force  [",end_time-start_time,"]"
+                logging.info("".join(["  " for l in xrange(loglevel)])+"Interface "+str(c)+" -> "+str(n)+" planarization force  ["+str(end_time-start_time)+" s]")
 
             interface_planarization_force = np.transpose([nd.sum(planarization_unitary_force[:,0],triangle_vertices[:,0],index=interface_vertices),
                                                 nd.sum(planarization_unitary_force[:,1],triangle_vertices[:,0],index=interface_vertices),
@@ -921,7 +925,7 @@ def property_topomesh_cell_interface_planarization_force(topomesh):
     return planarization_force
 
 
-def topomesh_remove_vertex(topomesh,pid,kept_fid=None,triangulate=True):
+def topomesh_remove_vertex(topomesh,pid,kept_fid=None,triangulate=True, verbose=False, debug=False, loglevel=0):
 
     try:
         vertex_fids = list(topomesh.regions(0,pid,2))
@@ -955,11 +959,11 @@ def topomesh_remove_vertex(topomesh,pid,kept_fid=None,triangulate=True):
         return True
 
     except AssertionError:
-        print "Impossible to remove vertex : wrong configuration ( ",array_unique(vertex_fid_cells).shape[0]," cell memberships)"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Impossible to remove vertex : wrong configuration ( ",array_unique(vertex_fid_cells).shape[0]," cell memberships)")
         return False
 
 
-def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
+def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True, verbose=False, debug=False, loglevel=0):
     initial_topomesh = deepcopy(topomesh)
 
     try:
@@ -968,7 +972,7 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
 
         pid_to_keep, pid_to_delete = topomesh.borders(1,eid)
 
-        print "--> Trying to collapse edge",eid," : ",pid_to_keep," ; ",pid_to_delete
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Trying to collapse edge "+str(eid)+" : "+str(pid_to_keep)+" ; "+str(pid_to_delete))
 
         if kept_pid is not None and pid_to_keep != kept_pid:
             pid_to_delete, pid_to_keep = topomesh.borders(1,eid)
@@ -978,7 +982,7 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
         eids_to_keep = list(topomesh.regions(0,pid_to_keep))
         eids_to_delete = list(topomesh.regions(0,pid_to_delete))
 
-        print "  --> Edge fids : ",edge_fids
+        # logging.info("".join(["  " for l in xrange(loglevel)])+"  --> Edge fids : ",edge_fids)
 
         assert np.all([len(list(set(topomesh.borders(2,fid)).intersection(set(eids_to_keep)))) == 2 for fid in edge_fids])
         assert np.all([len(list(set(topomesh.borders(2,fid)).intersection(set(eids_to_delete)))) == 2 for fid in edge_fids])
@@ -988,20 +992,20 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
 
         pids_to_link = np.unique([list(set(topomesh.borders(2,fid,2)).difference({pid_to_keep,pid_to_delete}))[0] for fid in edge_fids])
 
-        print "  --> Face pids : ",pids_to_link
+        # logging.info("".join(["  " for l in xrange(loglevel)])+"  --> Face pids : ",pids_to_link)
 
         assert len(pids_to_link) == len(edge_fids)
         # assert np.all(np.array(map(len,[list(topomesh.regions(0,pid)) for pid in pids_to_link])) > 3)
         assert np.all([np.all([len(list(topomesh.regions(1,e))) == 2 for e in topomesh.borders(2,fid) if e != eid]) for fid in edge_fids])
 
         for fid in edge_fids:
-            print "    --> Face ",fid," : ",list(topomesh.borders(2,fid))," (",eids_to_keep,")"
+            # logging.info("".join(["  " for l in xrange(loglevel)])+"    --> Face ",fid," : ",list(topomesh.borders(2,fid))," (",eids_to_keep,")"
 
             eid_to_keep = list(set(topomesh.borders(2,fid)).intersection(set(eids_to_keep)).difference({eid}))[0]
             eid_to_delete = list(set(topomesh.borders(2,fid)).intersection(set(eids_to_delete)).difference({eid}))[0]
 
-            print "      --> Kept eid : ",eid_to_keep,list(topomesh.regions(1,eid_to_keep))
-            print "      --> Deleted eid : ",eid_to_delete,list(topomesh.regions(1,eid_to_delete))
+            # logging.info("".join(["  " for l in xrange(loglevel)])+"      --> Kept eid : ",eid_to_keep,list(topomesh.regions(1,eid_to_keep))
+            # logging.info("".join(["  " for l in xrange(loglevel)])+"      --> Deleted eid : ",eid_to_delete,list(topomesh.regions(1,eid_to_delete))
 
             topomesh.unlink(2,fid,eid)
             topomesh.unlink(2,fid,eid_to_keep)
@@ -1041,12 +1045,12 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
 
         topomesh.remove_wisp(1,eid)
 
-        if np.max([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])>2:
-            print "  --> Error while collapsing! Non-manifold edges :",np.array(list(topomesh.wisps(1)))[np.array([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])>2]
+        # if np.max([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])>2:
+        #     logging.info("".join(["  " for l in xrange(loglevel)])+"  --> Error while collapsing! Non-manifold edges :",np.array(list(topomesh.wisps(1)))[np.array([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])>2]
 
         assert np.max([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])==2
 
-        print "<-- Collapsed edge",eid," : ",pid_to_keep," (",topomesh.nb_wisps(2)," Faces )"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Collapsed edge"+str(eid)+" : "+str(pid_to_keep)+" ("+str(topomesh.nb_wisps(2))+" Faces )")
         #raw_input()
 
         return True
@@ -1054,18 +1058,18 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
         # edge_vertices = np.sort(np.array([list(topomesh.borders(1,e)) for e in topomesh.wisps(1) if topomesh.nb_borders(1,e) == 2]))
         # edge_vertex_id = edge_vertices[:,0]*10000 + edge_vertices[:,1]
         # if edge_vertices.shape[0] != array_unique(edge_vertices).shape[0]:
-        #     print eid," collapse error : (",pid_to_keep,pid_to_delete,@")",np.array(list(topomesh.wisps(1)))[nd.sum(np.ones_like(edge_vertex_id),edge_vertex_id,index=edge_vertex_id)>1]
+        #     logging.info("".join(["  " for l in xrange(loglevel)])+eid," collapse error : (",pid_to_keep,pid_to_delete,@")",np.array(list(topomesh.wisps(1)))[nd.sum(np.ones_like(edge_vertex_id),edge_vertex_id,index=edge_vertex_id)>1]
         #     raw_input()
 
     except AssertionError:
-        print "<-- Impossible to collapse edge : wrong configuration ( ",len(list(initial_topomesh.regions(1,eid)))," regions)"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Impossible to collapse edge : wrong configuration ( "+str(len(list(initial_topomesh.regions(1,eid))))+" regions)")
         assert np.max([initial_topomesh.nb_regions(1,e) for e in initial_topomesh.wisps(1)])==2
         topomesh._borders = deepcopy(initial_topomesh._borders)
         topomesh._regions = deepcopy(initial_topomesh._regions)
         topomesh.update_wisp_property('barycenter',0,initial_topomesh.wisp_property('barycenter',0))
         assert np.max([topomesh.nb_regions(1,e) for e in topomesh.wisps(1)])==2
 
-        print "<-- Failed to collapse edge",eid," : ",pid_to_keep," (",topomesh.nb_wisps(2)," Faces )"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Failed to collapse edge"+str(eid)+" : "+str(pid_to_keep)+" ("+str(topomesh.nb_wisps(2))+" Faces )")
         # raw_input()
         return False
 
@@ -1076,7 +1080,7 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
 
 #         pid_to_keep, pid_to_delete = topomesh.borders(1,eid)
 
-#         print "Collapsing edge eid : ",pid_to_keep, pid_to_delete
+#         logging.info("".join(["  " for l in xrange(loglevel)])+"Collapsing edge eid : ",pid_to_keep, pid_to_delete
 
 #         if kept_pid is not None and pid_to_keep != kept_pid:
 #             pid_to_delete, pid_to_keep = topomesh.borders(1,eid)
@@ -1093,21 +1097,21 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
 #         for neighbor_eid in neighbor_edges:
 #             topomesh.unlink(1,neighbor_eid,pid_to_delete)
 #             neighbor_pid = list(topomesh.borders(1,neighbor_eid))[0]
-#             print neighbor_eid," : ", neighbor_pid, list(topomesh.region_neighbors(0,pid_to_keep))
+#             logging.info("".join(["  " for l in xrange(loglevel)])+neighbor_eid," : ", neighbor_pid, list(topomesh.region_neighbors(0,pid_to_keep))
 #             if neighbor_pid not in topomesh.region_neighbors(0,pid_to_keep):
 #                 topomesh.link(1,neighbor_eid,pid_to_keep)
-#                 print neighbor_eid, list(topomesh.borders(1,neighbor_eid)),"[",list(topomesh.regions(1,neighbor_eid)),"]"
+#                 logging.info("".join(["  " for l in xrange(loglevel)])+neighbor_eid, list(topomesh.borders(1,neighbor_eid)),"[",list(topomesh.regions(1,neighbor_eid)),"]"
 #             else:
 #                 eid_to_fuse = tuple(set(topomesh.regions(0,pid_to_keep)).intersection(set(topomesh.regions(0,neighbor_pid))))[0]
 
-#                 print neighbor_eid," -> ",tuple(set(topomesh.regions(0,pid_to_keep)).intersection(set(topomesh.regions(0,neighbor_pid))))
+#                 logging.info("".join(["  " for l in xrange(loglevel)])+neighbor_eid," -> ",tuple(set(topomesh.regions(0,pid_to_keep)).intersection(set(topomesh.regions(0,neighbor_pid))))
 
 #                 topomesh.unlink(1,neighbor_eid,neighbor_pid)
 #                 for fid in topomesh.regions(1,neighbor_eid):
 #                     topomesh.unlink(2,fid,neighbor_eid)
 #                     topomesh.link(2,fid,eid_to_fuse)
 #                 topomesh.remove_wisp(1,neighbor_eid)
-#                 print eid_to_fuse, list(topomesh.borders(1,eid_to_fuse)),"[",list(topomesh.regions(1,eid_to_fuse)),"]"
+#                 logging.info("".join(["  " for l in xrange(loglevel)])+eid_to_fuse, list(topomesh.borders(1,eid_to_fuse)),"[",list(topomesh.regions(1,eid_to_fuse)),"]"
 
 #         topomesh.wisp_property("barycenter",0)[pid_to_keep] = (topomesh.wisp_property("barycenter",0).values([pid_to_keep,pid_to_delete]).sum(axis=0))/2.
 
@@ -1118,20 +1122,20 @@ def topomesh_collapse_edge(topomesh,eid,kept_pid=None,manifold=True):
 
 #         edge_borders = np.array(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)])))
 #         if np.min(edge_borders) == 1:
-#             print eid," collapse error - borders : (",pid_to_keep,pid_to_delete,")",np.array(list(topomesh.wisps(1)))[edge_borders==1],neighbor_edges
+#             logging.info("".join(["  " for l in xrange(loglevel)])+eid," collapse error - borders : (",pid_to_keep,pid_to_delete,")",np.array(list(topomesh.wisps(1)))[edge_borders==1],neighbor_edges
 #             raw_input()
 
 #         edge_regions = np.array(map(len,map(np.unique,[list(topomesh.regions(1,e)) for e in topomesh.wisps(1)])))
 #         if np.max(edge_regions) > 2:
-#             print eid," collapse error - regions : (",pid_to_keep,pid_to_delete,")",np.array(list(topomesh.wisps(1)))[edge_regions>2],neighbor_edges
+#             logging.info("".join(["  " for l in xrange(loglevel)])+eid," collapse error - regions : (",pid_to_keep,pid_to_delete,")",np.array(list(topomesh.wisps(1)))[edge_regions>2],neighbor_edges
 #             raw_input()
 
 #     except AssertionError:
-#         print "Impossible to collapse edge : wrong configuration ( ",len(list(topomesh.regions(1,eid)))," regions)"
+#         logging.info("".join(["  " for l in xrange(loglevel)])+"Impossible to collapse edge : wrong configuration ( ",len(list(topomesh.regions(1,eid)))," regions)"
 #         return False
 
 
-def topomesh_flip_edge(topomesh,eid):
+def topomesh_flip_edge(topomesh,eid, verbose=False, debug=False, loglevel=0):
     try:
         assert len(list(topomesh.regions(1,eid))) == 2
         edge_triangles = list(topomesh.regions(1,eid))
@@ -1165,11 +1169,11 @@ def topomesh_flip_edge(topomesh,eid):
         return True
 
     except AssertionError:
-        print "Impossible to flip edge : wrong configuration ( ",len(list(topomesh.regions(1,eid)))," faces)"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Impossible to flip edge : wrong configuration ( "+str(len(list(topomesh.regions(1,eid))))+" Faces)")
         return False
 
 
-def topomesh_split_edge(topomesh,eid):
+def topomesh_split_edge(topomesh,eid, verbose=False, debug=False, loglevel=0):
     pid_to_keep, pid_to_unlink = topomesh.borders(1,eid)
 
     edge_fids = list(topomesh.regions(1,eid))
@@ -1179,21 +1183,21 @@ def topomesh_split_edge(topomesh,eid):
     pid_to_add = topomesh.add_wisp(0)
     topomesh.unlink(1,eid,pid_to_unlink)
     topomesh.link(1,eid,pid_to_add)
-    # print eid," : ",pid_to_keep,pid_to_add
+    # logging.info("".join(["  " for l in xrange(loglevel)])+eid," : ",pid_to_keep,pid_to_add
 
     topomesh.wisp_property("barycenter",0)[pid_to_add] = (topomesh.wisp_property("barycenter",0).values([pid_to_keep,pid_to_unlink]).sum(axis=0))/2.
 
     eid_to_add = topomesh.add_wisp(1)
     topomesh.link(1,eid_to_add,pid_to_add)
     topomesh.link(1,eid_to_add,pid_to_unlink)
-    # print "Split ",eid_to_add," : ",pid_to_add,pid_to_unlink
+    # logging.info("".join(["  " for l in xrange(loglevel)])+"Split ",eid_to_add," : ",pid_to_add,pid_to_unlink
 
     for fid, eid_to_unlink, pid_split in zip(edge_fids,eids_to_unlink,pids_split):
         
         eid_split = topomesh.add_wisp(1)
         topomesh.link(1,eid_split,pid_to_add)
         topomesh.link(1,eid_split,pid_split)
-        # print "Added ",eid_split," : ",pid_to_add,pid_split
+        # logging.info("".join(["  " for l in xrange(loglevel)])+"Added ",eid_split," : ",pid_to_add,pid_split
 
         topomesh.unlink(2,fid,eid_to_unlink)
         topomesh.link(2,fid,eid_split)
@@ -1211,13 +1215,13 @@ def topomesh_split_edge(topomesh,eid):
     # edge_vertices = np.sort(np.array([list(topomesh.borders(1,e)) for e in topomesh.wisps(1) if  topomesh.nb_borders(1,e) == 2]))
     # edge_vertex_id = edge_vertices[:,0]*10000 + edge_vertices[:,1]
     # if edge_vertices.shape[0] != array_unique(edge_vertices).shape[0]:
-    #     print eid," split error : (",pid_to_keep,pid_to_unlink,")",np.array(list(topomesh.wisps(1)))[nd.sum(np.ones_like(edge_vertex_id),edge_vertex_id,index=edge_vertex_id)>1]
+    #     logging.info("".join(["  " for l in xrange(loglevel)])+eid," split error : (",pid_to_keep,pid_to_unlink,")",np.array(list(topomesh.wisps(1)))[nd.sum(np.ones_like(edge_vertex_id),edge_vertex_id,index=edge_vertex_id)>1]
     #     raw_input()
 
     return True
 
 
-def topomesh_triangle_split(input_topomesh):
+def topomesh_triangle_split(input_topomesh, verbose=False, debug=False, loglevel=0):
     from copy import deepcopy
     from time import time
     topomesh = deepcopy(input_topomesh)
@@ -1233,7 +1237,7 @@ def topomesh_triangle_split(input_topomesh):
     topomesh_triangles = list(topomesh.wisps(2))
 
     start_time = time()
-    print "--> Splitting edges"
+    logging.info("".join(["  " for l in xrange(loglevel)])+"--> Splitting edges")
 
     edge_splitted = {}
     edge_middles = {}
@@ -1249,10 +1253,10 @@ def topomesh_triangle_split(input_topomesh):
         edge_splitted[e] = [e,eid]
         edge_middles[e] = mid
     end_time = time()
-    print "--> Splitting edges             [",end_time-start_time,"s]"
+    logging.info("".join(["  " for l in xrange(loglevel)])+"--> Splitting edges             ["+str(end_time-start_time)+" s]")
 
     start_time = time()
-    print "--> Splitting triangles"
+    logging.info("".join(["  " for l in xrange(loglevel)])+"--> Splitting triangles")
 
     for t in topomesh_triangles:
                 
@@ -1278,14 +1282,14 @@ def topomesh_triangle_split(input_topomesh):
                 topomesh.link(3,c,fid)
 
     end_time = time()
-    print "--> Splitting triangles         [",end_time-start_time,"s]"
+    logging.info("".join(["  " for l in xrange(loglevel)])+"--> Splitting triangles         ["+str(end_time-start_time)+" s]")
 
     topomesh.update_wisp_property('barycenter',degree=0,values=triangle_vertex_positions)
 
     return topomesh
     
 
-def topomesh_remove_interface_vertex(topomesh, pid):
+def topomesh_remove_interface_vertex(topomesh, pid, verbose=False, debug=False, loglevel=0):
     try:
         vertex_fids = list(topomesh.regions(0,pid,2))
 
@@ -1329,7 +1333,7 @@ def topomesh_remove_interface_vertex(topomesh, pid):
         else:
             eids_to_remove = list(topomesh.regions(0,pid))
 
-            # print np.unique(eids_to_remove)
+            # logging.info("".join(["  " for l in xrange(loglevel)])+np.unique(eids_to_remove)
         for eid in np.unique(eids_to_remove):
             for pid_to_unlink in topomesh.borders(1,eid):
                 topomesh.unlink(1,eid,pid_to_unlink)
@@ -1343,11 +1347,11 @@ def topomesh_remove_interface_vertex(topomesh, pid):
 
         return True
     except AssertionError:
-        print "Impossible to remove vertex : wrong face definition"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"Impossible to remove vertex : wrong face definition")
         return False
 
 
-def topomesh_remove_interface_edge(topomesh,eid):
+def topomesh_remove_interface_edge(topomesh,eid, verbose=False, debug=False, loglevel=0):
     edge_fids = list(topomesh.regions(1,eid))
     fid_to_keep = np.min(edge_fids)
 
@@ -1377,7 +1381,7 @@ def topomesh_remove_interface_edge(topomesh,eid):
     return True
 
 
-def topomesh_remove_boundary_vertex(topomesh, pid):
+def topomesh_remove_boundary_vertex(topomesh, pid, verbose=False, debug=False, loglevel=0):
     try:
         vertex_eids = list(topomesh.regions(0,pid))
         eid_to_keep = np.min(vertex_eids)
@@ -1404,17 +1408,17 @@ def topomesh_remove_boundary_vertex(topomesh, pid):
         topomesh.remove_wisp(0,pid)
 
         # if np.array([list(topomesh.borders(1,eid)) for eid in topomesh.wisps(1)]).ndim != 2:
-        #     print eid_to_keep, eids_to_remove
-        #     print np.array(list(topomesh.wisps(1)))[np.array(map(len,[list(topomesh.borders(1,eid)) for eid in topomesh.wisps(1)]))!=2]
+        #     logging.info("".join(["  " for l in xrange(loglevel)])+eid_to_keep, eids_to_remove
+        #     logging.info("".join(["  " for l in xrange(loglevel)])+np.array(list(topomesh.wisps(1)))[np.array(map(len,[list(topomesh.borders(1,eid)) for eid in topomesh.wisps(1)]))!=2]
         #     raw_input()
 
         return True
     except AssertionError:
-        print "Impossible to remove vertex : wrong edge definition"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"Impossible to remove vertex : wrong edge definition")
         return False
 
 
-def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('regularization',0.15),('neighborhood',0.65)]),simulated_annealing=True,display=False,**kwargs):
+def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('regularization',0.15),('neighborhood',0.65)]),simulated_annealing=True,display=False, verbose=False, debug=False, loglevel=0,**kwargs):
     from openalea.cellcomplex.property_topomesh.utils.geometry_tools import triangle_geometric_features
 
     projected = kwargs.get("projected_map_display",False)
@@ -1450,7 +1454,7 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
 
         compute_topomesh_triangle_properties(topomesh)
 
-        # print "Area : ",topomesh.wisp_property('area',2).values().mean()," (",topomesh.wisp_property('area',2).values().std()," ) Eccentricity : ,",topomesh.wisp_property('eccentricity',2).values().mean(),"    [ T = ",simulated_annealing_temperature," ]"
+        # logging.info("".join(["  " for l in xrange(loglevel)])+"Area : ",topomesh.wisp_property('area',2).values().mean()," (",topomesh.wisp_property('area',2).values().std()," ) Eccentricity : ,",topomesh.wisp_property('eccentricity',2).values().mean(),"    [ T = ",simulated_annealing_temperature," ]"
 
         flippable_edges = topomesh.wisp_property('triangles',1).keys()[np.where(np.array(map(len,topomesh.wisp_property('triangles',1).values())) == 2)]
         
@@ -1537,7 +1541,7 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
         flippable_edge_sorted_energy_variation = array_dict(np.sort(flippable_edge_energy_variation.values()),flippable_edges[np.argsort(flippable_edge_energy_variation.values())])
 
         start_time = time()
-        print "--> Flipping mesh edges"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Flipping mesh edges")
         flipped_edges = 0
         flipped_nonoptimal_edges = 0
         unflippable_edges = set()
@@ -1545,7 +1549,7 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
             flip_probability = np.exp(-flippable_edge_sorted_energy_variation[eid]/simulated_annealing_temperature)
             if (simulated_annealing and (np.random.rand() < flip_probability)) or (1 < flip_probability):
                 if not eid in unflippable_edges:
-                    # print topomesh.wisp_property('vertices',1)[eid], flippable_edge_sorted_energy_variation[e]
+                    # logging.info("".join(["  " for l in xrange(loglevel)])+topomesh.wisp_property('vertices',1)[eid], flippable_edge_sorted_energy_variation[e]
                     # neighbor_edges = list(topomesh.region_neighbors(1,eid))
                     flipped_edges += 1
                     flipped_nonoptimal_edges += (flip_probability<1)
@@ -1556,13 +1560,13 @@ def property_topomesh_edge_flip_optimization(topomesh,omega_energies=dict([('reg
                     unflippable_edges = unflippable_edges.union(set(neighbor_edges))
 
         end_time = time()
-        print "  --> Flipped ",flipped_edges," edges (",flipped_nonoptimal_edges," non-optimal)    [ T = ",simulated_annealing_temperature,"]"
-        print "<-- Flipping mesh edges    [",end_time-start_time,"s]"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"  --> Flipped "+str(flipped_edges)+" edges ("+str(flipped_nonoptimal_edges)+" non-optimal)    [ T = "+str(simulated_annealing_temperature)+"]")
+        logging.info("".join(["  " for l in xrange(loglevel)])+"<-- Flipping mesh edges    ["+str(end_time-start_time)+" s]")
 
     return flipped_edges   
 
 
-def property_topomesh_edge_split_optimization(topomesh, maximal_length=None, iterations=1):
+def property_topomesh_edge_split_optimization(topomesh, maximal_length=None, iterations=1, verbose=False, debug=False, loglevel=0):
 
     compute_topomesh_property(topomesh,'vertices',1)
     compute_topomesh_property(topomesh,'length',1)
@@ -1578,12 +1582,12 @@ def property_topomesh_edge_split_optimization(topomesh, maximal_length=None, ite
         n_splits = 0
         for eid in sorted_edge_length_edges:
             if not eid in modified_edges:
-                #print "  <-- Splitting edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+                #logging.info("".join(["  " for l in xrange(loglevel)])+"  <-- Splitting edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
                 modified_edges = modified_edges.union(set(np.unique([np.array(list(topomesh.borders(2,fid))) for fid in topomesh.regions(1,eid)])))
                 topomesh_split_edge(topomesh,eid)
                 n_splits += 1
-                #print "  <-- Splitted edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
-        print "--> Splitted ",n_splits," edges"
+                #logging.info("".join(["  " for l in xrange(loglevel)])+"  <-- Splitted edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Splitted "+str(n_splits)+" edges")
         
         compute_topomesh_property(topomesh,'vertices',1)
         compute_topomesh_property(topomesh,'length',1)
@@ -1591,7 +1595,7 @@ def property_topomesh_edge_split_optimization(topomesh, maximal_length=None, ite
     return n_splits
 
 
-def property_topomesh_edge_collapse_optimization(topomesh, omega_energies=dict([('length',0.01),('error_quadrics',0.65)]), minimal_length=None, target_triangles=None, iterations=1):
+def property_topomesh_edge_collapse_optimization(topomesh, omega_energies=dict([('length',0.01),('error_quadrics',0.65)]), minimal_length=None, target_triangles=None, iterations=1, verbose=False, debug=False, loglevel=0):
 
     compute_topomesh_property(topomesh,'vertices',1)
     compute_topomesh_property(topomesh,'vertices',2)
@@ -1655,17 +1659,17 @@ def property_topomesh_edge_collapse_optimization(topomesh, omega_energies=dict([
         n_collapses = 0 
         for eid in sorted_energy_variation_edges:
             if not eid in modified_edges and topomesh.nb_wisps(2)>target_triangles:
-                # print "  <-- Collapsing edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+                # logging.info("".join(["  " for l in xrange(loglevel)])+"  <-- Collapsing edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
                 modified_edges = modified_edges.union(set(np.unique(list(topomesh.border_neighbors(1,eid))))).union({eid})
                 collapsed = topomesh_collapse_edge(topomesh,eid,manifold=False)
                 n_collapses += collapsed
-                # print "  <-- Collapsed edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
-        print "--> Collapsed ",n_collapses," edges[",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+                # logging.info("".join(["  " for l in xrange(loglevel)])+"  <-- Collapsed edge ",eid," [",np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))),"]"
+        logging.info("".join(["  " for l in xrange(loglevel)])+"--> Collapsed "+str(n_collapses)+" edges ["+str(np.min(map(len,map(np.unique,[list(topomesh.borders(1,e)) for e in topomesh.wisps(1)]))))+"]")
 
     return n_collapses
 
 
-def property_topomesh_isotropic_remeshing(initial_topomesh, maximal_length=None, minimal_length=None, collapse=False, iterations=1):
+def property_topomesh_isotropic_remeshing(initial_topomesh, maximal_length=None, minimal_length=None, collapse=False, iterations=1, verbose=False, debug=False, loglevel=0):
 
     topomesh = deepcopy(initial_topomesh)
 

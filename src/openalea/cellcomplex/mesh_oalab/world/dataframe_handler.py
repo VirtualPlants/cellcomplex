@@ -329,12 +329,12 @@ class DataframeHandler(AbstractListener):
                 point_invalidity = point_invalidity | np.isnan(all_Y)
                 point_invalidity = point_invalidity | np.isnan(all_filters)
                 point_invalidity = point_invalidity | np.isnan(all_sizes)
-                if all_classes.dtype != np.dtype('O'):
+                if (all_classes.dtype != np.dtype('O')) and (all_classes.dtype != np.dtype('S')):
                     point_invalidity = point_invalidity | np.isnan(all_classes)
                 else:
                     point_invalidity = point_invalidity | pd.isnull(all_classes)
 
-                if all_labels.dtype != np.dtype('O'):
+                if (all_labels.dtype != np.dtype('O')) and (all_labels.dtype != np.dtype('S')):
                     point_invalidity = point_invalidity | np.isnan(all_labels)
                 else:
                     point_invalidity = point_invalidity | pd.isnull(all_labels)
