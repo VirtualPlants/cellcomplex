@@ -33,6 +33,7 @@ from openalea.cellcomplex.property_topomesh.utils.geometry_tools import triangle
 def epidermis_topomesh(topomesh,cells=None):
     
     compute_topomesh_property(topomesh,'epidermis',3)
+    compute_topomesh_property(topomesh,'epidermis',2)
     compute_topomesh_property(topomesh,'epidermis',1)
     compute_topomesh_property(topomesh,'epidermis',0)
     
@@ -295,7 +296,8 @@ def star_interface_topomesh(topomesh, inner_interfaces=True, verbose=False):
             interface_edges = topomesh.wisp_property('vertices',1).values(topomesh.wisp_property('edges',2)[interface])
             interface_vertices = np.unique(interface_edges)
 
-            if (len(interface_vertices)>2) and (inner_interfaces or (len(interface_cells) == 1)):
+
+            if (len(interface_vertices)>3) and (inner_interfaces or (len(interface_cells) == 1)):
 
                 interface_positions = array_dict(topomesh.wisp_property('barycenter',0).values(interface_vertices),interface_vertices)
                 interface_center = interface_positions.values().mean(axis=0)
@@ -321,6 +323,13 @@ def star_interface_topomesh(topomesh, inner_interfaces=True, verbose=False):
                         triangular_topomesh.link(2,fid,vertex_center_edges[v])
                     for cid in interface_cells:
                         triangular_topomesh.link(3,cid,fid)
+            elif (len(interface_vertices)>2) and (inner_interfaces or (len(interface_cells) == 1)):
+                fid = triangular_topomesh.add_wisp(2)
+                for e in topomesh.borders(2,interface):
+                    face_triangles[interface] = [fid]
+                    triangular_topomesh.link(2,fid,e)
+                for cid in interface_cells:
+                    triangular_topomesh.link(3,cid,fid)
 
             if verbose:
                 if interface%100 == 0:

@@ -542,7 +542,7 @@ def save_ply_property_topomesh(topomesh,ply_filename,properties_to_save=dict([(0
         print "<-- Saving .ply        [",end_time-start_time,"s]"
 
 
-def read_ply_property_topomesh(ply_filename, verbose = False):
+def read_ply_property_topomesh(ply_filename, verbose=False, fuse_elements=True):
     """
     """
     import re
@@ -680,67 +680,153 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
             face_vertices[fid] = element_properties['face'][fid]['vertex_indices']
 
     timecheck = verbose
-    forcetest = False
+    
+    if fuse_elements:
+        forcetest = False
 
-    if timecheck: check_time =time()
-    if verbose: print len(point_positions)," Points, ", len(face_vertices), " Faces"
+        if timecheck: check_time =time()
+        if verbose: print len(point_positions)," Points, ", len(face_vertices), " Faces"
 
-    unique_points = array_unique(np.array(point_positions.values()))
-    if not forcetest and len(unique_points) == len(point_positions):
-        unique_points = np.array(point_positions.values())
-        point_matching = array_dict(point_positions.keys(),point_positions.keys())
-    else:
-        point_matching = array_dict(kd_tree_match(np.array(point_positions.values()),unique_points),point_positions.keys())
-
-    element_matching['vertex'] = point_matching
-    if verbose: print len(unique_points)," Unique Points"
-    if timecheck: print 'point unicity test:',time()-check_time 
-
-    if timecheck: check_time =time()
-    faces = np.array(face_vertices.values())
-    if faces.ndim == 2:
-        if verbose: print "Faces = Triangles !"
-        triangular = True
-        triangles = np.sort(point_matching.values(faces))
-        unique_triangles = array_unique(triangles)
-        if not forcetest and len(unique_triangles) == len(triangles):
-            unique_triangles = triangles
-            triangle_matching = array_dict(face_vertices.keys(),face_vertices.keys())
+        unique_points = array_unique(np.array(point_positions.values()))
+        if not forcetest and len(unique_points) == len(point_positions):
+            unique_points = np.array(point_positions.values())
+            point_matching = array_dict(point_positions.keys(),point_positions.keys())
         else:
-            triangle_matching = array_dict(kd_tree_match(triangles,unique_triangles),face_vertices.keys())
-    else:
-        triangular = False
-        if len(faces)>0:
-            unique_triangles = point_matching.values(faces)
-            triangle_matching = array_dict(face_vertices.keys(),face_vertices.keys())
-        else:
-            unique_triangles = np.array([])
-            triangle_matching = array_dict()
-    element_matching['face'] = triangle_matching
-    if verbose: print len(unique_triangles)," Unique Faces"
-    if timecheck: print 'face unicity test:',time()-check_time 
+            point_matching = array_dict(kd_tree_match(np.array(point_positions.values()),unique_points),point_positions.keys())
 
-    if timecheck: check_time =time()
-    if n_wisps.has_key('edge'):
-        edge_vertices = {}
-        edge_faces = {}
-        for eid in xrange(n_wisps['edge']):
-            edge_faces[eid] = []
-            edge_vertices[eid] = point_matching.values(np.array([element_properties['edge'][eid][dim] for dim in ['source','target']]))
-            if element_properties['edge'][eid].has_key('face_index'):
-                edge_faces[eid] = element_properties['edge'][eid]['face_index']
-        #print element_properties['edge']
-        if not 'face_index' in properties['edge'] and len(faces)>0:
-            face_edge_vertices = np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))
-            face_edge_faces = np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])
-            face_edge_matching = kd_tree_match(face_edge_vertices,np.sort(edge_vertices.values()))
+        element_matching['vertex'] = point_matching
+        if verbose: print len(unique_points)," Unique Points"
+        if timecheck: print 'point unicity test:',time()-check_time 
+
+        if timecheck: check_time =time()
+        faces = np.array(face_vertices.values())
+        if faces.ndim == 2:
+            if verbose: print "Faces = Triangles !"
+            triangular = True
+            triangles = np.sort(point_matching.values(faces))
+            unique_triangles = array_unique(triangles)
+            if not forcetest and len(unique_triangles) == len(triangles):
+                unique_triangles = triangles
+                triangle_matching = array_dict(face_vertices.keys(),face_vertices.keys())
+            else:
+                triangle_matching = array_dict(kd_tree_match(triangles,unique_triangles),face_vertices.keys())
+        else:
+            triangular = False
+            if len(faces)>0:
+                unique_triangles = point_matching.values(faces)
+                triangle_matching = array_dict(face_vertices.keys(),face_vertices.keys())
+            else:
+                unique_triangles = np.array([])
+                triangle_matching = array_dict()
+        element_matching['face'] = triangle_matching
+        if verbose: print len(unique_triangles)," Unique Faces"
+        if timecheck: print 'face unicity test:',time()-check_time 
+
+        if timecheck: check_time =time()
+        if n_wisps.has_key('edge'):
+            edge_vertices = {}
+            edge_faces = {}
             for eid in xrange(n_wisps['edge']):
                 edge_faces[eid] = []
-            for eid, fid in zip(face_edge_matching, face_edge_faces):
-                if eid is not None:
-                    edge_faces[eid] += [fid]
-            
+                edge_vertices[eid] = point_matching.values(np.array([element_properties['edge'][eid][dim] for dim in ['source','target']]))
+                if element_properties['edge'][eid].has_key('face_index'):
+                    edge_faces[eid] = element_properties['edge'][eid]['face_index']
+            #print element_properties['edge']
+            if not 'face_index' in properties['edge'] and len(faces)>0:
+                face_edge_vertices = np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))
+                face_edge_faces = np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])
+                face_edge_matching = kd_tree_match(face_edge_vertices,np.sort(edge_vertices.values()))
+                for eid in xrange(n_wisps['edge']):
+                    edge_faces[eid] = []
+                for eid, fid in zip(face_edge_matching, face_edge_faces):
+                    if eid is not None:
+                        edge_faces[eid] += [fid]
+                
+        else:
+            if triangular:
+                edge_vertices = dict(zip(range(3*len(unique_triangles)),np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))))
+                edge_faces = dict(zip(range(3*len(unique_triangles)),np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])))
+            else:
+                edge_index = range(len(unique_triangles[0]))
+                for v in unique_triangles[1:]:
+                    edge_index += [edge_index[-1]+1+r for r in range(len(v))]
+                edge_vertices = dict(zip(edge_index,np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))))
+                edge_faces = dict(zip(edge_index,np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])))
+
+        if verbose: print len(edge_vertices)," Edges" 
+
+        if len(edge_vertices)>0:
+            unique_edges = array_unique(np.sort(edge_vertices.values()))
+            if not forcetest and len(unique_edges) == len(edge_vertices.values()):
+                unique_edges = edge_vertices.values()
+                edge_matching = array_dict(edge_vertices.keys(),edge_vertices.keys())
+            else:
+                # edge_matching = array_dict(vq(np.sort(edge_vertices.values()),unique_edges)[0],edge_vertices.keys())
+                edge_matching = array_dict(kd_tree_match(np.sort(edge_vertices.values()),unique_edges),edge_vertices.keys())
+        else:
+            unique_edges = np.array([])
+            edge_matching = array_dict()
+
+        element_matching['edge'] = edge_matching
+        if verbose: print len(unique_edges)," Unique Edges"
+        if timecheck: print 'edge unicity test:',time()-check_time 
+        
+        if timecheck: check_time =time()
+        face_cells = {}
+        for fid in xrange(len(unique_triangles)):
+            face_cells[fid] = set()
+
+        cell_matching = {}
+        if n_wisps.has_key('volume'):
+            oriented_cells = False
+            if np.any([np.any([f<0 for f in element_properties['volume'][c]['face_index']]) for c in xrange(n_wisps['volume'])]):
+                oriented_cells = True
+
+            if 'label' in properties['volume']:
+                for cid in xrange(n_wisps['volume']):
+                    cell_matching[cid] = element_properties['volume'][cid]['label']
+            else:
+                cell_matching = dict(zip(range(n_wisps['volume']),range(n_wisps['volume'])))
+
+            if 'face_index' in properties['volume']:
+                for c in xrange(n_wisps['volume']):
+                    for f in element_properties['volume'][c]['face_index']:
+                        if oriented_cells:
+                            face_cells[triangle_matching[np.abs(f)-1]] = face_cells[triangle_matching[np.abs(f)-1]].union({cell_matching[c]})
+                        else:
+                            face_cells[triangle_matching[f]] = face_cells[triangle_matching[f]].union({cell_matching[c]})
+            else:
+                for f in xrange(len(unique_triangles)):
+                    face_cells[triangle_matching[f]] = {0}
+        else:
+            cell_matching[0] = 0
+            for f in xrange(len(unique_triangles)):
+                face_cells[triangle_matching[f]] = {0}
+        element_matching['volume'] = cell_matching
+        if verbose: print len(cell_matching)," Cells"
+        if timecheck: print 'cell unicity test:',time()-check_time 
     else:
+        unique_points = np.array(point_positions.values())
+        point_matching = array_dict(point_positions.keys(),point_positions.keys())
+        element_matching['vertex'] = point_matching
+
+        faces = np.array(face_vertices.values())
+        if faces.ndim == 2:
+            if verbose: print "Faces = Triangles !"
+            triangular = True
+            triangles = np.sort(faces)
+            unique_triangles = point_matching.values(triangles)
+            triangle_matching = array_dict(face_vertices.keys(),face_vertices.keys())
+        else:
+            triangular = False
+            if len(faces)>0:
+                unique_triangles = point_matching.values(faces)
+                triangle_matching = array_dict(face_vertices.keys(),face_vertices.keys())
+            else:
+                unique_triangles = np.array([])
+                triangle_matching = array_dict()
+        element_matching['face'] = triangle_matching
+
         if triangular:
             edge_vertices = dict(zip(range(3*len(unique_triangles)),np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))))
             edge_faces = dict(zip(range(3*len(unique_triangles)),np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])))
@@ -750,59 +836,25 @@ def read_ply_property_topomesh(ply_filename, verbose = False):
                 edge_index += [edge_index[-1]+1+r for r in range(len(v))]
             edge_vertices = dict(zip(edge_index,np.sort(np.concatenate([np.transpose([v,list(v[1:])+[v[0]]]) for v in unique_triangles]))))
             edge_faces = dict(zip(edge_index,np.concatenate([fid*np.ones_like(unique_triangles[fid]) for fid in xrange(len(unique_triangles))])))
-
-    if verbose: print len(edge_vertices)," Edges" 
-
-    if len(edge_vertices)>0:
-        unique_edges = array_unique(np.sort(edge_vertices.values()))
-        if not forcetest and len(unique_edges) == len(edge_vertices.values()):
+        if len(edge_vertices)>0:
             unique_edges = edge_vertices.values()
             edge_matching = array_dict(edge_vertices.keys(),edge_vertices.keys())
         else:
-            # edge_matching = array_dict(vq(np.sort(edge_vertices.values()),unique_edges)[0],edge_vertices.keys())
-            edge_matching = array_dict(kd_tree_match(np.sort(edge_vertices.values()),unique_edges),edge_vertices.keys())
-    else:
-        unique_edges = np.array([])
-        edge_matching = array_dict()
+            unique_edges = np.array([])
 
-    element_matching['edge'] = edge_matching
-    if verbose: print len(unique_edges)," Unique Edges"
-    if timecheck: print 'edge unicity test:',time()-check_time 
-    
-    if timecheck: check_time =time()
-    face_cells = {}
-    for fid in xrange(len(unique_triangles)):
-        face_cells[fid] = set()
+        element_matching['edge'] = edge_matching
+       
+        face_cells = {}
+        for fid in xrange(len(unique_triangles)):
+            face_cells[fid] = set()
 
-    cell_matching = {}
-    if n_wisps.has_key('volume'):
-        oriented_cells = False
-        if np.any([np.any([f<0 for f in element_properties['volume'][c]['face_index']]) for c in xrange(n_wisps['volume'])]):
-            oriented_cells = True
+        cell_matching = {}
 
-        if 'label' in properties['volume']:
-            for cid in xrange(n_wisps['volume']):
-                cell_matching[cid] = element_properties['volume'][cid]['label']
-        else:
-            cell_matching = dict(zip(range(n_wisps['volume']),range(n_wisps['volume'])))
-
-        if 'face_index' in properties['volume']:
-            for c in xrange(n_wisps['volume']):
-                for f in element_properties['volume'][c]['face_index']:
-                    if oriented_cells:
-                        face_cells[triangle_matching[np.abs(f)-1]] = face_cells[triangle_matching[np.abs(f)-1]].union({cell_matching[c]})
-                    else:
-                        face_cells[triangle_matching[f]] = face_cells[triangle_matching[f]].union({cell_matching[c]})
-        else:
-            for f in xrange(len(unique_triangles)):
-                face_cells[triangle_matching[f]] = {0}
-    else:
         cell_matching[0] = 0
         for f in xrange(len(unique_triangles)):
             face_cells[triangle_matching[f]] = {0}
-    element_matching['volume'] = cell_matching
-    if verbose: print len(cell_matching)," Cells"
-    if timecheck: print 'cell unicity test:',time()-check_time 
+        element_matching['volume'] = cell_matching
+
 
 
     if timecheck: check_time =time()

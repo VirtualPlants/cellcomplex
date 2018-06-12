@@ -197,7 +197,7 @@ else:
         circle = patch.Circle((0, 0), 1, facecolor='none',edgecolor=(0.8,0.8,0.8), linewidth=3, alpha=0.5)
         axins.add_patch(circle)
         for i,a in enumerate(projected_axes):
-            axins.text(a[0], a[1],features[1:][i], size=10, ha="center", va="center",bbox = dict(boxstyle="round",ec=(0.1,0.1,0.1),fc=(0.5,0.5,0.5),alpha=0.2))
+            axins.text(a[0], a[1],features[1:][i], size=10, ha="center", va="center",bbox=dict(boxstyle="round",ec=(0.1,0.1,0.1),fc=(0.5,0.5,0.5),alpha=0.2))
             # axins.plot([0,a[0]],[0,a[1]],color=np.array(cmap(24%254+1).i3tuple())/255.,linewidth=2.*np.linalg.norm(a),alpha=0.2)
             axins.plot([0,a[0]],[0,a[1]],color=(0.5,0.5,0.5),linewidth=2.*np.linalg.norm(a),alpha=0.2)
         axins.set_xlim(-1,1)
